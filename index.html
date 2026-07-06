@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Coach Database</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <!-- Background Elements for Premium Look -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-3"></div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen active">
+        <div class="glass-card login-card fade-in">
+            <div class="logo-container">
+                <i class="fa-solid fa-train logo-icon"></i>
+            </div>
+            <h1>Coach Database</h1>
+            <p class="subtitle">Secure Data Access</p>
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input type="password" id="passwordInput" placeholder="Enter Password" required>
+                    <button type="button" id="togglePasswordBtn" class="icon-btn"><i class="fa-solid fa-eye"></i></button>
+                </div>
+                <button type="submit" class="btn primary-btn">
+                    <span>Login</span>
+                </button>
+                <p id="loginError" class="error-text hidden">Invalid password</p>
+            </form>
+        </div>
+        <div class="footer-branding">SBC COACHING DEPOT</div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <div>
+                <h1>Dashboard</h1>
+                <p class="subtitle">Select a module</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="icon-btn sync-btn" onclick="forceRefreshData()" title="Refresh Data"><i class="fa-solid fa-rotate-right"></i></button>
+                <button class="icon-btn logout-btn" onclick="logout()" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </header>
+
+        <main class="dashboard-grid slide-up">
+            <button class="dashboard-card primary" onclick="navigateTo('searchScreen')">
+                <div class="card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <div class="card-content">
+                    <h3>Search Coach</h3>
+                    <p>Fetch details from database</p>
+                </div>
+                <i class="fa-solid fa-chevron-right chevron"></i>
+            </button>
+            
+            <button class="dashboard-card" onclick="navigateTo('wspSearchScreen')">
+                <div class="card-icon"><i class="fa-solid fa-clipboard-list"></i></div>
+                <div class="card-content">
+                    <h3>WSP Entry</h3>
+                    <p>Log defects</p>
+                </div>
+                <i class="fa-solid fa-chevron-right chevron"></i>
+            </button>
+        </main>
+    </div>
+
+    
+    <!-- Search Screen -->
+    <div id="searchScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>Search Coach</h1>
+                <p class="subtitle">Enter coach identifiers</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card form-card">
+                <div class="search-tabs">
+                    <button class="tab-btn active" id="tabCoach" onclick="switchSearchTab('coach')">Coach Number</button>
+                    <button class="tab-btn" id="tabRake" onclick="switchSearchTab('rake')">By Rake</button>
+                </div>
+
+                <!-- Coach Search Form -->
+                <form id="searchCoachForm">
+                    <div class="form-group">
+                        <label for="coachNumberInput">Coach Number</label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-hashtag input-icon"></i>
+                            <input type="number" id="coachNumberInput" placeholder="6 digit number (e.g. 123456)" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn primary-btn btn-block" id="searchSubmitBtn">
+                        <span class="btn-text">Search</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+                </form>
+
+                <!-- Rake Search Form -->
+                <form id="searchRakeForm" class="hidden">
+                    <div class="form-group">
+                        <label for="trainSelect">Train</label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-train input-icon"></i>
+                            <select id="trainSelect" required>
+                                <option value="" disabled selected>Select Train</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn primary-btn btn-block" id="fetchRakesBtn" onclick="fetchRakes()">
+                        <span class="btn-text">Find Rakes</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+
+                    <div id="rakeSelectionArea" class="hidden" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div class="form-group">
+                            <label for="rakeSelect">Select Rake</label>
+                            <div class="input-group">
+                                <i class="fa-solid fa-list-ol input-icon"></i>
+                                <select id="rakeSelect">
+                                    <option value="" disabled selected>Select Rake</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn secondary-btn btn-block" onclick="viewRakeCoaches()">
+                            View Coaches
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Selection Screen -->
+    <div id="selectionScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('searchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>Multiple Matches</h1>
+                <p class="subtitle">Select the correct coach</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card list-container" id="selectionListContainer">
+                <!-- Selectable list items injected here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="resultsScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('searchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1 id="resultCoachId">Coach Details</h1>
+                <p class="subtitle">Fetched from database</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card results-container" id="resultsContainer">
+                <!-- Dynamically populated properties will go here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Rake Results Screen -->
+    <div id="rakeResultsScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('searchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1 id="rakeResultTitle">Rake Details</h1>
+                <p class="subtitle">Coach List</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <!-- General Details Card -->
+            <div class="glass-card" style="margin-bottom: 1rem; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Departure</span>
+                    <div id="rakeDepartureDate" style="font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem;">-</div>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Arrival</span>
+                    <div id="rakeArrivalDate" style="font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem;">-</div>
+                </div>
+            </div>
+
+            <div class="glass-card" style="padding: 0; overflow: hidden;">
+                <div class="table-responsive">
+                    <table class="rake-table">
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>RLY</th>
+                                <th>Coach No</th>
+                                <th>Type</th>
+                                <th>Indication</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rakeTableBody">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    
+    <!-- WSP Search Screen -->
+    <div id="wspSearchScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>WSP Defect Entry</h1>
+                <p class="subtitle">Search & update WSP issues</p>
+            </div>
+        </header>
+        
+        <main class="slide-up">
+            <div class="glass-card form-card">
+                <div class="search-tabs">
+                    <button class="tab-btn active" id="wspTabCoach" onclick="switchWspTab('coach')">Coach Number</button>
+                    <button class="tab-btn" id="wspTabRake" onclick="switchWspTab('rake')">By Rake</button>
+                </div>
+                
+                <!-- Coach Number Search Form -->
+                <form id="wspSearchCoachForm">
+                    <div class="form-group">
+                        <label for="wspCoachNumberInput">Coach Number</label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-hashtag input-icon"></i>
+                            <input type="number" id="wspCoachNumberInput" placeholder="6 digit number" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn primary-btn btn-block" id="wspSearchSubmitBtn" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <span class="btn-text">Search</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+                </form>
+
+                <!-- Rake Search Form -->
+                <form id="wspSearchRakeForm" class="hidden">
+                    <div class="form-group">
+                        <label for="wspTrainSelect">Train</label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-train input-icon"></i>
+                            <select id="wspTrainSelect" required>
+                                <option value="" disabled selected>Select Train</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn primary-btn btn-block" id="wspFetchRakesBtn" onclick="fetchWspRakes()" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <span class="btn-text">Find Rakes</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+
+                    <div id="wspRakeSelectionArea" class="hidden" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <div class="form-group">
+                            <label for="wspRakeSelect">Select Rake</label>
+                            <div class="input-group">
+                                <i class="fa-solid fa-list-ol input-icon"></i>
+                                <select id="wspRakeSelect" required>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="btn secondary-btn btn-block" onclick="viewWspRakeCoaches()" style="background: linear-gradient(135deg, #10b981, #059669);">
+                            View Coaches
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+    
+    
+    <!-- WSP Rake Results Screen -->
+    <div id="wspRakeResultsScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1 id="wspRakeResultTitle">Rake Details</h1>
+                <p class="subtitle">Select a coach for WSP entry</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card" style="padding: 0; overflow: hidden;">
+                <div class="table-responsive">
+                    <table class="rake-table">
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>RLY</th>
+                                <th>Coach No</th>
+                                <th>Type</th>
+                                <th>Indication</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wspRakeTableBody">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- WSP Results Screen -->
+    <div id="wspResultsScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1 id="wspResultCoachId">Coach WSP</h1>
+                <p class="subtitle">History & Entry</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card" style="margin-bottom: 1rem;">
+                <h3 class="group-title"><i class="fa-solid fa-circle-info"></i> Coach Details</h3>
+                <div id="wspCoachDetailsContainer" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <!-- Details injected here -->
+                </div>
+            </div>
+
+            <div class="glass-card" style="margin-bottom: 1rem;">
+                <h3 class="group-title"><i class="fa-solid fa-clock-rotate-left"></i> Previous WSP Issues</h3>
+                <div id="wspHistoryContainer">
+                    <!-- History cards or 'no issues' message injected here -->
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="accordion-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="document.getElementById('wspDefectFormWrapper').classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('fa-chevron-up'); this.querySelector('.chevron').classList.toggle('fa-chevron-down');">
+                    <h3 class="group-title" style="margin-bottom: 0; color: #10b981;"><i class="fa-solid fa-plus"></i> Add New Defect</h3>
+                    <i class="fa-solid fa-chevron-down chevron"></i>
+                </div>
+                
+                <div id="wspDefectFormWrapper" class="hidden" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <form id="wspDefectForm">
+                    <input type="hidden" id="wspDefectCoachNum">
+                    
+                    <div class="form-group">
+                        <label>Download Date</label>
+                        <input type="date" id="wspDownloadDate" class="styled-input" onclick="this.showPicker()" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Wheel Condition</label>
+                        <input type="text" id="wspWheelCondition" class="styled-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Pressure Switch (PS) Status</label>
+                        <select id="wspPsStatus" class="styled-input">
+                            <option value="" disabled selected>Select Status</option>
+                            <option value="ok">ok</option>
+                            <option value="Not ok">Not ok</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>WSP Code</label>
+                        <input type="text" id="wspCode" class="styled-input" placeholder="e.g. 72, 95">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Self Test Dump Valve</label>
+                        <select id="wspDumpValve" class="styled-input">
+                            <option value="" disabled selected>Select Status</option>
+                            <option value="ok">ok</option>
+                            <option value="Not ok">Not ok</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Sensor Gap</label>
+                        <input type="text" id="wspSensorGap" class="styled-input" placeholder="axle1-1mm, axle 2 - 1mm , axle 3 -1mm, axle 4 - 1mm">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Downloading Observation</label>
+                        <input type="text" id="wspObservation" class="styled-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Other Observation</label>
+                        <input type="text" id="wspOtherObservation" class="styled-input">
+                    </div>
+                    
+
+                    <div class="form-group">
+                        <label>Defect Category</label>
+                        <select id="wspDefectCategory" class="styled-input">
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="Sensor defect">Sensor defect</option>
+                            <option value="Dump valve defect">Dump valve defect</option>
+                            <option value="Pressure switch defect">Pressure switch defect</option>
+                            <option value="Card defect">Card defect</option>
+                            <option value="Dump valve connector loose">Dump valve connector loose</option>
+                            <option value="Speed sensor connector loose">Speed sensor connector loose</option>
+                            <option value="Fuse">Fuse</option>
+                            <option value="K05 defective">K05 defective</option>
+                            <option value="Loose wiring in wago">Loose wiring in wago</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Attention (If Any)</label>
+                        <input type="text" id="wspAttention" class="styled-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Follow Up Remarks</label>
+                        <input type="text" id="wspFollowUp" class="styled-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Defect Description</label>
+                        <textarea id="wspDescription" class="styled-input" rows="3" placeholder="Describe the issue..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Item Required / Used</label>
+                        <input type="text" id="wspItemRequired" class="styled-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Data Entry By</label>
+                        <select id="wspDataEntryBy" class="styled-input" required>
+                            <option value="" disabled selected>Select ID</option>
+                            <option value="295">295</option>
+                            <option value="294">294</option>
+                            <option value="274">274</option>
+                            <option value="755">755</option>
+                            <option value="639">639</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Checklist Submitted</label>
+                        <select id="wspChecklist" class="styled-input" required>
+                            <option value="" disabled selected>Select Yes / No</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn primary-btn btn-block" id="wspSubmitDefectBtn" style="margin-top: 1rem; background: linear-gradient(135deg, #10b981, #059669);">
+                        <span class="btn-text">Submit Defect</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+                </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
