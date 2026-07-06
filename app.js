@@ -1233,7 +1233,7 @@ async function fetchWspHistory(coachNumber) {
                 `;
                 
                 const excludeKeys = ['coach no', 'rake', 'train no', 'coach type', 'ci', 'left date', 'arrival date', 'arrival t no', 'wsp make', 'month', 'download date', 'wheel condition'];
-                const fullWidthKeys = ['other observation', 'attention if any', 'downloading obseravtion', 'downloading observation', 'defect description'];
+                const fullWidthKeys = ['other observation', 'attention if any', 'downloading obseravtion', 'downloading observation', 'defect description', 'data entry by'];
                 
                 // Render Wheel Condition first if it exists
                 const wheelCondKey = Object.keys(entry).find(k => String(k).toLowerCase().trim() === 'wheel condition');
