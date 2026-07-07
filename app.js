@@ -1507,27 +1507,30 @@ function viewWspRakeCoaches() {
             const wheelCond = coach['Wheel Condition'] || '-';
             const indication = coach['_colS'] || '-';
             
-            tr.innerHTML = `
-                <td style="border-bottom: none;">${pos}</td>
-                <td style="border-bottom: none;">${rly}</td>
-                <td style="border-bottom: none;"><span class="highlight-badge">${coachNum}</span></td>
-                <td style="border-bottom: none;">${type}</td>
-                <td style="border-bottom: none;">${indication}</td>
-            `;
+            const hasWheelCond = wheelCond !== '-';
             
-            const subTr = document.createElement('tr');
-            subTr.style.cursor = 'pointer';
-            subTr.innerHTML = `
-                <td colspan="5" style="padding-top: 0; color: var(--text-muted); font-size: 0.85rem; border-top: none;">
-                    <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px; opacity: 0.7; color: red;"></i> <span style="color: red;">${wheelCond === '-' ? 'Wheel Cond: -' : wheelCond}</span>
-                </td>
+            tr.innerHTML = `
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${pos}</td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${rly}</td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}><span class="highlight-badge">${coachNum}</span></td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${type}</td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${indication}</td>
             `;
             
             tr.onclick = () => { renderWspResults(coach); };
-            subTr.onclick = () => { renderWspResults(coach); };
-            
             tbody.appendChild(tr);
-            tbody.appendChild(subTr);
+            
+            if (hasWheelCond) {
+                const subTr = document.createElement('tr');
+                subTr.style.cursor = 'pointer';
+                subTr.innerHTML = `
+                    <td colspan="5" style="padding-top: 0; color: var(--text-muted); font-size: 0.85rem; border-top: none;">
+                        <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px; opacity: 0.9; color: #e74c3c;"></i> <span style="color: #e74c3c;">${wheelCond}</span>
+                    </td>
+                `;
+                subTr.onclick = () => { renderWspResults(coach); };
+                tbody.appendChild(subTr);
+            }
         });
     }
     
