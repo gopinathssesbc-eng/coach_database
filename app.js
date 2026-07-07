@@ -2046,3 +2046,69 @@ async function handleScheduleSubmit(e) {
         btn.querySelector('.btn-text').style.opacity = '1';
     }
 }
+
+// --- Due Coaches Logic ---
+async function fetchDueCoaches() {
+    const dateInput = document.getElementById('dueDatePicker').value;
+    const errorEl = document.getElementById('dueCoachesError');
+    const loadingEl = document.getElementById('dueCoachesLoading');
+    const resultsContainer = document.getElementById('dueCoachesResultsContainer');
+    const tbody = document.getElementById('dueCoachesTableBody');
+    const countBadge = document.getElementById('dueCoachesCountBadge');
+    
+    errorEl.classList.add('hidden');
+    resultsContainer.classList.add('hidden');
+    
+    if (!dateInput) {
+        errorEl.textContent = 'Please select a date.';
+        errorEl.classList.remove('hidden');
+        return;
+    }
+    
+    loadingEl.classList.remove('hidden');
+    tbody.innerHTML = '';
+    
+    try {
+        const url = `${SCHEDULE_APP_SCRIPT_URL}?action=getDueCoaches&date=${encodeURIComponent(dateInput)}`;
+        const response = await fetch(url);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            const coaches = result.data || [];
+            countBadge.textContent = coaches.length;
+            
+            if (coaches.length > 0) {
+                coaches.forEach(coach => {
+                    const tr = document.createElement('tr');
+                    
+                    const d2Status = coach.isD2Due ? '<span class="status-badge" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c;">Due</span>' : '';
+                    const d3Status = coach.isD3Due ? '<span class="status-badge" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c;">Due</span>' : '';
+                    
+                    tr.innerHTML = `
+                        <td>${coach.rly}</td>
+                        <td>${coach.type}</td>
+                        <td><span class="highlight-badge">${coach.coachNo}</span></td>
+                        <td>${coach.trainNo}</td>
+                        <td>${coach.d2Date} ${d2Status}</td>
+                        <td>${coach.d3Date} ${d3Status}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">No coaches due on this date for available rakes.</td>`;
+                tbody.appendChild(tr);
+            }
+            resultsContainer.classList.remove('hidden');
+        } else {
+            errorEl.textContent = result.message || 'Failed to fetch due coaches.';
+            errorEl.classList.remove('hidden');
+        }
+    } catch (err) {
+        console.error('Error fetching due coaches:', err);
+        errorEl.textContent = 'Failed to load data. Ensure Apps Script is updated and deployed.';
+        errorEl.classList.remove('hidden');
+    } finally {
+        loadingEl.classList.add('hidden');
+    }
+}

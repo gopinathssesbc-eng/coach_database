@@ -16,13 +16,14 @@
 const SHEET_NAME = "all rake schedule";
 
 function doGet(e) {
+  const action = e.parameter.action;
   const coachNumber = e.parameter.coachNumber;
   const coachNumbersStr = e.parameter.coachNumbers;
   
-  if (!coachNumber && !coachNumbersStr) {
+  if (!action && !coachNumber && !coachNumbersStr) {
     return createJsonResponse({
       status: 'error',
-      message: 'No coach number(s) provided.'
+      message: 'No action or coach number(s) provided.'
     });
   }
 
@@ -46,6 +47,101 @@ function doGet(e) {
     }
 
     const headers = data[1]; // Row 2 headers
+    
+    if (action === 'getDueCoaches') {
+      const selectedDateStr = e.parameter.date;
+      if (!selectedDateStr) {
+        return createJsonResponse({ status: 'error', message: 'No date provided.' });
+      }
+      const selectedDate = new Date(selectedDateStr);
+      selectedDate.setHours(0, 0, 0, 0);
+
+      const findIdx = (headerName) => {
+        const lowerName = headerName.toLowerCase();
+        for (let j = 0; j < headers.length; j++) {
+           if (String(headers[j]).toLowerCase().includes(lowerName)) return j;
+        }
+        return -1;
+      };
+
+      const pitDate1Idx = findIdx('next pit check date 1');
+      const pitDate2Idx = findIdx('next pit check date 2');
+      const d2Idx = findIdx('d 2');
+      const d3Idx = findIdx('d 3');
+      const rlyIdx = 0; // Column A
+      const typeIdx = 1; // Column B
+      const trainNoIdx = 4; // Column E
+      const coachNoIdx = 8; // Column I
+
+      const dueCoaches = [];
+      
+      for (let i = 2; i < data.length; i++) {
+         const row = data[i];
+         if (!row[coachNoIdx]) continue;
+         
+         let pit1Match = false;
+         let pit2Match = false;
+         
+         if (pitDate1Idx !== -1 && row[pitDate1Idx]) {
+            let p1 = new Date(row[pitDate1Idx]);
+            if (!isNaN(p1)) {
+              p1.setHours(0,0,0,0);
+              if (p1.getTime() === selectedDate.getTime()) pit1Match = true;
+            }
+         }
+         
+         if (pitDate2Idx !== -1 && row[pitDate2Idx]) {
+            let p2 = new Date(row[pitDate2Idx]);
+            if (!isNaN(p2)) {
+              p2.setHours(0,0,0,0);
+              if (p2.getTime() === selectedDate.getTime()) pit2Match = true;
+            }
+         }
+         
+         if (pit1Match || pit2Match) {
+             let d2Match = false;
+             let d3Match = false;
+             let d2DateStr = '-';
+             let d3DateStr = '-';
+             
+             if (d2Idx !== -1 && row[d2Idx]) {
+                 let d2Date = new Date(row[d2Idx]);
+                 if (!isNaN(d2Date)) {
+                     d2Date.setHours(0,0,0,0);
+                     if (d2Date.getTime() <= selectedDate.getTime()) d2Match = true;
+                     d2DateStr = d2Date.getFullYear() + '-' + String(d2Date.getMonth()+1).padStart(2,'0') + '-' + String(d2Date.getDate()).padStart(2,'0');
+                 }
+             }
+             
+             if (d3Idx !== -1 && row[d3Idx]) {
+                 let d3Date = new Date(row[d3Idx]);
+                 if (!isNaN(d3Date)) {
+                     d3Date.setHours(0,0,0,0);
+                     if (d3Date.getTime() <= selectedDate.getTime()) d3Match = true;
+                     d3DateStr = d3Date.getFullYear() + '-' + String(d3Date.getMonth()+1).padStart(2,'0') + '-' + String(d3Date.getDate()).padStart(2,'0');
+                 }
+             }
+             
+             if (d2Match || d3Match) {
+                 dueCoaches.push({
+                     rly: row[rlyIdx] || '-',
+                     type: row[typeIdx] || '-',
+                     coachNo: row[coachNoIdx] || '-',
+                     trainNo: row[trainNoIdx] || '-',
+                     d2Date: d2DateStr,
+                     d3Date: d3DateStr,
+                     isD2Due: d2Match,
+                     isD3Due: d3Match
+                 });
+             }
+         }
+      }
+      
+      return createJsonResponse({
+        status: 'success',
+        data: dueCoaches
+      });
+    }
     
     const parseRow = (row, index) => {
       const resultObj = {};

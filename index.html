@@ -82,9 +82,69 @@
                 </div>
                 <i class="fa-solid fa-chevron-right chevron"></i>
             </button>
+            
+            <button class="dashboard-card" onclick="navigateTo('dueCoachesScreen')" style="border-left: 4px solid #f39c12;">
+                <div class="card-icon" style="color: #f39c12;"><i class="fa-solid fa-train"></i></div>
+                <div class="card-content">
+                    <h3>Due Coaches</h3>
+                    <p>Find due coaches by pit date</p>
+                </div>
+                <i class="fa-solid fa-chevron-right chevron"></i>
+            </button>
         </main>
     </div>
 
+    <!-- Due Coaches Screen -->
+    <div id="dueCoachesScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>Due Coaches</h1>
+                <p class="subtitle">Check which coaches are due</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card form-card" style="margin-bottom: 20px;">
+                <div class="form-group">
+                    <label>Select Date</label>
+                    <input type="date" id="dueDatePicker" class="app-input" required>
+                </div>
+                <button class="primary-btn" onclick="fetchDueCoaches()">
+                    <i class="fa-solid fa-search"></i> Find Due Coaches
+                </button>
+                <div id="dueCoachesLoading" class="hidden" style="text-align: center; margin-top: 15px; color: var(--text-muted);">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Fetching due coaches...
+                </div>
+                <div id="dueCoachesError" class="hidden" style="color: #e74c3c; margin-top: 15px; text-align: center; font-size: 0.9rem;"></div>
+            </div>
+
+            <div id="dueCoachesResultsContainer" class="hidden glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0; font-size: 1.1rem;">Due Coaches</h3>
+                    <span id="dueCoachesCountBadge" class="status-badge" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6;">0</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="data-table" id="dueCoachesTable">
+                        <thead>
+                            <tr>
+                                <th>RLY</th>
+                                <th>TYPE</th>
+                                <th>COACH NO</th>
+                                <th>TRAIN NO</th>
+                                <th>D2 DUE</th>
+                                <th>D3 DUE</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dueCoachesTableBody">
+                            <!-- Results will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
     
     <!-- Search Screen -->
     <div id="searchScreen" class="screen hidden">
