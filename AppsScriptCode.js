@@ -269,7 +269,7 @@ function doGet(e) {
            
            if (latestDate && latestCond !== '-') {
                const formattedDate = latestDate.getFullYear() + '-' + String(latestDate.getMonth()+1).padStart(2,'0') + '-' + String(latestDate.getDate()).padStart(2,'0');
-               foundWheelCondition = `date-${formattedDate}, Wheel condition-${latestCond}`;
+               foundWheelCondition = `Date-${formattedDate}, Wheel condition-${latestCond}`;
            } else {
                foundWheelCondition = latestCond;
            }
