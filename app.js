@@ -1,6 +1,9 @@
 // Replace this URL with the actual Web App URL provided by Google Apps Script after deployment
 const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVl0qS-ApqoWQwDSyluLOdV7JvinVSibq5SrB0G8T2ex1ynW4_ZGNBM4Pv-AhJ6KvU1Q/exec';
 
+// URL for the new Schedule Database Apps Script
+const SCHEDULE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzSrcye1yLxG5fsOsOScrSHAPgPGaP1EsNyeLML9JQusykQ-xWzt5i4oYbTQT1LDTL/exec';
+
 // Simple static password for demonstration (you can change this)
 const APP_PASSWORD = '1234';
 
@@ -14,7 +17,9 @@ const screens = {
     rakeResults: document.getElementById('rakeResultsScreen'),
     wspSearch: document.getElementById('wspSearchScreen'),
     wspRakeResults: document.getElementById('wspRakeResultsScreen'),
-    wspResults: document.getElementById('wspResultsScreen')
+    wspResults: document.getElementById('wspResultsScreen'),
+    scheduleSearch: document.getElementById('scheduleSearchScreen'),
+    scheduleResults: document.getElementById('scheduleResultsScreen')
 };
 
 // --- SweetAlert Helpers ---
@@ -74,6 +79,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const wspCoachForm = document.getElementById('wspSearchCoachForm');
     if(wspCoachForm) {
         wspCoachForm.addEventListener('submit', handleWspSearch);
+    }
+    
+    // Schedule Event Listeners
+    const scheduleSearchForm = document.getElementById('scheduleSearchForm');
+    if(scheduleSearchForm) {
+        scheduleSearchForm.addEventListener('submit', handleScheduleSearch);
+    }
+    
+    const scheduleUpdateForm = document.getElementById('scheduleUpdateForm');
+    if(scheduleUpdateForm) {
+        scheduleUpdateForm.addEventListener('submit', handleScheduleSubmit);
     }
     
     const wspDefectForm = document.getElementById('wspDefectForm');
@@ -297,6 +313,11 @@ async function handleSearch(e) {
     const spinner = submitBtn.querySelector('.spinner');
     const btnText = submitBtn.querySelector('span');
     
+    // Loading State
+    spinner.classList.remove('hidden');
+    btnText.style.opacity = '0';
+    submitBtn.disabled = true;
+
     const cacheKey = 'cachedCoach_' + coachNumber;
     const cachedCoach = localStorage.getItem(cacheKey);
     let usedCache = false;
@@ -306,7 +327,7 @@ async function handleSearch(e) {
             const data = JSON.parse(cachedCoach);
             if (data.status === 'success') {
                 if (data.data.length === 1) {
-                    renderResults(data.data[0]);
+                    await renderResults(data.data[0]);
                 } else if (data.data.length > 1) {
                     renderSelectionList(data.data);
                 }
@@ -316,11 +337,6 @@ async function handleSearch(e) {
             console.error('Cache parsing error:', e);
         }
     }
-    
-    // Loading State
-    spinner.classList.remove('hidden');
-    btnText.style.opacity = '0';
-    submitBtn.disabled = true;
 
     try {
         if (GOOGLE_APP_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
@@ -342,7 +358,7 @@ async function handleSearch(e) {
             if (data.status === 'success') {
                 localStorage.setItem(cacheKey, JSON.stringify(data));
                 if (data.data.length === 1) {
-                    renderResults(data.data[0]);
+                    await renderResults(data.data[0]);
                 } else if (data.data.length > 1) {
                     renderSelectionList(data.data);
                 } else {
@@ -482,13 +498,23 @@ function populateRakeDropdown(coachArray, trainCode) {
     }
 }
 
-function viewRakeCoaches() {
+async function viewRakeCoaches() {
     const trainCode = document.getElementById('trainSelect').value;
     const selectedRake = document.getElementById('rakeSelect').value;
     
     if (!selectedRake) {
         showWarningAlert("Please select a rake.");
         return;
+    }
+    
+    const fetchBtn = document.getElementById('viewRakeCoachesBtn');
+    let spinner, btnText;
+    if (fetchBtn) {
+        spinner = fetchBtn.querySelector('.spinner');
+        btnText = fetchBtn.querySelector('.btn-text');
+        if (spinner) spinner.classList.remove('hidden');
+        if (btnText) btnText.style.opacity = '0';
+        fetchBtn.disabled = true;
     }
     
     // Filter coaches for the selected rake
@@ -538,6 +564,33 @@ function viewRakeCoaches() {
         document.getElementById('rakeDepartureDate').innerText = '-';
     }
     
+    // Fetch schedule details for D2 and D3
+    let scheduleMap = {};
+    if (rakeCoaches.length > 0 && typeof SCHEDULE_APP_SCRIPT_URL !== 'undefined') {
+        try {
+            const coachNumbersList = rakeCoaches.map(coach => {
+                for (const key of Object.keys(coach)) {
+                    if (key.toLowerCase().includes('coach') && key.toLowerCase().includes('no')) return coach[key];
+                    if (key.toLowerCase().includes('coach num')) return coach[key];
+                }
+                return null;
+            }).filter(c => c).join(',');
+            
+            const scheduleUrl = `${SCHEDULE_APP_SCRIPT_URL}?coachNumbers=${encodeURIComponent(coachNumbersList)}`;
+            const response = await fetch(scheduleUrl);
+            const data = await response.json();
+            
+            if (data.status === 'success' && data.data) {
+                data.data.forEach(s => {
+                    const cNum = String(s['COACH NO.']).trim();
+                    scheduleMap[cNum] = { d2: s['D 2'], d3: s['D 3'] };
+                });
+            }
+        } catch(e) {
+            console.error('Error fetching bulk schedules:', e);
+        }
+    }
+    
     // Render the table
     const tableBody = document.getElementById('rakeTableBody');
     tableBody.innerHTML = '';
@@ -545,7 +598,12 @@ function viewRakeCoaches() {
     rakeCoaches.forEach(coach => {
         const tr = document.createElement('tr');
         tr.style.cursor = 'pointer';
-        tr.onclick = () => renderResults(coach);
+        tr.onclick = async () => {
+            const icon = tr.querySelector('.fa-chevron-right, .fa-spinner');
+            if (icon) icon.className = 'fa-solid fa-spinner fa-spin text-primary';
+            await renderResults(coach);
+            if (icon) icon.className = 'fa-solid fa-chevron-right text-primary';
+        };
         
         // Find RLY, Coach No, Type
         const rly = coach['RLY'] || coach['Rly'] || coach['Col2'] || '-';
@@ -560,17 +618,33 @@ function viewRakeCoaches() {
         
         const indication = coach['_colS'] || '-';
         
+        let d2 = '-';
+        let d3 = '-';
+        if (scheduleMap[coachNum]) {
+            d2 = scheduleMap[coachNum].d2 ? formatIfDate(scheduleMap[coachNum].d2) : '-';
+            d3 = scheduleMap[coachNum].d3 ? formatIfDate(scheduleMap[coachNum].d3) : '-';
+        }
+        
         tr.innerHTML = `
             <td>${coach._position}</td>
             <td>${rly}</td>
             <td>${coachNum}</td>
             <td>${type}</td>
+            <td>${d2}</td>
+            <td>${d3}</td>
             <td>${indication}</td>
         `;
         tableBody.appendChild(tr);
     });
     
     document.getElementById('rakeResultTitle').innerText = `${trainCode} - Rake ${selectedRake}`;
+    
+    if (fetchBtn) {
+        if (spinner) spinner.classList.add('hidden');
+        if (btnText) btnText.style.opacity = '1';
+        fetchBtn.disabled = false;
+    }
+    
     navigateTo('rakeResultsScreen');
 }
 
@@ -599,11 +673,14 @@ function renderSelectionList(matchesArray, isWsp = false) {
             <i class="fa-solid fa-chevron-right list-item-icon"></i>
         `;
         
-        item.onclick = () => {
+        item.onclick = async () => {
             if (isWsp) {
                 renderWspResults(match);
             } else {
-                renderResults(match);
+                const icon = item.querySelector('.list-item-icon');
+                icon.className = 'fa-solid fa-spinner fa-spin list-item-icon';
+                await renderResults(match);
+                icon.className = 'fa-solid fa-chevron-right list-item-icon';
             }
         };
         container.appendChild(item);
@@ -612,7 +689,7 @@ function renderSelectionList(matchesArray, isWsp = false) {
     navigateTo('selectionScreen');
 }
 
-function renderResults(dataObj) {
+async function renderResults(dataObj) {
     const container = document.getElementById('resultsContainer');
     
     // Try to build a clean title
@@ -746,7 +823,107 @@ function renderResults(dataObj) {
     }
     createGroup('Other Details', group4);
 
+    if (coachNum && typeof SCHEDULE_APP_SCRIPT_URL !== 'undefined') {
+        await appendScheduleDetailsToResults(coachNum, container, delayCounter);
+    }
+
     navigateTo('resultsScreen');
+}
+
+async function appendScheduleDetailsToResults(coachNumber, container, delayCounter) {
+    try {
+        const url = `${SCHEDULE_APP_SCRIPT_URL}?coachNumber=${encodeURIComponent(coachNumber)}`;
+        const response = await fetch(url);
+        if (!response.ok) return;
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.data) {
+            const schedObj = data.data;
+            let groupHTML = `<div class="group-section slide-up" style="animation-delay: ${Math.min(delayCounter * 0.05, 1)}s; border-color: #3b82f6;">
+                                <h3 class="group-title" style="color: #3b82f6;"><i class="fa-solid fa-calendar-check"></i> Schedule Details</h3>
+                                <div class="group-content">`;
+            
+            const fmtDate = (dStr) => {
+                if(!dStr || dStr === '-') return '-';
+                let d = String(dStr);
+                if(d.includes('T')) d = d.split('T')[0];
+                const parts = d.split('-');
+                if(parts.length === 3 && parts[0].length === 4) {
+                    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                }
+                return d;
+            };
+
+            const getVal = (key, isDate=false) => {
+                let val = schedObj[key];
+                let displayValue = (val === '' || val === null || val === undefined) ? '-' : val;
+                if (isDate) displayValue = fmtDate(displayValue);
+                return displayValue;
+            };
+
+            // Full width rows for dates
+            groupHTML += `
+                <div class="data-row">
+                    <div class="data-label">D2 Done Date</div>
+                    <div class="data-value" style="font-weight: 500;">${getVal('D 2', true)}</div>
+                </div>
+                <div class="data-row">
+                    <div class="data-label">D3 Done Date</div>
+                    <div class="data-value" style="font-weight: 500;">${getVal('D 3', true)}</div>
+                </div>
+            `;
+
+            // Helper for side-by-side rows
+            const sideBySide = (label1, key1, label2, key2) => `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                    <div class="data-row" style="margin-bottom: 0;">
+                        <div class="data-label">${label1}</div>
+                        <div class="data-value" style="font-weight: 500;">${getVal(key1)}</div>
+                    </div>
+                    <div class="data-row" style="margin-bottom: 0;">
+                        <div class="data-label">${label2}</div>
+                        <div class="data-value" style="font-weight: 500;">${getVal(key2)}</div>
+                    </div>
+                </div>
+            `;
+
+            groupHTML += sideBySide('L1', 'L1', 'R8', 'R8');
+            groupHTML += sideBySide('L2', 'L2', 'R7', 'R7');
+            groupHTML += sideBySide('L3', 'L3', 'R6', 'R6');
+            groupHTML += sideBySide('L4', 'L4', 'R5', 'R5');
+            groupHTML += sideBySide('PP End', 'stiffener plate PP end', 'NPP End', 'stiffener plate NPP end');
+
+            // Full width row for remarks
+            groupHTML += `
+                <div class="data-row">
+                    <div class="data-label">Remarks</div>
+                    <div class="data-value" style="font-weight: 500;">${getVal('ATTENTION GIVEN IF ANY')}</div>
+                </div>
+            `;
+            
+            groupHTML += `</div></div>`;
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = groupHTML;
+            
+            const contentDiv = wrapper.querySelector('.group-content');
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn secondary-btn';
+            editBtn.style.width = '100%';
+            editBtn.style.marginTop = '1rem';
+            editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> Update Schedule Details';
+            editBtn.onclick = () => renderScheduleResults(schedObj);
+            contentDiv.appendChild(editBtn);
+            
+            // Insert after the first child (Coach Details)
+            if (container.children.length > 1) {
+                container.insertBefore(wrapper.firstElementChild, container.children[1]);
+            } else {
+                container.appendChild(wrapper.firstElementChild);
+            }
+        }
+    } catch (e) {
+        console.error('Failed to append schedule data:', e);
+    }
 }
 
 // --- Utility Functions ---
@@ -883,9 +1060,25 @@ async function fetchWspRakes() {
         currentWspTrainCoaches.forEach(coach => {
             const rakeStr = coach['_colO'];
             if (rakeStr) {
-                let match = rakeStr.match(/\d+/);
-                if(trainSelect === 'CLONE') match = ['1'];
-                if (match) rakeSet.add(match[0]);
+                const prefix = 'RK' + trainSelect;
+                if (String(rakeStr).startsWith(prefix)) {
+                    if (trainSelect === 'CLONE') {
+                        rakeSet.add('1');
+                    } else {
+                        const remainder = String(rakeStr).substring(prefix.length);
+                        if (remainder.length >= 3) {
+                            const rakeNum = remainder.slice(0, -2);
+                            rakeSet.add(rakeNum);
+                        } else {
+                            rakeSet.add(remainder);
+                        }
+                    }
+                } else {
+                    // Fallback just in case
+                    let match = String(rakeStr).match(/\d+/);
+                    if(trainSelect === 'CLONE') match = ['1'];
+                    if (match) rakeSet.add(match[0]);
+                }
             }
         });
         
@@ -1322,4 +1515,210 @@ function forceRefreshData() {
         if (syncBtn) syncBtn.classList.remove('fa-spin');
         showErrorAlert('Failed to sync. Please check your connection.');
     });
+}
+
+// --- Schedule Entry Logic ---
+
+async function handleScheduleSearch(e) {
+    e.preventDefault();
+    
+    const coachNumber = document.getElementById('scheduleCoachNumberInput').value;
+    
+    if (coachNumber.length !== 6) {
+        showWarningAlert("Please enter a valid 6-digit coach number.");
+        return;
+    }
+    
+    const submitBtn = document.getElementById('scheduleSearchSubmitBtn');
+    const spinner = submitBtn.querySelector('.spinner');
+    const btnText = submitBtn.querySelector('.btn-text');
+    
+    spinner.classList.remove('hidden');
+    btnText.style.opacity = '0';
+    submitBtn.disabled = true;
+
+    try {
+        const url = `${SCHEDULE_APP_SCRIPT_URL}?coachNumber=${encodeURIComponent(coachNumber)}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            renderScheduleResults(data.data);
+        } else {
+            throw new Error(data.message || 'Coach not found');
+        }
+    } catch (error) {
+        console.error('Error fetching schedule data:', error);
+        if (error.message.includes('Coach not found')) {
+            showErrorAlert(`Coach not available in schedule data base`);
+        } else {
+            showErrorAlert(`Error: ${error.message}`);
+        }
+    } finally {
+        spinner.classList.add('hidden');
+        btnText.style.opacity = '1';
+        submitBtn.disabled = false;
+    }
+}
+
+function renderScheduleResults(dataObj) {
+    document.getElementById('scheduleResultCoachId').innerText = dataObj['COACH NO.'] || 'Schedule Entry';
+    
+    const detailsContainer = document.getElementById('scheduleCoachDetailsContainer');
+    
+    const fmtDate = (dStr) => {
+        if(!dStr || dStr === '-') return '-';
+        let d = String(dStr);
+        if(d.includes('T')) d = d.split('T')[0];
+        const parts = d.split('-');
+        if(parts.length === 3 && parts[0].length === 4) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return d;
+    };
+    
+    let trainNo = '-';
+    let ci = '-';
+    let arrivalDate = '-';
+    let leftDate = '-';
+    
+    for (const key of Object.keys(dataObj)) {
+        const h = String(key).toLowerCase().trim();
+        if (h === 'train no' || h.includes('train')) {
+            if (trainNo === '-') trainNo = dataObj[key] || '-';
+        } else if (h === 'ci') {
+            ci = dataObj[key] || '-';
+        } else if (h === 'arrival' || h.includes('arrival date')) {
+            if (arrivalDate === '-') arrivalDate = dataObj[key] || '-';
+        } else if (h === 'left date' || h.includes('left date') || h.includes('departure')) {
+            if (leftDate === '-') leftDate = dataObj[key] || '-';
+        }
+    }
+
+    detailsContainer.innerHTML = `
+        <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Number</span>
+            <span style="font-weight:600; font-size:1.1rem; color: #3b82f6;">${dataObj['COACH NO.'] || '-'}</span>
+        </div>
+        <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Owning Railway</span>
+            <span style="font-weight:500;">${dataObj['OWN RLY'] || '-'}</span>
+        </div>
+        <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Type</span>
+            <span style="font-weight:500;">${dataObj['COACH TYPE'] || '-'}</span>
+        </div>
+        <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Rake</span>
+            <span style="font-weight:500;">${dataObj['RAKE'] || '-'}</span>
+        </div>
+        <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Train Number</span>
+            <span style="font-weight:500;">${trainNo}</span>
+        </div>
+        <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">CI</span>
+            <span style="font-weight:500;">${ci}</span>
+        </div>
+        <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Left Date</span>
+            <span style="font-weight:500;">${fmtDate(leftDate)}</span>
+        </div>
+        <div>
+            <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Arrival Date</span>
+            <span style="font-weight:500;">${fmtDate(arrivalDate)}</span>
+        </div>
+    `;
+    
+    // Helper to format date for input type="date"
+    const inputDateFmt = (dStr) => {
+        if(!dStr || dStr === '-') return '';
+        let d = String(dStr);
+        if(d.includes('T')) return d.split('T')[0];
+        // If DD/MM/YYYY
+        const parts = d.split('/');
+        if(parts.length === 3) {
+            return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+        }
+        return '';
+    };
+
+    // Populate form
+    document.getElementById('scheduleRowIndex').value = dataObj['_rowIndex'] || '';
+    
+    document.getElementById('scheduleD2').value = inputDateFmt(dataObj['D 2']);
+    document.getElementById('scheduleD3').value = inputDateFmt(dataObj['D 3']);
+    
+    document.getElementById('scheduleL1').value = dataObj['L1'] || '';
+    document.getElementById('scheduleR8').value = dataObj['R8'] || '';
+    document.getElementById('scheduleL2').value = dataObj['L2'] || '';
+    document.getElementById('scheduleR7').value = dataObj['R7'] || '';
+    document.getElementById('scheduleL3').value = dataObj['L3'] || '';
+    document.getElementById('scheduleR6').value = dataObj['R6'] || '';
+    document.getElementById('scheduleL4').value = dataObj['L4'] || '';
+    document.getElementById('scheduleR5').value = dataObj['R5'] || '';
+    
+    document.getElementById('schedulePPEnd').value = dataObj['stiffener plate PP end'] || '';
+    document.getElementById('scheduleNPPEnd').value = dataObj['stiffener plate NPP end'] || '';
+    
+    document.getElementById('scheduleRemarks').value = dataObj['ATTENTION GIVEN IF ANY'] || '';
+    
+    navigateTo('scheduleResultsScreen');
+}
+
+async function handleScheduleSubmit(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('scheduleSubmitBtn');
+    btn.disabled = true;
+    btn.querySelector('.spinner').classList.remove('hidden');
+    btn.querySelector('.btn-text').style.opacity = '0';
+    
+    const formData = {
+        action: 'updateSchedule',
+        rowIndex: document.getElementById('scheduleRowIndex').value,
+        d2: document.getElementById('scheduleD2').value,
+        d3: document.getElementById('scheduleD3').value,
+        l1: document.getElementById('scheduleL1').value,
+        r8: document.getElementById('scheduleR8').value,
+        l2: document.getElementById('scheduleL2').value,
+        r7: document.getElementById('scheduleR7').value,
+        l3: document.getElementById('scheduleL3').value,
+        r6: document.getElementById('scheduleR6').value,
+        l4: document.getElementById('scheduleL4').value,
+        r5: document.getElementById('scheduleR5').value,
+        ppEnd: document.getElementById('schedulePPEnd').value,
+        nppEnd: document.getElementById('scheduleNPPEnd').value,
+        remarks: document.getElementById('scheduleRemarks').value
+    };
+    
+    try {
+        const response = await fetch(SCHEDULE_APP_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        Swal.fire({
+            icon: 'success',
+            title: 'Schedule Updated!',
+            text: 'The schedule details have been updated successfully.',
+            background: 'var(--surface)',
+            color: 'var(--text)'
+        });
+        
+    } catch (error) {
+        console.error('Error submitting schedule update:', error);
+        showErrorAlert('Failed to update schedule. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.querySelector('.spinner').classList.add('hidden');
+        btn.querySelector('.btn-text').style.opacity = '1';
+    }
 }

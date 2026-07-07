@@ -9,7 +9,7 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=202607070028">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -70,6 +70,15 @@
                 <div class="card-content">
                     <h3>WSP Entry</h3>
                     <p>Log defects</p>
+                </div>
+                <i class="fa-solid fa-chevron-right chevron"></i>
+            </button>
+            
+            <button class="dashboard-card" onclick="navigateTo('scheduleSearchScreen')" style="border-left: 4px solid #3b82f6;">
+                <div class="card-icon" style="color: #3b82f6;"><i class="fa-solid fa-calendar-check"></i></div>
+                <div class="card-content">
+                    <h3>Schedule Entry</h3>
+                    <p>Update coach schedules</p>
                 </div>
                 <i class="fa-solid fa-chevron-right chevron"></i>
             </button>
@@ -137,8 +146,9 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="button" class="btn secondary-btn btn-block" onclick="viewRakeCoaches()">
-                            View Coaches
+                        <button type="button" class="btn secondary-btn btn-block" id="viewRakeCoachesBtn" onclick="viewRakeCoaches()">
+                            <span class="btn-text">View Coaches</span>
+                            <div class="spinner hidden"></div>
                         </button>
                     </div>
                 </form>
@@ -177,6 +187,9 @@
             <div class="glass-card results-container" id="resultsContainer">
                 <!-- Dynamically populated properties will go here -->
             </div>
+            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="navigateTo('searchScreen')">
+                <i class="fa-solid fa-arrow-left"></i> Go Back
+            </button>
         </main>
     </div>
 
@@ -212,6 +225,8 @@
                                 <th>RLY</th>
                                 <th>Coach No</th>
                                 <th>Type</th>
+                                <th>D2</th>
+                                <th>D3</th>
                                 <th>Indication</th>
                             </tr>
                         </thead>
@@ -221,10 +236,114 @@
                     </table>
                 </div>
             </div>
+            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="navigateTo('searchScreen')">
+                <i class="fa-solid fa-arrow-left"></i> Go Back
+            </button>
         </main>
     </div>
 
-    
+    <!-- Schedule Search Screen -->
+    <div id="scheduleSearchScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>Schedule Data</h1>
+                <p class="subtitle">Search coach in schedule database</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card form-card">
+                <form id="scheduleSearchForm">
+                    <div class="form-group">
+                        <label for="scheduleCoachNumberInput">Coach Number</label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-hashtag input-icon"></i>
+                            <input type="number" id="scheduleCoachNumberInput" placeholder="6 digit number" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn primary-btn btn-block" id="scheduleSearchSubmitBtn" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                        <span class="btn-text">Search Schedule</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Schedule Results/Entry Screen -->
+    <div id="scheduleResultsScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('scheduleSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1 id="scheduleResultCoachId">Schedule Entry</h1>
+                <p class="subtitle">Update details</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card" style="margin-bottom: 1rem;">
+                <h3 class="group-title"><i class="fa-solid fa-circle-info"></i> Current Data</h3>
+                <div id="scheduleCoachDetailsContainer" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    <!-- Details injected here -->
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3 class="group-title" style="margin-bottom: 1rem; color: #3b82f6;"><i class="fa-solid fa-pen-to-square"></i> Update Data</h3>
+                
+                <form id="scheduleUpdateForm">
+                    <input type="hidden" id="scheduleRowIndex">
+                    
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>D2 Done Date</label>
+                            <input type="date" id="scheduleD2" class="styled-input" onclick="this.showPicker()">
+                        </div>
+                        <div class="form-group">
+                            <label>D3 Done Date</label>
+                            <input type="date" id="scheduleD3" class="styled-input" onclick="this.showPicker()">
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text); font-size: 0.9rem;">Wheel Diameters</h4>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group"><label>L1</label><input type="text" id="scheduleL1" class="styled-input"></div>
+                        <div class="form-group"><label>R8</label><input type="text" id="scheduleR8" class="styled-input"></div>
+                        
+                        <div class="form-group"><label>L2</label><input type="text" id="scheduleL2" class="styled-input"></div>
+                        <div class="form-group"><label>R7</label><input type="text" id="scheduleR7" class="styled-input"></div>
+                        
+                        <div class="form-group"><label>L3</label><input type="text" id="scheduleL3" class="styled-input"></div>
+                        <div class="form-group"><label>R6</label><input type="text" id="scheduleR6" class="styled-input"></div>
+                        
+                        <div class="form-group"><label>L4</label><input type="text" id="scheduleL4" class="styled-input"></div>
+                        <div class="form-group"><label>R5</label><input type="text" id="scheduleR5" class="styled-input"></div>
+                    </div>
+                    
+                    <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text); font-size: 0.9rem;">Stiffener Plate</h4>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group"><label>PP End</label><input type="text" id="schedulePPEnd" class="styled-input"></div>
+                        <div class="form-group"><label>NPP End</label><input type="text" id="scheduleNPPEnd" class="styled-input"></div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label>Remarks</label>
+                        <input type="text" id="scheduleRemarks" class="styled-input">
+                    </div>
+                    
+                    <button type="submit" class="btn primary-btn btn-block" id="scheduleSubmitBtn" style="margin-top: 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                        <span class="btn-text">Update Schedule</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+                </form>
+            </div>
+            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="navigateTo('scheduleSearchScreen')">
+                <i class="fa-solid fa-arrow-left"></i> Go Back
+            </button>
+        </main>
+    </div>
+
     <!-- WSP Search Screen -->
     <div id="wspSearchScreen" class="screen hidden">
         <header class="app-header fade-in">
@@ -422,6 +541,7 @@
                             <option value="Fuse">Fuse</option>
                             <option value="K05 defective">K05 defective</option>
                             <option value="Loose wiring in wago">Loose wiring in wago</option>
+                            <option value="Junction box defective">Junction box defective</option>
                         </select>
                     </div>
                     
@@ -473,9 +593,12 @@
                 </form>
                 </div>
             </div>
+            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="navigateTo('wspSearchScreen')">
+                <i class="fa-solid fa-arrow-left"></i> Go Back
+            </button>
         </main>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=202607070028"></script>
 </body>
 </html>
