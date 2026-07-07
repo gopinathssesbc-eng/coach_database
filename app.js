@@ -20,7 +20,8 @@ const screens = {
     wspDateResults: document.getElementById('wspDateResultsScreen'),
     wspResults: document.getElementById('wspResultsScreen'),
     scheduleSearch: document.getElementById('scheduleSearchScreen'),
-    scheduleResults: document.getElementById('scheduleResultsScreen')
+    scheduleResults: document.getElementById('scheduleResultsScreen'),
+    dueCoaches: document.getElementById('dueCoachesScreen')
 };
 
 // --- SweetAlert Helpers ---
@@ -2054,7 +2055,6 @@ async function fetchDueCoaches() {
     const loadingEl = document.getElementById('dueCoachesLoading');
     const resultsContainer = document.getElementById('dueCoachesResultsContainer');
     const tbody = document.getElementById('dueCoachesTableBody');
-    const countBadge = document.getElementById('dueCoachesCountBadge');
     
     errorEl.classList.add('hidden');
     resultsContainer.classList.add('hidden');
@@ -2064,6 +2064,26 @@ async function fetchDueCoaches() {
         errorEl.classList.remove('hidden');
         return;
     }
+    
+    const pitSchedule = {
+        0: { day: 'KARWAR', night: 'No rake' }, // Sunday
+        1: { day: 'KARWAR', night: 'LAL' }, // Monday
+        2: { day: 'SMET JAN', night: 'LAL, UBL JAN' }, // Tuesday
+        3: { day: 'KARWAR', night: 'No rake' }, // Wednesday
+        4: { day: 'KARWAR', night: 'LAL' }, // Thursday
+        5: { day: 'No rake', night: 'LAL' }, // Friday
+        6: { day: 'SMET JAN', night: 'UBL JAN' }  // Saturday
+    };
+    
+    const selectedDateObj = new Date(dateInput);
+    const dayOfWeek = selectedDateObj.getDay();
+    const dayName = selectedDateObj.toLocaleDateString('en-US', { weekday: 'long' });
+    const todaysSchedule = pitSchedule[dayOfWeek];
+    
+    document.getElementById('pitCheckDayRakes').textContent = todaysSchedule.day;
+    document.getElementById('pitCheckNightRakes').textContent = todaysSchedule.night;
+    const dayOfWeekEl = document.getElementById('pitCheckDayOfWeek');
+    if (dayOfWeekEl) dayOfWeekEl.textContent = `(${dayName})`;
     
     loadingEl.classList.remove('hidden');
     tbody.innerHTML = '';
@@ -2075,22 +2095,43 @@ async function fetchDueCoaches() {
         
         if (result.status === 'success') {
             const coaches = result.data || [];
-            countBadge.textContent = coaches.length;
+            document.getElementById('dueCoachesTotalText').textContent = `Total schedule due coaches: ${coaches.length}`;
             
             if (coaches.length > 0) {
                 coaches.forEach(coach => {
                     const tr = document.createElement('tr');
                     
-                    const d2Status = coach.isD2Due ? '<span class="status-badge" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c;">Due</span>' : '';
-                    const d3Status = coach.isD3Due ? '<span class="status-badge" style="background: rgba(231, 76, 60, 0.15); color: #e74c3c;">Due</span>' : '';
+                    const d2Display = coach.isD2Due 
+                        ? `<span style="background: rgba(231, 76, 60, 0.2); color: #ff6b6b; padding: 4px 8px; border-radius: 4px; font-weight: 500; display: inline-block;">${coach.d2Date}</span>` 
+                        : coach.d2Date;
+                        
+                    const d3Display = coach.isD3Due 
+                        ? `<span style="background: rgba(231, 76, 60, 0.2); color: #ff6b6b; padding: 4px 8px; border-radius: 4px; font-weight: 500; display: inline-block;">${coach.d3Date}</span>` 
+                        : coach.d3Date;
+                    
+                    tr.style.cursor = 'pointer';
+                    tr.style.transition = 'background-color 0.2s';
+                    tr.onmouseover = () => tr.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                    tr.onmouseout = () => tr.style.backgroundColor = 'transparent';
+                    tr.title = "Click to update schedule";
+                    
+                    tr.onclick = () => {
+                        navigateTo('scheduleSearchScreen');
+                        const searchInput = document.getElementById('scheduleCoachNumberInput');
+                        if (searchInput) {
+                            searchInput.value = coach.coachNo;
+                            const form = document.getElementById('scheduleSearchForm');
+                            if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                        }
+                    };
                     
                     tr.innerHTML = `
-                        <td>${coach.rly}</td>
-                        <td>${coach.type}</td>
-                        <td><span class="highlight-badge">${coach.coachNo}</span></td>
-                        <td>${coach.trainNo}</td>
-                        <td>${coach.d2Date} ${d2Status}</td>
-                        <td>${coach.d3Date} ${d3Status}</td>
+                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${coach.rly}</td>
+                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${coach.type}</td>
+                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;"><span class="highlight-badge">${coach.coachNo}</span></td>
+                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${coach.trainNo}</td>
+                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${d2Display}</td>
+                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${d3Display}</td>
                     `;
                     tbody.appendChild(tr);
                 });

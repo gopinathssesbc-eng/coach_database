@@ -66,8 +66,8 @@ function doGet(e) {
 
       const pitDate1Idx = findIdx('next pit check date 1');
       const pitDate2Idx = findIdx('next pit check date 2');
-      const d2Idx = findIdx('d 2');
-      const d3Idx = findIdx('d 3');
+      const d2Idx = findIdx('d2 due');
+      const d3Idx = findIdx('d3 due');
       const rlyIdx = 0; // Column A
       const typeIdx = 1; // Column B
       const trainNoIdx = 4; // Column E
@@ -109,7 +109,7 @@ function doGet(e) {
                  if (!isNaN(d2Date)) {
                      d2Date.setHours(0,0,0,0);
                      if (d2Date.getTime() <= selectedDate.getTime()) d2Match = true;
-                     d2DateStr = d2Date.getFullYear() + '-' + String(d2Date.getMonth()+1).padStart(2,'0') + '-' + String(d2Date.getDate()).padStart(2,'0');
+                     d2DateStr = String(d2Date.getDate()).padStart(2,'0') + '-' + String(d2Date.getMonth()+1).padStart(2,'0') + '-' + d2Date.getFullYear();
                  }
              }
              
@@ -118,7 +118,7 @@ function doGet(e) {
                  if (!isNaN(d3Date)) {
                      d3Date.setHours(0,0,0,0);
                      if (d3Date.getTime() <= selectedDate.getTime()) d3Match = true;
-                     d3DateStr = d3Date.getFullYear() + '-' + String(d3Date.getMonth()+1).padStart(2,'0') + '-' + String(d3Date.getDate()).padStart(2,'0');
+                     d3DateStr = String(d3Date.getDate()).padStart(2,'0') + '-' + String(d3Date.getMonth()+1).padStart(2,'0') + '-' + d3Date.getFullYear();
                  }
              }
              
