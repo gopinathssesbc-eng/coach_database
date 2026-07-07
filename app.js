@@ -623,19 +623,21 @@ async function viewRakeCoaches() {
         let d2Color = 'inherit';
         let d3Color = 'inherit';
         
-        function getScheduleColor(dateString, intervalDays) {
-            if (!dateString || dateString === '-') return 'inherit';
+        function parseDateSafely(dateString) {
+            if (!dateString || dateString === '-') return null;
             let doneDate = new Date(dateString);
-            
-            // Check if it's invalid date (could be DD/MM/YYYY format)
             if (isNaN(doneDate.getTime()) && typeof dateString === 'string') {
                 const parts = dateString.split('/');
                 if (parts.length === 3) {
                     doneDate = new Date(parts[2], parts[1] - 1, parts[0]);
                 }
             }
-            
-            if (isNaN(doneDate.getTime())) return 'inherit';
+            return isNaN(doneDate.getTime()) ? null : doneDate;
+        }
+
+        function getScheduleColor(dateString, intervalDays) {
+            const doneDate = parseDateSafely(dateString);
+            if (!doneDate) return 'inherit';
             
             const dueDate = new Date(doneDate.getTime() + intervalDays * 24 * 60 * 60 * 1000);
             const today = new Date();
@@ -656,7 +658,16 @@ async function viewRakeCoaches() {
             d2 = rawD2 ? formatIfDate(rawD2) : '-';
             d3 = rawD3 ? formatIfDate(rawD3) : '-';
             
-            d2Color = rawD2 ? getScheduleColor(rawD2, 30) : 'inherit'; // Assume 30 days for D2
+            let d2BaseDate = rawD2;
+            if (rawD2 && rawD3) {
+                const date2 = parseDateSafely(rawD2);
+                const date3 = parseDateSafely(rawD3);
+                if (date2 && date3 && date3 > date2) {
+                    d2BaseDate = rawD3;
+                }
+            }
+            
+            d2Color = rawD2 ? getScheduleColor(d2BaseDate, 30) : 'inherit'; // Assume 30 days for D2
             d3Color = rawD3 ? getScheduleColor(rawD3, 180) : 'inherit'; // 180 days for D3
         }
         
