@@ -642,7 +642,7 @@ async function viewRakeCoaches() {
         subTr.style.cursor = 'pointer';
         subTr.onclick = tr.onclick;
         subTr.innerHTML = `
-            <td colspan="5" style="padding-top: 0; padding-bottom: 1rem; color: #94a3b8; font-size: 0.85rem;">
+            <td colspan="5" style="padding-top: 0; padding-bottom: 0.75rem; color: #94a3b8; font-size: 0.85rem;">
                 <span style="display: inline-block; margin-right: 1.5rem;">
                     <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>D2: 
                     <span style="color: ${d2 !== '-' ? '#10b981' : 'inherit'};">${d2}</span>
