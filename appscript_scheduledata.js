@@ -201,9 +201,67 @@ function doGet(e) {
           data: parseRow(matchRow, foundRowIndex)
         });
       } else {
+        // Open the WSP Data extraction spreadsheet by ID to access "Imported Database"
+        let importedSheet = null;
+        let errorMessage = 'Coach details not available in database';
+        
+        try {
+          const wspSpreadsheet = SpreadsheetApp.openById('10_RpT1irSd8yxE_9UL7q5oypUtRPV0oVU8QYwWlevVM');
+          importedSheet = wspSpreadsheet.getSheetByName("Imported Database");
+        } catch (e) {
+          errorMessage = 'Error opening spreadsheet: ' + e.message;
+        }
+        
+        let importedFound = false;
+        let importedMatchData = { 'COACH NO.': coachNumber, _rowIndex: -1 };
+        
+        if (importedSheet) {
+            const importedData = importedSheet.getDataRange().getValues();
+            
+            let headers = [];
+            if (importedData.length > 1) {
+                headers = importedData[1]; // Usually row 2
+            } else if (importedData.length > 0) {
+                headers = importedData[0]; // Or row 1
+            }
+            
+            for (let i = 1; i < importedData.length; i++) { // Check from row 2
+                if (String(importedData[i][0]).trim() === String(coachNumber).trim()) {
+                    importedFound = true;
+                    // Map headers to row
+                    for (let j = 0; j < headers.length; j++) {
+                        if (headers[j]) {
+                            importedMatchData[headers[j]] = importedData[i][j];
+                        }
+                    }
+                    
+                    // Normalize keys for the frontend
+                    if (!importedMatchData['OWN RLY'] && importedMatchData['RLY']) {
+                        importedMatchData['OWN RLY'] = importedMatchData['RLY'];
+                    }
+                    if (!importedMatchData['COACH TYPE'] && (importedMatchData['TYPE'] || importedMatchData['Coach Type'])) {
+                        importedMatchData['COACH TYPE'] = importedMatchData['TYPE'] || importedMatchData['Coach Type'];
+                    }
+                    
+                    break;
+                }
+            }
+            if (!importedFound) errorMessage = 'Coach details not available in database';
+        } else if (!errorMessage.includes('Error opening spreadsheet')) {
+            errorMessage = 'Imported Database sheet not found in the spreadsheet.';
+        }
+        
+        if (!importedFound) {
+            return createJsonResponse({
+                status: 'error',
+                message: errorMessage
+            });
+        }
+        
         return createJsonResponse({
-          status: 'error',
-          message: 'Coach not found'
+          status: 'success',
+          isNewCoach: true,
+          data: importedMatchData
         });
       }
     }
@@ -228,10 +286,26 @@ function doPost(e) {
         return createJsonResponse({ status: 'error', message: 'Sheet not found' });
       }
       
-      const rowIndex = body.rowIndex;
+      let rowIndex = body.rowIndex;
       
-      if (!rowIndex) {
+      if (!rowIndex && rowIndex !== 0) {
         return createJsonResponse({ status: 'error', message: 'Row index not provided' });
+      }
+
+      if (rowIndex == -1) {
+          var dataRange = sheet.getDataRange().getValues();
+          var firstEmptyRow = dataRange.length + 1; // Default to after the last row
+          for (var i = 1; i < dataRange.length; i++) {
+              if (!String(dataRange[i][8]).trim()) { // Check coach column (I - index 8)
+                  firstEmptyRow = i + 1;
+                  break;
+              }
+          }
+          rowIndex = firstEmptyRow;
+          
+          if (body.coachNumber) {
+              sheet.getRange(rowIndex, 9).setValue(body.coachNumber);
+          }
       }
 
       // Columns map (1-based index for getRange)

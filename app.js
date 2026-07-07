@@ -1871,6 +1871,9 @@ async function handleScheduleSearch(e) {
         const data = await response.json();
         
         if (data.status === 'success') {
+            if (data.isNewCoach) {
+                showWarningAlert("Coach not found in schedule database. A new entry will be created.");
+            }
             renderScheduleResults(data.data);
         } else {
             throw new Error(data.message || 'Coach not found');
@@ -2004,6 +2007,7 @@ async function handleScheduleSubmit(e) {
     
     const formData = {
         action: 'updateSchedule',
+        coachNumber: document.getElementById('scheduleResultCoachId').innerText,
         rowIndex: document.getElementById('scheduleRowIndex').value,
         d2: document.getElementById('scheduleD2').value,
         d3: document.getElementById('scheduleD3').value,
