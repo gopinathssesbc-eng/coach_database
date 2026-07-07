@@ -176,6 +176,7 @@ function doGet(e) {
       
       let dlCoachIdx = 0;
       let dlWheelCondIdx = -1;
+      let dlDateIdx = -1;
       if (dlHeaders) {
           const findDlIdx = (texts) => {
               for(let i=0; i<dlHeaders.length; i++) {
@@ -187,6 +188,7 @@ function doGet(e) {
           const cIdx = findDlIdx(['coach no', 'coach num']);
           if (cIdx !== -1) dlCoachIdx = cIdx;
           dlWheelCondIdx = findDlIdx(['wheel condition']);
+          dlDateIdx = findDlIdx(['download date']);
       }
       
       let sourceCoachIdx = 0;
@@ -234,16 +236,44 @@ function doGet(e) {
            const coachNumber = String(matchRow[sourceCoachIdx]).trim();
            let foundWheelCondition = '-';
            
-           // Search backwards to get the most recent entry
-           for (let d = downloadStatusData.length - 1; d > 0; d--) {
+           let latestDate = null;
+           let latestCond = '-';
+           
+           // Search all entries to get the one with the latest date
+           for (let d = 1; d < downloadStatusData.length; d++) {
               if (String(downloadStatusData[d][dlCoachIdx]).trim() === coachNumber) {
                  const cond = downloadStatusData[d][dlWheelCondIdx];
                  if (cond && String(cond).trim() !== '') {
-                     foundWheelCondition = cond;
-                     break;
+                     let rowDate = null;
+                     if (dlDateIdx !== -1) {
+                         const dateVal = downloadStatusData[d][dlDateIdx];
+                         if (dateVal instanceof Date) {
+                             rowDate = dateVal;
+                         } else if (dateVal && String(dateVal).trim() !== '') {
+                             rowDate = new Date(dateVal);
+                         }
+                     }
+                     
+                     if (rowDate && !isNaN(rowDate)) {
+                         if (!latestDate || rowDate > latestDate) {
+                             latestDate = rowDate;
+                             latestCond = cond;
+                         }
+                     } else {
+                         // Fallback if no valid date, just take the last one we find
+                         latestCond = cond;
+                     }
                  }
               }
            }
+           
+           if (latestDate && latestCond !== '-') {
+               const formattedDate = latestDate.getFullYear() + '-' + String(latestDate.getMonth()+1).padStart(2,'0') + '-' + String(latestDate.getDate()).padStart(2,'0');
+               foundWheelCondition = `date-${formattedDate}, Wheel condition-${latestCond}`;
+           } else {
+               foundWheelCondition = latestCond;
+           }
+           
            resultObj['Wheel Condition'] = foundWheelCondition;
         }
         

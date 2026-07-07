@@ -1519,7 +1519,7 @@ function viewWspRakeCoaches() {
             subTr.style.cursor = 'pointer';
             subTr.innerHTML = `
                 <td colspan="5" style="padding-top: 0; color: var(--text-muted); font-size: 0.85rem; border-top: none;">
-                    <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px; opacity: 0.7;"></i> Wheel Cond: <span style="color: var(--text);">${wheelCond}</span>
+                    <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px; opacity: 0.7;"></i> <span style="color: var(--text);">${wheelCond === '-' ? 'Wheel Cond: -' : wheelCond}</span>
                 </td>
             `;
             
