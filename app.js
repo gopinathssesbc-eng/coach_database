@@ -289,12 +289,12 @@ function handleLogin(e) {
         document.getElementById('passwordInput').value = '';
         navigateTo('dashboardScreen');
     } else {
-        errorMsg.classList.remove('hidden');
+        showErrorAlert('Invalid password');
         // Shake effect
         const card = document.querySelector('.login-card');
         card.style.animation = 'none';
         card.offsetHeight; // trigger reflow
-        card.style.animation = 'shake 0.4s ease-in-out';
+        card.style.animation = 'shake 0.5s ease-in-out';
     }
 }
 
