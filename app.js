@@ -17,6 +17,7 @@ const screens = {
     rakeResults: document.getElementById('rakeResultsScreen'),
     wspSearch: document.getElementById('wspSearchScreen'),
     wspRakeResults: document.getElementById('wspRakeResultsScreen'),
+    wspDateResults: document.getElementById('wspDateResultsScreen'),
     wspResults: document.getElementById('wspResultsScreen'),
     scheduleSearch: document.getElementById('scheduleSearchScreen'),
     scheduleResults: document.getElementById('scheduleResultsScreen')
@@ -497,6 +498,32 @@ function populateRakeDropdown(coachArray, trainCode) {
         viewRakeCoaches();
     }
 }
+function parseDateSafely(dateString) {
+    if (!dateString || dateString === '-') return null;
+    let doneDate = new Date(dateString);
+    if (isNaN(doneDate.getTime()) && typeof dateString === 'string') {
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+            doneDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+    }
+    return isNaN(doneDate.getTime()) ? null : doneDate;
+}
+
+function getDueDateColor(dueDateString) {
+    const dueDate = parseDateSafely(dueDateString);
+    if (!dueDate) return 'inherit';
+    
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    dueDate.setHours(0,0,0,0);
+    
+    const diffDays = Math.round((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return '#ef4444'; // Red (past)
+    if (diffDays >= 0 && diffDays <= 3) return '#f97316'; // Orange (today or within 3 days)
+    return '#10b981'; // Green
+}
 
 async function viewRakeCoaches() {
     const trainCode = document.getElementById('trainSelect').value;
@@ -583,7 +610,14 @@ async function viewRakeCoaches() {
             if (data.status === 'success' && data.data) {
                 data.data.forEach(s => {
                     const cNum = String(s['COACH NO.']).trim();
-                    scheduleMap[cNum] = { d2: s['D 2'], d3: s['D 3'] };
+                    let d2DueVal = s['D2 DUE'] || s['D2 Due'] || s['D2 due'];
+                    let d3DueVal = s['D3 DUE'] || s['D3 Due'] || s['D3 due'];
+                    scheduleMap[cNum] = { 
+                        d2: s['D 2'], 
+                        d3: s['D 3'],
+                        d2Due: d2DueVal,
+                        d3Due: d3DueVal
+                    };
                 });
             }
         } catch(e) {
@@ -620,55 +654,27 @@ async function viewRakeCoaches() {
         
         let d2 = '-';
         let d3 = '-';
+        let d2DueStr = '-';
+        let d3DueStr = '-';
         let d2Color = 'inherit';
         let d3Color = 'inherit';
         
-        function parseDateSafely(dateString) {
-            if (!dateString || dateString === '-') return null;
-            let doneDate = new Date(dateString);
-            if (isNaN(doneDate.getTime()) && typeof dateString === 'string') {
-                const parts = dateString.split('/');
-                if (parts.length === 3) {
-                    doneDate = new Date(parts[2], parts[1] - 1, parts[0]);
-                }
-            }
-            return isNaN(doneDate.getTime()) ? null : doneDate;
-        }
 
-        function getScheduleColor(dateString, intervalDays) {
-            const doneDate = parseDateSafely(dateString);
-            if (!doneDate) return 'inherit';
-            
-            const dueDate = new Date(doneDate.getTime() + intervalDays * 24 * 60 * 60 * 1000);
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            dueDate.setHours(0,0,0,0);
-            
-            const diffDays = Math.floor((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            
-            if (diffDays <= 0) return '#ef4444'; // Red
-            if (diffDays <= 3) return '#f97316'; // Orange
-            return '#10b981'; // Green
-        }
         
         if (scheduleMap[coachNum]) {
             const rawD2 = scheduleMap[coachNum].d2;
             const rawD3 = scheduleMap[coachNum].d3;
+            const rawD2Due = scheduleMap[coachNum].d2Due;
+            const rawD3Due = scheduleMap[coachNum].d3Due;
             
             d2 = rawD2 ? formatIfDate(rawD2) : '-';
             d3 = rawD3 ? formatIfDate(rawD3) : '-';
             
-            let d2BaseDate = rawD2;
-            if (rawD2 && rawD3) {
-                const date2 = parseDateSafely(rawD2);
-                const date3 = parseDateSafely(rawD3);
-                if (date2 && date3 && date3 > date2) {
-                    d2BaseDate = rawD3;
-                }
-            }
+            d2DueStr = rawD2Due ? formatIfDate(rawD2Due) : '-';
+            d3DueStr = rawD3Due ? formatIfDate(rawD3Due) : '-';
             
-            d2Color = rawD2 ? getScheduleColor(d2BaseDate, 30) : 'inherit'; // Assume 30 days for D2
-            d3Color = rawD3 ? getScheduleColor(rawD3, 180) : 'inherit'; // 180 days for D3
+            d2Color = rawD2Due ? getDueDateColor(rawD2Due) : 'inherit';
+            d3Color = rawD3Due ? getDueDateColor(rawD3Due) : 'inherit';
         }
         
         tr.innerHTML = `
@@ -689,14 +695,26 @@ async function viewRakeCoaches() {
         subTr.onclick = tr.onclick;
         subTr.innerHTML = `
             <td colspan="5" style="padding-top: 0; padding-bottom: 0.75rem; color: #94a3b8; font-size: 0.85rem;">
-                <span style="display: inline-block; margin-right: 1.5rem;">
-                    <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>D2: 
-                    <span style="color: ${d2Color}; font-weight: ${d2Color !== 'inherit' ? 'bold' : 'normal'}">${d2}</span>
-                </span>
-                <span style="display: inline-block;">
-                    <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>D3: 
-                    <span style="color: ${d3Color}; font-weight: ${d3Color !== 'inherit' ? 'bold' : 'normal'}">${d3}</span>
-                </span>
+                <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+                    <div>
+                        <span style="display: inline-block; width: 120px;">
+                            <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>D2: ${d2}
+                        </span>
+                        <span style="display: inline-block;">
+                            <span style="margin-right: 4px;">Due:</span>
+                            <span style="color: ${d2Color}; font-weight: ${d2Color !== 'inherit' ? 'bold' : 'normal'}">${d2DueStr}</span>
+                        </span>
+                    </div>
+                    <div>
+                        <span style="display: inline-block; width: 120px;">
+                            <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>D3: ${d3}
+                        </span>
+                        <span style="display: inline-block;">
+                            <span style="margin-right: 4px;">Due:</span>
+                            <span style="color: ${d3Color}; font-weight: ${d3Color !== 'inherit' ? 'bold' : 'normal'}">${d3DueStr}</span>
+                        </span>
+                    </div>
+                </div>
             </td>
         `;
         tableBody.appendChild(subTr);
@@ -909,14 +927,7 @@ async function appendScheduleDetailsToResults(coachNumber, container, delayCount
                                 <div class="group-content">`;
             
             const fmtDate = (dStr) => {
-                if(!dStr || dStr === '-') return '-';
-                let d = String(dStr);
-                if(d.includes('T')) d = d.split('T')[0];
-                const parts = d.split('-');
-                if(parts.length === 3 && parts[0].length === 4) {
-                    return `${parts[2]}-${parts[1]}-${parts[0]}`;
-                }
-                return d;
+                return formatDateDMY(dStr);
             };
 
             const getVal = (key, isDate=false) => {
@@ -926,6 +937,11 @@ async function appendScheduleDetailsToResults(coachNumber, container, delayCount
                 return displayValue;
             };
 
+            const d2DueVal = schedObj['D2 DUE'] || schedObj['D2 Due'] || schedObj['D2 due'];
+            const d3DueVal = schedObj['D3 DUE'] || schedObj['D3 Due'] || schedObj['D3 due'];
+            const d2DueColor = d2DueVal ? getDueDateColor(d2DueVal) : 'inherit';
+            const d3DueColor = d3DueVal ? getDueDateColor(d3DueVal) : 'inherit';
+
             // Full width rows for dates
             groupHTML += `
                 <div class="data-row">
@@ -933,8 +949,16 @@ async function appendScheduleDetailsToResults(coachNumber, container, delayCount
                     <div class="data-value" style="font-weight: 500;">${getVal('D 2', true)}</div>
                 </div>
                 <div class="data-row">
+                    <div class="data-label">D2 Due Date</div>
+                    <div class="data-value" style="font-weight: bold; color: ${d2DueColor}">${fmtDate(d2DueVal)}</div>
+                </div>
+                <div class="data-row">
                     <div class="data-label">D3 Done Date</div>
                     <div class="data-value" style="font-weight: 500;">${getVal('D 3', true)}</div>
+                </div>
+                <div class="data-row">
+                    <div class="data-label">D3 Due Date</div>
+                    <div class="data-value" style="font-weight: bold; color: ${d3DueColor}">${fmtDate(d3DueVal)}</div>
                 </div>
             `;
 
@@ -979,11 +1003,18 @@ async function appendScheduleDetailsToResults(coachNumber, container, delayCount
             editBtn.onclick = () => renderScheduleResults(schedObj);
             contentDiv.appendChild(editBtn);
             
+            const firstChild = wrapper.firstElementChild;
+            firstChild.id = 'schedule-details-box';
+            
+            // Remove any existing schedule details box to prevent duplicates
+            const existing = container.querySelector('#schedule-details-box');
+            if (existing) existing.remove();
+            
             // Insert after the first child (Coach Details)
             if (container.children.length > 1) {
-                container.insertBefore(wrapper.firstElementChild, container.children[1]);
+                container.insertBefore(firstChild, container.children[1]);
             } else {
-                container.appendChild(wrapper.firstElementChild);
+                container.appendChild(firstChild);
             }
         }
     } catch (e) {
@@ -999,17 +1030,34 @@ function letterToIndex(letter) {
     }
     return index - 1;
 }
-function formatIfDate(displayValue) {
-    if (typeof displayValue === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(displayValue)) {
-        const date = new Date(displayValue);
-        if (!isNaN(date.getTime())) {
-            const dd = String(date.getDate()).padStart(2, '0');
-            const mm = String(date.getMonth() + 1).padStart(2, '0'); // January is 0!
-            const yyyy = date.getFullYear();
-            return `${dd}/${mm}/${yyyy}`;
-        }
+function formatDateDMY(dStr) {
+    if (!dStr || dStr === '-') return '-';
+    let d = String(dStr).trim();
+    if (d.includes('T')) d = d.split('T')[0];
+    
+    // Check if it's already DD-MM-YYYY (or DD/MM/YYYY)
+    if (d.match(/^\d{2}[-\/]\d{2}[-\/]\d{4}$/)) {
+        return d.replace(/\//g, '-');
     }
-    return displayValue;
+    
+    // If it's YYYY-MM-DD
+    const parts = d.split('-');
+    if (parts.length === 3 && parts[0].length === 4) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    
+    // Fallback parsing
+    const parsed = new Date(d);
+    if (!isNaN(parsed.getTime())) {
+        return `${String(parsed.getDate()).padStart(2, '0')}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${parsed.getFullYear()}`;
+    }
+    
+    return d;
+}
+
+// Keep formatIfDate as an alias for formatDateDMY for compatibility with existing calls
+function formatIfDate(displayValue) {
+    return formatDateDMY(displayValue);
 }
 
 // --- Mock Data Helpers (For Demo) ---
@@ -1067,34 +1115,206 @@ document.head.appendChild(style);
 function switchWspTab(tab) {
     const coachBtn = document.getElementById('wspTabCoach');
     const rakeBtn = document.getElementById('wspTabRake');
+    const dateBtn = document.getElementById('wspTabDate');
     const coachForm = document.getElementById('wspSearchCoachForm');
     const rakeForm = document.getElementById('wspSearchRakeForm');
+    const dateForm = document.getElementById('wspSearchDateForm');
+    
+    if(coachBtn) coachBtn.classList.remove('active');
+    if(rakeBtn) rakeBtn.classList.remove('active');
+    if(dateBtn) dateBtn.classList.remove('active');
+    
+    if(coachForm) coachForm.classList.add('hidden');
+    if(rakeForm) rakeForm.classList.add('hidden');
+    if(dateForm) dateForm.classList.add('hidden');
     
     if (tab === 'coach') {
         if(coachBtn) coachBtn.classList.add('active');
-        if(rakeBtn) rakeBtn.classList.remove('active');
         if(coachForm) coachForm.classList.remove('hidden');
-        if(rakeForm) rakeForm.classList.add('hidden');
-    } else {
+    } else if (tab === 'rake') {
         if(rakeBtn) rakeBtn.classList.add('active');
-        if(coachBtn) coachBtn.classList.remove('active');
         if(rakeForm) rakeForm.classList.remove('hidden');
-        if(coachForm) coachForm.classList.add('hidden');
         
         const trainSelect = document.getElementById('wspTrainSelect');
         if (trainSelect && trainSelect.options.length <= 1) {
-            // Populate from the main array if we haven't yet, by calling loadTrainOptions but manually populating wspTrainSelect
-            // Wait, loadTrainOptions only populates trainSelect. We can copy options.
             const mainSelect = document.getElementById('trainSelect');
-            if(mainSelect.options.length > 1) {
+            if(mainSelect && mainSelect.options.length > 1) {
                 trainSelect.innerHTML = mainSelect.innerHTML;
             } else {
-                // If main isn't loaded, load it, then copy
                 fetchAvailableTrains().then(() => {
-                    trainSelect.innerHTML = document.getElementById('trainSelect').innerHTML;
+                    if(document.getElementById('trainSelect')) {
+                        trainSelect.innerHTML = document.getElementById('trainSelect').innerHTML;
+                    }
                 });
             }
         }
+    } else if (tab === 'date') {
+        if(dateBtn) dateBtn.classList.add('active');
+        if(dateForm) dateForm.classList.remove('hidden');
+    }
+}
+
+async function fetchWspByDate() {
+    const dateInput = document.getElementById('wspDateInput').value;
+    if (!dateInput) {
+        showWarningAlert("Please select a date.");
+        return;
+    }
+    
+    const fetchBtn = document.getElementById('wspFetchDateBtn');
+    const spinner = fetchBtn.querySelector('.spinner');
+    const btnText = fetchBtn.querySelector('.btn-text');
+    
+    spinner.classList.remove('hidden');
+    btnText.style.opacity = '0';
+    fetchBtn.disabled = true;
+
+    try {
+        const url = `${GOOGLE_APP_SCRIPT_URL}?date=${encodeURIComponent(dateInput)}&sheetName=DOWNLOAD status modified`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.data && data.data.length > 0) {
+            document.getElementById('wspDateResultTitle').innerText = `Defects for ${dateInput}`;
+            
+            const tbody = document.getElementById('wspDateTableBody');
+            tbody.innerHTML = '';
+            
+            data.data.forEach(entry => {
+                const tr = document.createElement('tr');
+                tr.style.cursor = 'pointer';
+                
+                let coachNum = '';
+                const coachKey = Object.keys(entry).find(k => k.toLowerCase().includes('coach no') || k.toLowerCase().includes('coach num'));
+                if (coachKey) coachNum = entry[coachKey];
+                if (!coachNum && entry['_rawRow']) coachNum = entry['_rawRow'][0];
+                
+                let rly = entry['RLY'] || '-';
+                if (rly === '-') {
+                    // Try to find RLY from currentTrainCoaches cache as fallback
+                    if (typeof currentTrainCoaches !== 'undefined' && currentTrainCoaches.length > 0) {
+                        const match = currentTrainCoaches.find(c => {
+                            const ck = Object.keys(c).find(k => String(k).toLowerCase().includes('coach no') || String(k).toLowerCase().includes('coach num'));
+                            return ck && c[ck] == coachNum;
+                        });
+                        if (match) rly = match['RLY'] || match['Rly'] || '-';
+                    }
+                }
+                
+                let wheelCondition = '-';
+                const wcKey = Object.keys(entry).find(k => String(k).toLowerCase().includes('wheel condition'));
+                if (wcKey) wheelCondition = entry[wcKey];
+                
+                // Extract other details for inline expansion
+                const getVal = (searchStr) => {
+                    // search by exact match first, then fallback to partial
+                    let key = Object.keys(entry).find(k => String(k).toLowerCase() === searchStr.toLowerCase());
+                    if (!key) {
+                        key = Object.keys(entry).find(k => String(k).toLowerCase().includes(searchStr.toLowerCase()));
+                    }
+                    return key && entry[key] ? entry[key] : '-';
+                };
+                
+                let type = getVal('coach type');
+                let rake = getVal('rake');
+                let trainNo = getVal('train no');
+                let ci = getVal('ci');
+                let leftDate = getVal('left date');
+                let arrivalDate = getVal('arrival date');
+                let arrivalTno = getVal('arrival t no');
+                let wspMake = entry['WSP Make'] || getVal('wsp make');
+                let typeOfWspd = entry['Type of WSPD'] || getVal('type of wspd');
+                let psStatus = getVal('ps status');
+                let wspCode = getVal('wsp code');
+                let dumpValve = getVal('dump valve');
+                let sensorGap = getVal('sensor gap');
+                let observation = getVal('downloading'); // downloading obseravtion
+                let otherObservation = getVal('other observation');
+                let defectCat = getVal('defect category');
+                let attentionIfAny = getVal('attention if any');
+                let followUp = getVal('follo up'); // follo up remarks
+                let defectDesc = getVal('defect desc');
+                let itemRequired = getVal('item required');
+                let checklist = getVal('checklist');
+                let dataEntryBy = getVal('data entry');
+
+                // Format dates to look cleaner
+                const fmtDt = (d) => {
+                    return formatDateDMY(d);
+                };
+
+                tr.innerHTML = `
+                    <td>${rly}</td>
+                    <td><span class="highlight-badge">${coachNum || '-'}</span></td>
+                    <td>${wheelCondition}</td>
+                    <td style="text-align:center;"><i class="fa-solid fa-chevron-down text-primary" style="transition: transform 0.3s;"></i></td>
+                `;
+                
+                const detailsTr = document.createElement('tr');
+                detailsTr.style.display = 'none';
+                detailsTr.innerHTML = `
+                    <td colspan="4" style="padding: 0; border-bottom: none;">
+                        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin: 0.5rem; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.8rem;">
+                                <div><small style="color: var(--text-muted); display: block;">Coach Type</small> <span style="font-weight: 500;">${type}</span></div>
+                                <div><small style="color: var(--text-muted); display: block;">WSP Make</small> <span style="font-weight: 500;">${wspMake}</span></div>
+                                
+                                <div><small style="color: var(--text-muted); display: block;">Type of WSPD</small> <span style="font-weight: 500;">${typeOfWspd}</span></div>
+                                <div><small style="color: var(--text-muted); display: block;">Rake / Train No.</small> <span style="font-weight: 500;">${rake} / ${trainNo}</span></div>
+                                <div><small style="color: var(--text-muted); display: block;">CI</small> <span style="font-weight: 500;">${ci}</span></div>
+                                
+                                <div><small style="color: var(--text-muted); display: block;">Left Date</small> <span style="font-weight: 500;">${fmtDt(leftDate)}</span></div>
+                                <div><small style="color: var(--text-muted); display: block;">Arrival Date</small> <span style="font-weight: 500;">${fmtDt(arrivalDate)}</span></div>
+                                
+                                <div><small style="color: var(--text-muted); display: block;">PS Status</small> <span style="font-weight: 500;">${psStatus}</span></div>
+                                <div><small style="color: var(--text-muted); display: block;">WSP Code</small> <span style="font-weight: 500;">${wspCode}</span></div>
+                                
+                                <div><small style="color: var(--text-muted); display: block;">Dump Valve</small> <span style="font-weight: 500;">${dumpValve}</span></div>
+                                <div><small style="color: var(--text-muted); display: block;">Sensor Gap</small> <span style="font-weight: 500;">${sensorGap}</span></div>
+                                
+                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Defect Category</small> <span style="font-weight: 500;">${defectCat}</span></div>
+                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Downloading Observation</small> <span style="font-weight: 500;">${observation}</span></div>
+                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Other Observation</small> <span style="font-weight: 500;">${otherObservation}</span></div>
+                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Defect Description</small> <span style="font-weight: 500;">${defectDesc}</span></div>
+                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Attention if Any</small> <span style="font-weight: 500;">${attentionIfAny}</span></div>
+                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Follow Up Remarks</small> <span style="font-weight: 500;">${followUp}</span></div>
+                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Item Required/Used</small> <span style="font-weight: 500;">${itemRequired}</span></div>
+                                <div><small style="color: var(--text-muted); display: block;">Checklist Submitted</small> <span style="font-weight: 500;">${checklist}</span></div>
+                                <div><small style="color: var(--text-muted); display: block;">Data Entry By</small> <span style="font-weight: 500;">${dataEntryBy}</span></div>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                
+                tr.onclick = () => {
+                    const icon = tr.querySelector('.fa-chevron-down');
+                    if (detailsTr.style.display === 'none') {
+                        detailsTr.style.display = 'table-row';
+                        if(icon) icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        detailsTr.style.display = 'none';
+                        if(icon) icon.style.transform = 'rotate(0deg)';
+                    }
+                };
+                
+                tbody.appendChild(tr);
+                tbody.appendChild(detailsTr);
+            });
+            
+            navigateTo('wspDateResultsScreen');
+        } else if (data.status === 'error') {
+            throw new Error(data.message || `No defects found for ${dateInput}`);
+        } else {
+            showWarningAlert(`No defects found for ${dateInput}`);
+        }
+    } catch (error) {
+        console.error('Error fetching WSP by date:', error);
+        showErrorAlert(`Error: ${error.message}`);
+    } finally {
+        spinner.classList.add('hidden');
+        btnText.style.opacity = '1';
+        fetchBtn.disabled = false;
     }
 }
 
@@ -1216,28 +1436,62 @@ function viewWspRakeCoaches() {
     
     document.getElementById('wspRakeResultTitle').innerText = `${selectedTrain} - Rake ${selectedRake}`;
     
-    const rakeCoaches = currentWspTrainCoaches.filter(coach => {
+    const rakeCoaches = [];
+    currentWspTrainCoaches.forEach(coach => {
         const rakeStr = coach['_colO'];
-        if (!rakeStr) return false;
-        let match = rakeStr.match(/\d+/);
-        if(selectedTrain === 'CLONE') match = ['1'];
-        return match && match[0] === selectedRake;
+        if (!rakeStr) return;
+        
+        const prefix = 'RK' + selectedTrain;
+        if (String(rakeStr).startsWith(prefix)) {
+            if (selectedTrain === 'CLONE') {
+                if (selectedRake === '1') {
+                    const pos = String(rakeStr).substring(prefix.length);
+                    coach._position = parseInt(pos, 10);
+                    rakeCoaches.push(coach);
+                }
+            } else {
+                const remainder = String(rakeStr).substring(prefix.length);
+                let rakeNum = remainder;
+                if (remainder.length >= 3) {
+                    rakeNum = remainder.slice(0, -2);
+                    coach._position = parseInt(remainder.slice(-2), 10);
+                } else {
+                    coach._position = parseInt(remainder, 10);
+                }
+                if (rakeNum === selectedRake) {
+                    rakeCoaches.push(coach);
+                }
+            }
+        } else {
+            let match = String(rakeStr).match(/\d+/);
+            if(selectedTrain === 'CLONE') match = ['1'];
+            if (match && match[0] === selectedRake) {
+                const posMatch = String(rakeStr).match(/\d+$/);
+                if (posMatch) {
+                    const numStr = posMatch[0];
+                    coach._position = numStr.length >= 3 ? parseInt(numStr.slice(-2), 10) : parseInt(numStr, 10);
+                } else {
+                    coach._position = 999;
+                }
+                rakeCoaches.push(coach);
+            }
+        }
     });
+    
+    // Sort by position
+    rakeCoaches.sort((a, b) => (a._position || 999) - (b._position || 999));
     
     const tbody = document.getElementById('wspRakeTableBody');
     tbody.innerHTML = '';
     
     if (rakeCoaches.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No coaches found for this rake.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No coaches found for this rake.</td></tr>`;
     } else {
         rakeCoaches.forEach(coach => {
             const tr = document.createElement('tr');
             tr.style.cursor = 'pointer';
             
-            const rakeStr = coach['_colO'] || '';
-            let positionMatch = rakeStr.match(/\d+$/);
-            if(selectedTrain === 'CLONE') positionMatch = rakeStr.match(/0(\d+)$/);
-            const pos = positionMatch ? positionMatch[0] : '-';
+            const pos = coach._position !== undefined ? coach._position : '-';
             
             const rly = coach['RLY'] || '-';
             let coachNum = '';
@@ -1250,6 +1504,7 @@ function viewWspRakeCoaches() {
             
             const typeKey = Object.keys(coach).find(k => k.toLowerCase().includes('type'));
             const type = typeKey ? coach[typeKey] : '-';
+            const wheelCond = coach['Wheel Condition'] || '-';
             const indication = coach['_colS'] || '-';
             
             tr.innerHTML = `
@@ -1257,6 +1512,7 @@ function viewWspRakeCoaches() {
                 <td>${rly}</td>
                 <td><span class="highlight-badge">${coachNum}</span></td>
                 <td>${type}</td>
+                <td>${wheelCond}</td>
                 <td>${indication}</td>
             `;
             
@@ -1382,14 +1638,7 @@ function renderWspResults(dataObj) {
     if (detailsContainer) {
         // Format dates just in case they're long ISO strings
         const fmtDate = (dStr) => {
-            if(!dStr || dStr === '-') return '-';
-            let d = String(dStr);
-            if(d.includes('T')) d = d.split('T')[0];
-            const parts = d.split('-');
-            if(parts.length === 3 && parts[0].length === 4) {
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
-            return d;
+            return formatDateDMY(dStr);
         };
         
         detailsContainer.innerHTML = `

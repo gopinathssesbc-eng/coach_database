@@ -9,7 +9,7 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=202607070550">
+    <link rel="stylesheet" href="style.css?v=202607071653">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -357,6 +357,7 @@
                 <div class="search-tabs">
                     <button class="tab-btn active" id="wspTabCoach" onclick="switchWspTab('coach')">Coach Number</button>
                     <button class="tab-btn" id="wspTabRake" onclick="switchWspTab('rake')">By Rake</button>
+                    <button class="tab-btn" id="wspTabDate" onclick="switchWspTab('date')">By Date</button>
                 </div>
                 
                 <!-- Coach Number Search Form -->
@@ -405,6 +406,22 @@
                         </button>
                     </div>
                 </form>
+
+                <!-- Date Search Form -->
+                <form id="wspSearchDateForm" class="hidden">
+                    <div class="form-group">
+                        <label for="wspDateInput">Download Date</label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-calendar input-icon"></i>
+                            <input type="date" id="wspDateInput" required onclick="this.showPicker()">
+                        </div>
+                    </div>
+                    
+                    <button type="button" class="btn primary-btn btn-block" id="wspFetchDateBtn" onclick="fetchWspByDate()" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <span class="btn-text">Search by Date</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+                </form>
             </div>
         </main>
     </div>
@@ -430,10 +447,42 @@
                                 <th>RLY</th>
                                 <th>Coach No</th>
                                 <th>Type</th>
+                                <th>Wheel Condition</th>
                                 <th>Indication</th>
                             </tr>
                         </thead>
                         <tbody id="wspRakeTableBody">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- WSP Date Results Screen -->
+    <div id="wspDateResultsScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1 id="wspDateResultTitle">Date Results</h1>
+                <p class="subtitle">Select a coach for details</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card" style="padding: 0; overflow: hidden;">
+                <div class="table-responsive">
+                    <table class="rake-table">
+                        <thead>
+                            <tr>
+                                <th>RLY</th>
+                                <th>Coach No</th>
+                                <th>Wheel Condition</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wspDateTableBody">
                             <!-- Rows injected here -->
                         </tbody>
                     </table>
@@ -597,6 +646,6 @@
         </main>
     </div>
 
-    <script src="app.js?v=202607070558"></script>
+    <script src="app.js?v=202607071653"></script>
 </body>
 </html>

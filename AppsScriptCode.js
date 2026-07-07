@@ -18,8 +18,9 @@ function doGet(e) {
   const isTrainSearch = !!e.parameter.train;
   const isCoachSearch = !!e.parameter.coachNumber;
   const isGetTrains = !!e.parameter.getTrains;
+  const isDateSearch = !!e.parameter.date;
   
-  if (!isTrainSearch && !isCoachSearch && !isGetTrains) {
+  if (!isTrainSearch && !isCoachSearch && !isGetTrains && !isDateSearch) {
     return createJsonResponse({
       status: 'error',
       message: 'No Search Parameter provided.'
@@ -95,11 +96,107 @@ function doGet(e) {
         if (colO.startsWith(targetPrefix)) {
           foundMatches.push(row);
         }
+      } else if (isDateSearch && targetSheetName === "DOWNLOAD status modified") {
+        const dateColIndex = 9; // Download Date is index 9
+        const rowDateStr = String(row[dateColIndex]).trim();
+        let formattedRowDate = rowDateStr;
+        
+        if (row[dateColIndex] instanceof Date) {
+            const d = row[dateColIndex];
+            formattedRowDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        } else if (rowDateStr) {
+            const d = new Date(rowDateStr);
+            if (!isNaN(d.getTime())) {
+                formattedRowDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+            }
+        }
+
+        if (formattedRowDate === String(e.parameter.date).trim()) {
+          foundMatches.push(row);
+        }
       }
     }
 
     if (foundMatches.length > 0) {
       const resultsArray = [];
+      
+      let importedDbData = null;
+      let impHeaders = null;
+      let downloadStatusData = null;
+      let dlHeaders = null;
+      
+      if (targetSheetName === "DOWNLOAD status modified") {
+        const importedSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Imported Database");
+        if (importedSheet) {
+          importedDbData = importedSheet.getDataRange().getValues();
+          if (importedDbData.length > 1) {
+            impHeaders = importedDbData[1]; // Headers on 2nd row for Imported Database
+          }
+        }
+      } else if (targetSheetName === "Imported Database") {
+        const dlSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DOWNLOAD status modified");
+        if (dlSheet) {
+          downloadStatusData = dlSheet.getDataRange().getValues();
+          if (downloadStatusData.length > 0) {
+            dlHeaders = downloadStatusData[0]; // Headers on 1st row
+          }
+        }
+      }
+      
+      let impCoachIdx = 0;
+      let impRlyIdx = 1;
+      let impTypeWspdIdx = -1;
+      let impWspMakeIdx = -1;
+      
+      if (impHeaders) {
+          const findIdx = (texts) => {
+              for(let i=0; i<impHeaders.length; i++) {
+                 const h = String(impHeaders[i]).toLowerCase();
+                 if(texts.some(t => h.includes(t))) return i;
+              }
+              return -1;
+          };
+          const cIdx = findIdx(['coach no', 'coach num']);
+          if (cIdx !== -1) impCoachIdx = cIdx;
+          const rIdx = findIdx(['rly', 'railway']);
+          if (rIdx !== -1) impRlyIdx = rIdx;
+          impTypeWspdIdx = findIdx(['type of wspd']);
+          
+          const exactWspIdx = impHeaders.findIndex(h => {
+              const str = String(h).toLowerCase().trim();
+              return str === 'wsp' || str === 'wsp make' || str === 'make';
+          });
+          
+          if (exactWspIdx !== -1) {
+              impWspMakeIdx = exactWspIdx;
+          } else {
+              impWspMakeIdx = 23; // Fallback to Column X
+          }
+      }
+      
+      let dlCoachIdx = 0;
+      let dlWheelCondIdx = -1;
+      if (dlHeaders) {
+          const findDlIdx = (texts) => {
+              for(let i=0; i<dlHeaders.length; i++) {
+                 const h = String(dlHeaders[i]).toLowerCase();
+                 if(texts.some(t => h.includes(t))) return i;
+              }
+              return -1;
+          };
+          const cIdx = findDlIdx(['coach no', 'coach num']);
+          if (cIdx !== -1) dlCoachIdx = cIdx;
+          dlWheelCondIdx = findDlIdx(['wheel condition']);
+      }
+      
+      let sourceCoachIdx = 0;
+      for(let i=0; i<headers.length; i++) {
+         const h = String(headers[i]).toLowerCase();
+         if(h.includes('coach no') || h.includes('coach num')) {
+            sourceCoachIdx = i;
+            break;
+         }
+      }
       
       for (let k = 0; k < foundMatches.length; k++) {
         const matchRow = foundMatches[k];
@@ -110,6 +207,44 @@ function doGet(e) {
           if (headers[j]) {
             resultObj[headers[j]] = matchRow[j];
           }
+        }
+        
+        // Look up RLY, Type of WSPD, WSP Make from Imported Database
+        if (importedDbData) {
+          const coachNumber = String(matchRow[sourceCoachIdx]).trim();
+          let foundRly = '-';
+          let foundTypeOfWspd = '-';
+          let foundWspMake = '-';
+          
+          for (let d = 2; d < importedDbData.length; d++) {
+             if (String(importedDbData[d][impCoachIdx]).trim() === coachNumber) {
+                foundRly = importedDbData[d][impRlyIdx];
+                if (impTypeWspdIdx !== -1) foundTypeOfWspd = importedDbData[d][impTypeWspdIdx];
+                if (impWspMakeIdx !== -1) foundWspMake = importedDbData[d][impWspMakeIdx];
+                break;
+             }
+          }
+          resultObj['RLY'] = foundRly;
+          resultObj['Type of WSPD'] = foundTypeOfWspd;
+          resultObj['WSP Make'] = foundWspMake;
+        }
+        
+        // Look up Wheel Condition from DOWNLOAD status modified
+        if (downloadStatusData && dlWheelCondIdx !== -1) {
+           const coachNumber = String(matchRow[sourceCoachIdx]).trim();
+           let foundWheelCondition = '-';
+           
+           // Search backwards to get the most recent entry
+           for (let d = downloadStatusData.length - 1; d > 0; d--) {
+              if (String(downloadStatusData[d][dlCoachIdx]).trim() === coachNumber) {
+                 const cond = downloadStatusData[d][dlWheelCondIdx];
+                 if (cond && String(cond).trim() !== '') {
+                     foundWheelCondition = cond;
+                     break;
+                 }
+              }
+           }
+           resultObj['Wheel Condition'] = foundWheelCondition;
         }
         
         // Add explicit properties for columns to avoid header typos
