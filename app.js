@@ -1508,19 +1508,26 @@ function viewWspRakeCoaches() {
             const indication = coach['_colS'] || '-';
             
             tr.innerHTML = `
-                <td>${pos}</td>
-                <td>${rly}</td>
-                <td><span class="highlight-badge">${coachNum}</span></td>
-                <td>${type}</td>
-                <td>${wheelCond}</td>
-                <td>${indication}</td>
+                <td style="border-bottom: none;">${pos}</td>
+                <td style="border-bottom: none;">${rly}</td>
+                <td style="border-bottom: none;"><span class="highlight-badge">${coachNum}</span></td>
+                <td style="border-bottom: none;">${type}</td>
+                <td style="border-bottom: none;">${indication}</td>
             `;
             
-            tr.onclick = () => {
-                renderWspResults(coach);
-            };
+            const subTr = document.createElement('tr');
+            subTr.style.cursor = 'pointer';
+            subTr.innerHTML = `
+                <td colspan="5" style="padding-top: 0; color: var(--text-muted); font-size: 0.85rem; border-top: none;">
+                    <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px; opacity: 0.7;"></i> Wheel Cond: <span style="color: var(--text);">${wheelCond}</span>
+                </td>
+            `;
+            
+            tr.onclick = () => { renderWspResults(coach); };
+            subTr.onclick = () => { renderWspResults(coach); };
             
             tbody.appendChild(tr);
+            tbody.appendChild(subTr);
         });
     }
     
