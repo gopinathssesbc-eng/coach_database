@@ -620,9 +620,44 @@ async function viewRakeCoaches() {
         
         let d2 = '-';
         let d3 = '-';
+        let d2Color = 'inherit';
+        let d3Color = 'inherit';
+        
+        function getScheduleColor(dateString, intervalDays) {
+            if (!dateString || dateString === '-') return 'inherit';
+            let doneDate = new Date(dateString);
+            
+            // Check if it's invalid date (could be DD/MM/YYYY format)
+            if (isNaN(doneDate.getTime()) && typeof dateString === 'string') {
+                const parts = dateString.split('/');
+                if (parts.length === 3) {
+                    doneDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                }
+            }
+            
+            if (isNaN(doneDate.getTime())) return 'inherit';
+            
+            const dueDate = new Date(doneDate.getTime() + intervalDays * 24 * 60 * 60 * 1000);
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            dueDate.setHours(0,0,0,0);
+            
+            const diffDays = Math.floor((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays <= 0) return '#ef4444'; // Red
+            if (diffDays <= 3) return '#f97316'; // Orange
+            return '#10b981'; // Green
+        }
+        
         if (scheduleMap[coachNum]) {
-            d2 = scheduleMap[coachNum].d2 ? formatIfDate(scheduleMap[coachNum].d2) : '-';
-            d3 = scheduleMap[coachNum].d3 ? formatIfDate(scheduleMap[coachNum].d3) : '-';
+            const rawD2 = scheduleMap[coachNum].d2;
+            const rawD3 = scheduleMap[coachNum].d3;
+            
+            d2 = rawD2 ? formatIfDate(rawD2) : '-';
+            d3 = rawD3 ? formatIfDate(rawD3) : '-';
+            
+            d2Color = rawD2 ? getScheduleColor(rawD2, 30) : 'inherit'; // Assume 30 days for D2
+            d3Color = rawD3 ? getScheduleColor(rawD3, 180) : 'inherit'; // 180 days for D3
         }
         
         tr.innerHTML = `
@@ -645,11 +680,11 @@ async function viewRakeCoaches() {
             <td colspan="5" style="padding-top: 0; padding-bottom: 0.75rem; color: #94a3b8; font-size: 0.85rem;">
                 <span style="display: inline-block; margin-right: 1.5rem;">
                     <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>D2: 
-                    <span style="color: ${d2 !== '-' ? '#10b981' : 'inherit'};">${d2}</span>
+                    <span style="color: ${d2Color}; font-weight: ${d2Color !== 'inherit' ? 'bold' : 'normal'}">${d2}</span>
                 </span>
                 <span style="display: inline-block;">
                     <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>D3: 
-                    <span style="color: ${d3 !== '-' ? '#10b981' : 'inherit'};">${d3}</span>
+                    <span style="color: ${d3Color}; font-weight: ${d3Color !== 'inherit' ? 'bold' : 'normal'}">${d3}</span>
                 </span>
             </td>
         `;
