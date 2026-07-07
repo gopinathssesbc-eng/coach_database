@@ -630,11 +630,30 @@ async function viewRakeCoaches() {
             <td>${rly}</td>
             <td>${coachNum}</td>
             <td>${type}</td>
-            <td>${d2}</td>
-            <td>${d3}</td>
             <td>${indication}</td>
         `;
+        // Remove bottom border from main row cells to connect with sub-row
+        tr.querySelectorAll('td').forEach(td => td.style.borderBottom = 'none');
+        
         tableBody.appendChild(tr);
+
+        // Sub-row for D2 and D3 dates
+        const subTr = document.createElement('tr');
+        subTr.style.cursor = 'pointer';
+        subTr.onclick = tr.onclick;
+        subTr.innerHTML = `
+            <td colspan="5" style="padding-top: 0; padding-bottom: 1rem; color: #94a3b8; font-size: 0.85rem;">
+                <span style="display: inline-block; margin-right: 1.5rem;">
+                    <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>D2: 
+                    <span style="color: ${d2 !== '-' ? '#10b981' : 'inherit'};">${d2}</span>
+                </span>
+                <span style="display: inline-block;">
+                    <i class="fa-regular fa-calendar" style="margin-right: 4px;"></i>D3: 
+                    <span style="color: ${d3 !== '-' ? '#10b981' : 'inherit'};">${d3}</span>
+                </span>
+            </td>
+        `;
+        tableBody.appendChild(subTr);
     });
     
     document.getElementById('rakeResultTitle').innerText = `${trainCode} - Rake ${selectedRake}`;
