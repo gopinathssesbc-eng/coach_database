@@ -113,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const formData = {
                 action: 'addWspEntry',
+                editRow: document.getElementById('wspEditRowIndex').value || '',
                 coachNumber: document.getElementById('wspDefectCoachNum').value,
                 downloadDate: downloadDateStr,
                 month: monthName,
@@ -129,7 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 description: document.getElementById('wspDescription').value,
                 itemRequired: document.getElementById('wspItemRequired').value,
                 dataEntryBy: document.getElementById('wspDataEntryBy').value,
-                checklistSubmitted: document.getElementById('wspChecklist').value
+                checklistSubmitted: document.getElementById('wspChecklist').value,
+                anyWorkPending: document.getElementById('wspAnyWorkPending').value,
+                pendingWorkDesc: document.getElementById('wspPendingWorkDesc') ? document.getElementById('wspPendingWorkDesc').value : ''
             };
             
             try {
@@ -151,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     color: 'var(--text)'
                 }).then(() => {
                     wspDefectForm.reset();
+                    document.getElementById('wspEditRowIndex').value = '';
                     
                     // Close the accordion
                     const wrapper = document.getElementById('wspDefectFormWrapper');
@@ -503,9 +507,12 @@ function parseDateSafely(dateString) {
     if (!dateString || dateString === '-') return null;
     let doneDate = new Date(dateString);
     if (isNaN(doneDate.getTime()) && typeof dateString === 'string') {
-        const parts = dateString.split('/');
-        if (parts.length === 3) {
-            doneDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        if (dateString.includes('/')) {
+            const parts = dateString.split('/');
+            if (parts.length === 3) doneDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        } else if (dateString.includes('-')) {
+            const parts = dateString.split('-');
+            if (parts.length === 3 && parts[0].length === 2) doneDate = new Date(parts[2], parts[1] - 1, parts[0]);
         }
     }
     return isNaN(doneDate.getTime()) ? null : doneDate;
@@ -774,6 +781,17 @@ function renderSelectionList(matchesArray, isWsp = false) {
 }
 
 async function renderResults(dataObj) {
+    Swal.fire({
+        title: 'Loading Coach Data...',
+        text: 'Please wait while we fetch the details.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        },
+        background: 'var(--surface)',
+        color: 'var(--text)'
+    });
+    
     const container = document.getElementById('resultsContainer');
     
     // Try to build a clean title
@@ -799,6 +817,7 @@ async function renderResults(dataObj) {
                 <p>No data available for this coach.</p>
             </div>
         `;
+        Swal.close();
         navigateTo('resultsScreen');
         return;
     }
@@ -910,7 +929,8 @@ async function renderResults(dataObj) {
     if (coachNum && typeof SCHEDULE_APP_SCRIPT_URL !== 'undefined') {
         await appendScheduleDetailsToResults(coachNum, container, delayCounter);
     }
-
+    
+    Swal.close();
     navigateTo('resultsScreen');
 }
 
@@ -1034,7 +1054,16 @@ function letterToIndex(letter) {
 function formatDateDMY(dStr) {
     if (!dStr || dStr === '-') return '-';
     let d = String(dStr).trim();
-    if (d.includes('T')) d = d.split('T')[0];
+    
+    // If it's a full ISO timestamp (contains T), parse it to get the local date
+    if (d.includes('T')) {
+        const parsed = new Date(d);
+        if (!isNaN(parsed.getTime())) {
+            return `${String(parsed.getDate()).padStart(2, '0')}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${parsed.getFullYear()}`;
+        }
+        // Fallback if Date parsing fails
+        d = d.split('T')[0];
+    }
     
     // Check if it's already DD-MM-YYYY (or DD/MM/YYYY)
     if (d.match(/^\d{2}[-\/]\d{2}[-\/]\d{4}$/)) {
@@ -1047,10 +1076,12 @@ function formatDateDMY(dStr) {
         return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
     
-    // Fallback parsing
-    const parsed = new Date(d);
-    if (!isNaN(parsed.getTime())) {
-        return `${String(parsed.getDate()).padStart(2, '0')}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${parsed.getFullYear()}`;
+    // Fallback parsing - only try this if it's not a pure number
+    if (!/^\d+$/.test(d)) {
+        const parsed = new Date(d);
+        if (!isNaN(parsed.getTime())) {
+            return `${String(parsed.getDate()).padStart(2, '0')}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${parsed.getFullYear()}`;
+        }
     }
     
     return d;
@@ -1117,17 +1148,21 @@ function switchWspTab(tab) {
     const coachBtn = document.getElementById('wspTabCoach');
     const rakeBtn = document.getElementById('wspTabRake');
     const dateBtn = document.getElementById('wspTabDate');
+    const pendingBtn = document.getElementById('wspTabPending');
     const coachForm = document.getElementById('wspSearchCoachForm');
     const rakeForm = document.getElementById('wspSearchRakeForm');
     const dateForm = document.getElementById('wspSearchDateForm');
+    const pendingForm = document.getElementById('wspSearchPendingForm');
     
     if(coachBtn) coachBtn.classList.remove('active');
     if(rakeBtn) rakeBtn.classList.remove('active');
     if(dateBtn) dateBtn.classList.remove('active');
+    if(pendingBtn) pendingBtn.classList.remove('active');
     
     if(coachForm) coachForm.classList.add('hidden');
     if(rakeForm) rakeForm.classList.add('hidden');
     if(dateForm) dateForm.classList.add('hidden');
+    if(pendingForm) pendingForm.classList.add('hidden');
     
     if (tab === 'coach') {
         if(coachBtn) coachBtn.classList.add('active');
@@ -1152,6 +1187,9 @@ function switchWspTab(tab) {
     } else if (tab === 'date') {
         if(dateBtn) dateBtn.classList.add('active');
         if(dateForm) dateForm.classList.remove('hidden');
+    } else if (tab === 'pending') {
+        if(pendingBtn) pendingBtn.classList.add('active');
+        if(pendingForm) pendingForm.classList.remove('hidden');
     }
 }
 
@@ -1171,13 +1209,14 @@ async function fetchWspByDate() {
     fetchBtn.disabled = true;
 
     try {
-        const url = `${GOOGLE_APP_SCRIPT_URL}?date=${encodeURIComponent(dateInput)}&sheetName=DOWNLOAD status modified`;
+        const url = `${GOOGLE_APP_SCRIPT_URL}?date=${encodeURIComponent(dateInput)}&sheetName=${encodeURIComponent('DOWNLOAD status modified')}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         
         if (data.status === 'success' && data.data && data.data.length > 0) {
-            document.getElementById('wspDateResultTitle').innerText = `Defects for ${dateInput}`;
+            const [yyyy, mm, dd] = dateInput.split('-');
+            document.getElementById('wspDateResultTitle').innerText = `Defects for ${dd}-${mm}-${yyyy}`;
             
             const tbody = document.getElementById('wspDateTableBody');
             tbody.innerHTML = '';
@@ -1205,7 +1244,7 @@ async function fetchWspByDate() {
                 
                 let wheelCondition = '-';
                 const wcKey = Object.keys(entry).find(k => String(k).toLowerCase().includes('wheel condition'));
-                if (wcKey) wheelCondition = entry[wcKey];
+                if (wcKey) wheelCondition = String(entry[wcKey]).replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
                 
                 // Extract other details for inline expansion
                 const getVal = (searchStr) => {
@@ -1279,7 +1318,7 @@ async function fetchWspByDate() {
                                 <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Other Observation</small> <span style="font-weight: 500;">${otherObservation}</span></div>
                                 <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Defect Description</small> <span style="font-weight: 500;">${defectDesc}</span></div>
                                 <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Attention if Any</small> <span style="font-weight: 500;">${attentionIfAny}</span></div>
-                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Follow Up Remarks</small> <span style="font-weight: 500;">${followUp}</span></div>
+                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Pending Work</small> <span style="font-weight: 500;">${followUp}</span></div>
                                 <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Item Required/Used</small> <span style="font-weight: 500;">${itemRequired}</span></div>
                                 <div><small style="color: var(--text-muted); display: block;">Checklist Submitted</small> <span style="font-weight: 500;">${checklist}</span></div>
                                 <div><small style="color: var(--text-muted); display: block;">Data Entry By</small> <span style="font-weight: 500;">${dataEntryBy}</span></div>
@@ -1482,6 +1521,23 @@ function viewWspRakeCoaches() {
     // Sort by position
     rakeCoaches.sort((a, b) => (a._position || 999) - (b._position || 999));
     
+    // Extract general details from the first coach in the rake
+    if (rakeCoaches.length > 0) {
+        const firstCoach = rakeCoaches[0];
+        let departureDate = firstCoach['_colP'] ? formatIfDate(firstCoach['_colP']) : '-';
+        let arrivalDate = firstCoach['_colQ'] ? formatIfDate(firstCoach['_colQ']) : '-';
+        
+        const arrEl = document.getElementById('wspRakeArrivalDate');
+        if(arrEl) arrEl.innerText = arrivalDate;
+        const depEl = document.getElementById('wspRakeDepartureDate');
+        if(depEl) depEl.innerText = departureDate;
+    } else {
+        const arrEl = document.getElementById('wspRakeArrivalDate');
+        if(arrEl) arrEl.innerText = '-';
+        const depEl = document.getElementById('wspRakeDepartureDate');
+        if(depEl) depEl.innerText = '-';
+    }
+
     const tbody = document.getElementById('wspRakeTableBody');
     tbody.innerHTML = '';
     
@@ -1505,7 +1561,8 @@ function viewWspRakeCoaches() {
             
             const typeKey = Object.keys(coach).find(k => k.toLowerCase().includes('type'));
             const type = typeKey ? coach[typeKey] : '-';
-            const wheelCond = coach['Wheel Condition'] || '-';
+            let wheelCond = coach['Wheel Condition'] || '-';
+            wheelCond = String(wheelCond).replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
             const indication = coach['_colS'] || '-';
             
             const hasWheelCond = wheelCond !== '-';
@@ -1611,6 +1668,11 @@ async function handleWspSearch(e) {
 }
 
 function renderWspResults(dataObj) {
+    const wspForm = document.getElementById('wspDefectForm');
+    if (wspForm) wspForm.reset();
+    const wspEditRow = document.getElementById('wspEditRowIndex');
+    if (wspEditRow) wspEditRow.value = '';
+
     let coachNum = '';
     for (const key of Object.keys(dataObj)) {
         if (key.toLowerCase().includes('coach') && key.toLowerCase().includes('no')) coachNum = dataObj[key];
@@ -1713,7 +1775,7 @@ async function fetchWspHistory(coachNumber) {
     });
     
     try {
-        const url = `${GOOGLE_APP_SCRIPT_URL}?coachNumber=${encodeURIComponent(coachNumber)}&sheetName=DOWNLOAD status modified`;
+        const url = `${GOOGLE_APP_SCRIPT_URL}?coachNumber=${encodeURIComponent(coachNumber)}&sheetName=${encodeURIComponent('DOWNLOAD status modified')}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Network response was not ok');
         
@@ -1725,7 +1787,9 @@ async function fetchWspHistory(coachNumber) {
         document.getElementById('wspDefectCoachNum').value = coachNumber;
         
         if (data.status === 'success' && data.data && data.data.length > 0) {
+            window.wspHistoryMap = {};
             data.data.forEach((entry, idx) => {
+                window.wspHistoryMap[entry._rowIndex] = entry;
                 const card = document.createElement('div');
                 card.className = 'glass-card slide-up';
                 card.style.background = 'rgba(255,255,255,0.02)';
@@ -1745,7 +1809,10 @@ async function fetchWspHistory(coachNumber) {
                 let html = `
                     <div class="accordion-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('fa-chevron-up'); this.querySelector('.chevron').classList.toggle('fa-chevron-down');">
                         <div style="font-weight: 600; color: #10b981;">Download Date: <span style="color:var(--text);">${fmtDDate}</span></div>
-                        <i class="fa-solid fa-chevron-down chevron"></i>
+                        <div>
+                            <button type="button" class="icon-btn" onclick="event.stopPropagation(); editWspEntry(${entry._rowIndex})" style="margin-right: 0.5rem; color: #3b82f6;" title="Edit Entry"><i class="fa-solid fa-pencil"></i></button>
+                            <i class="fa-solid fa-chevron-down chevron"></i>
+                        </div>
                     </div>
                     <div class="accordion-content hidden" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
                 `;
@@ -1756,8 +1823,9 @@ async function fetchWspHistory(coachNumber) {
                 // Render Wheel Condition first if it exists
                 const wheelCondKey = Object.keys(entry).find(k => String(k).toLowerCase().trim() === 'wheel condition');
                 if (wheelCondKey) {
+                    const formattedCond = String(entry[wheelCondKey] || '-').replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
                     html += `<div style="grid-column: 1 / -1;"><span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom: 0.2rem;">${wheelCondKey}</span>
-                             <span style="font-weight:500;">${entry[wheelCondKey] || '-'}</span></div>`;
+                             <span style="font-weight:500;">${formattedCond}</span></div>`;
                 }
                 
                 for (const [key, value] of Object.entries(entry)) {
@@ -1776,6 +1844,7 @@ async function fetchWspHistory(coachNumber) {
                 historyContainer.appendChild(card);
             });
         } else {
+            window.wspHistoryMap = {};
             historyContainer.innerHTML = `
                 <div class="empty-state" style="padding: 1.5rem 0;">
                     <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 2rem; margin-bottom: 0.5rem;"></i>
@@ -2155,5 +2224,219 @@ async function fetchDueCoaches() {
         errorEl.classList.remove('hidden');
     } finally {
         loadingEl.classList.add('hidden');
+    }
+}
+
+function editWspEntry(rowIndex) {
+    if (!window.wspHistoryMap || !window.wspHistoryMap[rowIndex]) return;
+    const entry = window.wspHistoryMap[rowIndex];
+    
+    // Set Edit Row ID
+    document.getElementById('wspEditRowIndex').value = rowIndex;
+    
+    // Function to safely set value
+    const setVal = (id, keyArr) => {
+        const el = document.getElementById(id);
+        if(!el) return;
+        const val = keyArr.reduce((found, k) => {
+            if(found) return found;
+            const entryKey = Object.keys(entry).find(ek => ek.toLowerCase().trim() === k.toLowerCase().trim());
+            return entryKey ? entry[entryKey] : '';
+        }, '');
+        if(val) el.value = val;
+    };
+    
+    // Map of id -> possible keys in entry
+    setVal('wspWheelCondition', ['Wheel condition']);
+    setVal('wspPsStatus', ['PS status']);
+    setVal('wspCode', ['wsp code']);
+    setVal('wspDumpValve', ['Self test dump valve']);
+    setVal('wspSensorGap', ['Sensor gap']);
+    setVal('wspObservation', ['downloading obseravtion', 'downloading observation']);
+    setVal('wspOtherObservation', ['OTHER OBSERVATION']);
+    setVal('wspDefectCategory', ['defect category']);
+    setVal('wspAttention', ['ATTENTION IF ANY']);
+    setVal('wspFollowUp', ['PENDING WORK']);
+    setVal('wspDescription', ['DEFECT DESCRIPTION']);
+    setVal('wspItemRequired', ['ITEM REQUIRED / USED']);
+    setVal('wspDataEntryBy', ['Data Entry By']);
+    setVal('wspChecklist', ['CHECKLIST SUBMITTED']);
+    setVal('wspAnyWorkPending', ['ANY WORK PENDING']);
+    setVal('wspPendingWorkDesc', ['PENDING WORK DESCRIPTION', 'pending work desc']);
+    
+    // Handle Date (Download Date)
+    const dateKey = Object.keys(entry).find(k => String(k).toLowerCase().trim() === 'download date');
+    if(dateKey && entry[dateKey]) {
+        let dDate = String(entry[dateKey]);
+        if(dDate.includes('T')) dDate = dDate.split('T')[0];
+        document.getElementById('wspDownloadDate').value = dDate;
+    }
+    
+    // Ensure we are on the correct screen
+    const resultsScreen = document.getElementById('wspResultsScreen');
+    if (resultsScreen && resultsScreen.classList.contains('hidden')) {
+        navigateTo('wspResultsScreen');
+        const coachNo = entry['COACH NO'] || entry['coach no'] || entry._rawRow[0] || 'Unknown';
+        document.getElementById('wspResultCoachId').innerText = coachNo;
+        document.getElementById('wspDefectCoachNum').value = coachNo;
+        
+        // Hide history since we navigated directly here from Pending Work
+        const historyContainer = document.getElementById('wspHistoryContainer');
+        if (historyContainer) {
+            historyContainer.innerHTML = '<div class="empty-state" style="padding: 1rem 0;"><p>History hidden while editing from Pending Work.</p></div>';
+        }
+        const detailsContainer = document.getElementById('wspCoachDetailsContainer');
+        if (detailsContainer) {
+            detailsContainer.innerHTML = '';
+        }
+    }
+
+    // Open accordion if hidden
+    const wrapper = document.getElementById('wspDefectFormWrapper');
+    if (wrapper && wrapper.classList.contains('hidden')) {
+        wrapper.classList.remove('hidden');
+        const header = wrapper.previousElementSibling;
+        if(header) {
+            const chevron = header.querySelector('.chevron');
+            if(chevron) {
+                chevron.classList.remove('fa-chevron-down');
+                chevron.classList.add('fa-chevron-up');
+            }
+        }
+    }
+    
+    // Scroll to form
+    if(wrapper) {
+        setTimeout(() => {
+            wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+}
+
+async function fetchWspPendingWork() {
+    const btn = document.getElementById('wspFetchPendingBtn');
+    if(btn) {
+        btn.disabled = true;
+        btn.querySelector('.spinner').classList.remove('hidden');
+        btn.querySelector('.btn-text').style.opacity = '0';
+    }
+    
+    Swal.fire({
+        title: 'Loading Pending Work...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+    
+    try {
+        const url = `${GOOGLE_APP_SCRIPT_URL}?pendingWork=true&sheetName=${encodeURIComponent('DOWNLOAD status modified')}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        const container = document.getElementById('wspPendingWorkContainer');
+        container.innerHTML = '';
+        
+        if (data.status === 'success' && data.data && data.data.length > 0) {
+            window.wspHistoryMap = window.wspHistoryMap || {};
+            
+            // Group by Coach Number
+            const grouped = {};
+            data.data.forEach(entry => {
+                const coachNo = entry['COACH NO'] || entry['coach no'] || entry._rawRow[0] || 'Unknown';
+                if (!grouped[coachNo]) grouped[coachNo] = [];
+                grouped[coachNo].push(entry);
+                window.wspHistoryMap[entry._rowIndex] = entry; // Save for editing
+            });
+            
+            // Render Accordion
+            for (const [coachNo, entries] of Object.entries(grouped)) {
+                const coachCard = document.createElement('div');
+                coachCard.className = 'glass-card slide-up';
+                coachCard.style.padding = '0';
+                coachCard.style.marginBottom = '1rem';
+                coachCard.style.overflow = 'hidden';
+                
+                let coachHtml = `
+                    <div class="accordion-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 1.2rem; background: rgba(255,255,255,0.05);" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('fa-chevron-up'); this.querySelector('.chevron').classList.toggle('fa-chevron-down');">
+                        <div style="font-weight: 600; font-size: 1.1rem;"><i class="fa-solid fa-train-tram" style="color:#10b981; margin-right: 0.5rem;"></i> Coach: <span style="color:var(--text);">${coachNo}</span> <span style="font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 2px 6px; border-radius: 4px; margin-left: 0.5rem;">${entries.length} Pending</span></div>
+                        <i class="fa-solid fa-chevron-down chevron"></i>
+                    </div>
+                    <div class="accordion-content hidden" style="padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                `;
+                
+                entries.forEach((entry, idx) => {
+                    const dDate = entry['Download Date'] || entry['download date'] || '-';
+                    let fmtDDate = String(dDate);
+                    if (fmtDDate.includes('T')) fmtDDate = fmtDDate.split('T')[0];
+                    const parts = fmtDDate.split('-');
+                    if (parts.length === 3 && parts[0].length === 4) {
+                        fmtDDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    }
+                    
+                    coachHtml += `
+                        <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-left: 3px solid #f59e0b; margin-bottom: 1rem; border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
+                                <div style="font-weight: 600; color: #f59e0b;">Download Date: <span style="color:var(--text);">${fmtDDate}</span></div>
+                                <button type="button" class="icon-btn" onclick="event.stopPropagation(); editWspEntry(${entry._rowIndex})" style="color: #3b82f6;" title="Edit Entry"><i class="fa-solid fa-pencil"></i></button>
+                            </div>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                    `;
+                    
+                    const excludeKeys = ['coach no', 'rake', 'train no', 'coach type', 'ci', 'left date', 'arrival date', 'arrival t no', 'wsp make', 'month', 'download date', 'wheel condition'];
+                    const fullWidthKeys = ['other observation', 'attention if any', 'downloading obseravtion', 'downloading observation', 'defect description', 'data entry by'];
+                    
+                    const wheelCondKey = Object.keys(entry).find(k => String(k).toLowerCase().trim() === 'wheel condition');
+                    if (wheelCondKey) {
+                        const formattedCond = String(entry[wheelCondKey] || '-').replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
+                        coachHtml += `<div style="grid-column: 1 / -1;"><span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom: 0.2rem;">${wheelCondKey}</span>
+                                 <span style="font-weight:500;">${formattedCond}</span></div>`;
+                    }
+                    
+                    for (const [key, value] of Object.entries(entry)) {
+                        if (key.startsWith('_')) continue;
+                        const cleanKey = String(key).toLowerCase().trim();
+                        if (excludeKeys.includes(cleanKey)) continue;
+                        
+                        const isFullWidth = fullWidthKeys.includes(cleanKey);
+                        const gridStyle = isFullWidth ? 'grid-column: 1 / -1;' : '';
+                        
+                        coachHtml += `<div style="${gridStyle}"><span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom: 0.2rem;">${key}</span>
+                                 <span style="font-weight:500;">${value || '-'}</span></div>`;
+                    }
+                    
+                    coachHtml += `</div></div>`;
+                });
+                
+                coachHtml += `</div>`;
+                coachCard.innerHTML = coachHtml;
+                container.appendChild(coachCard);
+            }
+        } else {
+            container.innerHTML = `
+                <div class="empty-state" style="padding: 1.5rem 0;">
+                    <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                    <p>Awesome! No pending WSP work found.</p>
+                </div>
+            `;
+        }
+        
+        Swal.close();
+        navigateTo('wspPendingResultsScreen');
+        
+    } catch (error) {
+        console.error('Error fetching pending work:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Could not fetch pending work.',
+            background: 'var(--surface)',
+            color: 'var(--text)'
+        });
+    } finally {
+        if(btn) {
+            btn.disabled = false;
+            btn.querySelector('.spinner').classList.add('hidden');
+            btn.querySelector('.btn-text').style.opacity = '1';
+        }
     }
 }

@@ -19,8 +19,9 @@ function doGet(e) {
   const isCoachSearch = !!e.parameter.coachNumber;
   const isGetTrains = !!e.parameter.getTrains;
   const isDateSearch = !!e.parameter.date;
+  const isPendingWorkSearch = !!e.parameter.pendingWork;
   
-  if (!isTrainSearch && !isCoachSearch && !isGetTrains && !isDateSearch) {
+  if (!isTrainSearch && !isCoachSearch && !isGetTrains && !isDateSearch && !isPendingWorkSearch) {
     return createJsonResponse({
       status: 'error',
       message: 'No Search Parameter provided.'
@@ -87,14 +88,14 @@ function doGet(e) {
       if (isCoachSearch) {
         const coachNumber = String(row[0]).trim(); // Col1 (index 0)
         if (coachNumber === String(e.parameter.coachNumber).trim()) {
-          foundMatches.push(row);
+          foundMatches.push({ data: row, rowIndex: i + 1 });
         }
       } else if (isTrainSearch) {
         const colO = String(row[14]).trim(); // Column O (index 14)
         const targetPrefix = 'RK' + String(e.parameter.train).trim();
         // Check if Col O starts with RK + Train Code (e.g., RKCAPE)
         if (colO.startsWith(targetPrefix)) {
-          foundMatches.push(row);
+          foundMatches.push({ data: row, rowIndex: i + 1 });
         }
       } else if (isDateSearch && targetSheetName === "DOWNLOAD status modified") {
         const dateColIndex = 9; // Download Date is index 9
@@ -112,7 +113,12 @@ function doGet(e) {
         }
 
         if (formattedRowDate === String(e.parameter.date).trim()) {
-          foundMatches.push(row);
+          foundMatches.push({ data: row, rowIndex: i + 1 });
+        }
+      } else if (isPendingWorkSearch && targetSheetName === "DOWNLOAD status modified") {
+        const colZ = String(row[25]).trim().toLowerCase();
+        if (colZ === 'yes') {
+          foundMatches.push({ data: row, rowIndex: i + 1 });
         }
       }
     }
@@ -164,7 +170,7 @@ function doGet(e) {
           
           const exactWspIdx = impHeaders.findIndex(h => {
               const str = String(h).toLowerCase().trim();
-              return str === 'wsp' || str === 'wsp make' || str === 'make';
+              return str === 'wsp';
           });
           
           if (exactWspIdx !== -1) {
@@ -201,7 +207,8 @@ function doGet(e) {
       }
       
       for (let k = 0; k < foundMatches.length; k++) {
-        const matchRow = foundMatches[k];
+        const matchRow = foundMatches[k].data;
+        const rowIndex = foundMatches[k].rowIndex;
         const resultObj = {};
         
         // Loop through columns. We include all columns now.
@@ -268,7 +275,7 @@ function doGet(e) {
            }
            
            if (latestDate && latestCond !== '-') {
-               const formattedDate = latestDate.getFullYear() + '-' + String(latestDate.getMonth()+1).padStart(2,'0') + '-' + String(latestDate.getDate()).padStart(2,'0');
+               const formattedDate = String(latestDate.getDate()).padStart(2,'0') + '-' + String(latestDate.getMonth()+1).padStart(2,'0') + '-' + latestDate.getFullYear();
                foundWheelCondition = `Date-${formattedDate}, Wheel condition-${latestCond}`;
            } else {
                foundWheelCondition = latestCond;
@@ -284,6 +291,7 @@ function doGet(e) {
         resultObj['_colS'] = matchRow[18]; // Indication
         resultObj['_rawRow'] = matchRow;   // Full unmapped array for column index access
         resultObj['_headers'] = headers;   // Headers array for index-to-name mapping
+        resultObj['_rowIndex'] = rowIndex; // Keep track of the exact row in Google Sheet
         
         resultsArray.push(resultObj);
       }
@@ -331,22 +339,28 @@ function doPost(e) {
           'ARRIVAL DATE', 'ARRIVAL T NO', 'WSP MAKE', 'Download Date', 'Month', 
           'PS status', 'wsp code', 'Self test dump valve', 'Sensor gap', 
           'downloading obseravtion', 'OTHER OBSERVATION', 'Wheel condition', 
-          'defect category', 'ATTENTION IF ANY', 'FOLLO UP REMARKS', 
+          'defect category', 'ATTENTION IF ANY', 'PENDING WORK', 
           'DEFECT DESCRIPTION', 'ITEM REQUIRED / USED', 'CHECKLIST SUBMITTED',
-          'Data Entry By'
+          'Data Entry By', 'ANY WORK PENDING'
         ]);
       }
       
-      sheet.appendRow([
-        body.coachNumber || '', // 1. COACH NO
-        '', // 2. RAKE (auto)
-        '', // 3. TRAIN NO (auto)
-        '', // 4. COACH TYPE (auto)
-        '', // 5. CI (auto)
-        '', // 6. LEFT DATE (auto)
-        '', // 7. ARRIVAL DATE (auto)
-        '', // 8. ARRIVAL T NO (auto)
-        '', // 9. WSP MAKE (auto)
+      var colA = sheet.getRange("A:A").getValues();
+      var lastRow = 0;
+      for (var i = colA.length - 1; i >= 0; i--) {
+        if (colA[i][0] !== "" && colA[i][0] != null) {
+          lastRow = i + 1;
+          break;
+        }
+      }
+      
+      var targetRow = body.editRow ? parseInt(body.editRow, 10) : (lastRow + 1);
+      
+      // 1. COACH NO
+      sheet.getRange(targetRow, 1).setValue(body.coachNumber || '');
+      
+      // Columns 10 to 27 (J to AA)
+      var col10to27 = [
         body.downloadDate || '', // 10. Download Date
         body.month || '', // 11. Month
         body.psStatus || '', // 12. PS status
@@ -358,12 +372,16 @@ function doPost(e) {
         body.wheelCondition || '', // 18. Wheel condition
         body.defectCategory || '', // 19. defect category
         body.attention || '', // 20. ATTENTION IF ANY
-        body.followUp || '', // 21. FOLLO UP REMARKS
+        body.followUp || '', // 21. PENDING WORK
         body.description || '', // 22. DEFECT DESCRIPTION
         body.itemRequired || '', // 23. ITEM REQUIRED / USED
         body.checklistSubmitted || '', // 24. CHECKLIST SUBMITTED
-        body.dataEntryBy || '' // 25. Data Entry By
-      ]);
+        body.dataEntryBy || '', // 25. Data Entry By
+        body.anyWorkPending || '', // 26. ANY WORK PENDING
+        body.pendingWorkDesc || '' // 27. PENDING WORK DESCRIPTION
+      ];
+      
+      sheet.getRange(targetRow, 10, 1, col10to27.length).setValues([col10to27]);
       
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
