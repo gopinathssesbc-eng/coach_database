@@ -126,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 wheelCondition: document.getElementById('wspWheelCondition').value,
                 defectCategory: document.getElementById('wspDefectCategory').value,
                 attention: document.getElementById('wspAttention').value,
-                followUp: document.getElementById('wspFollowUp').value,
                 description: document.getElementById('wspDescription').value,
                 itemRequired: document.getElementById('wspItemRequired').value,
                 dataEntryBy: document.getElementById('wspDataEntryBy').value,
@@ -2256,7 +2255,6 @@ function editWspEntry(rowIndex) {
     setVal('wspOtherObservation', ['OTHER OBSERVATION']);
     setVal('wspDefectCategory', ['defect category']);
     setVal('wspAttention', ['ATTENTION IF ANY']);
-    setVal('wspFollowUp', ['PENDING WORK']);
     setVal('wspDescription', ['DEFECT DESCRIPTION']);
     setVal('wspItemRequired', ['ITEM REQUIRED / USED']);
     setVal('wspDataEntryBy', ['Data Entry By']);

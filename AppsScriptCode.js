@@ -372,7 +372,7 @@ function doPost(e) {
         body.wheelCondition || '', // 18. Wheel condition
         body.defectCategory || '', // 19. defect category
         body.attention || '', // 20. ATTENTION IF ANY
-        body.followUp || '', // 21. PENDING WORK
+        '', // 21. PENDING WORK (Removed)
         body.description || '', // 22. DEFECT DESCRIPTION
         body.itemRequired || '', // 23. ITEM REQUIRED / USED
         body.checklistSubmitted || '', // 24. CHECKLIST SUBMITTED
