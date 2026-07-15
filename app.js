@@ -227,6 +227,20 @@ async function switchSearchTab(tabName) {
     const coachForm = document.getElementById('searchCoachForm');
     const rakeForm = document.getElementById('searchRakeForm');
     
+    const searchResultScreens = ['selectionScreen', 'resultsScreen', 'rakeResultsScreen'];
+    searchResultScreens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('hidden');
+            el.classList.remove('active');
+        }
+    });
+    
+    const searchScreen = document.getElementById('searchScreen');
+    if (searchScreen) {
+        searchScreen.style.minHeight = '100vh';
+    }
+
     if (tabName === 'coach') {
         coachTab.classList.add('active');
         rakeTab.classList.remove('active');
@@ -1209,6 +1223,20 @@ function switchWspTab(tab) {
     if(rakeForm) rakeForm.classList.add('hidden');
     if(dateForm) dateForm.classList.add('hidden');
     if(pendingForm) pendingForm.classList.add('hidden');
+    
+    const wspResultScreens = ['wspResultsScreen', 'wspRakeResultsScreen', 'wspDateResultsScreen', 'wspPendingResultsScreen'];
+    wspResultScreens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.classList.add('hidden');
+            el.classList.remove('active');
+        }
+    });
+    
+    const searchScreen = document.getElementById('wspSearchScreen');
+    if (searchScreen) {
+        searchScreen.style.minHeight = '100vh';
+    }
     
     if (tab === 'coach') {
         if(coachBtn) coachBtn.classList.add('active');
