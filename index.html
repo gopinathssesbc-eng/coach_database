@@ -9,7 +9,7 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=202607082158">
+    <link rel="stylesheet" href="style.css?v=202607140226">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -297,6 +297,10 @@
                                 <th>RLY</th>
                                 <th>Coach No</th>
                                 <th>Type</th>
+                                <th>Left Date</th>
+                                <th>Arrival Date</th>
+                                <th>WSP Type</th>
+                                <th>Train No</th>
                                 <th>Indication</th>
                             </tr>
                         </thead>
@@ -368,38 +372,43 @@
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
                             <label>D2 Done Date</label>
-                            <input type="date" id="scheduleD2" class="styled-input" onclick="this.showPicker()">
+                            <input type="date" id="scheduleD2" class="styled-input" onclick="this.showPicker()" required>
                         </div>
                         <div class="form-group">
                             <label>D3 Done Date</label>
-                            <input type="date" id="scheduleD3" class="styled-input" onclick="this.showPicker()">
+                            <input type="date" id="scheduleD3" class="styled-input" onclick="this.showPicker()" required>
                         </div>
                     </div>
 
                     <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text); font-size: 0.9rem;">Wheel Diameters</h4>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group"><label>L1</label><input type="text" id="scheduleL1" class="styled-input"></div>
-                        <div class="form-group"><label>R8</label><input type="text" id="scheduleR8" class="styled-input"></div>
+                        <div class="form-group"><label>L1</label><input type="text" id="scheduleL1" class="styled-input" required></div>
+                        <div class="form-group"><label>R8</label><input type="text" id="scheduleR8" class="styled-input" required></div>
                         
-                        <div class="form-group"><label>L2</label><input type="text" id="scheduleL2" class="styled-input"></div>
-                        <div class="form-group"><label>R7</label><input type="text" id="scheduleR7" class="styled-input"></div>
+                        <div class="form-group"><label>L2</label><input type="text" id="scheduleL2" class="styled-input" required></div>
+                        <div class="form-group"><label>R7</label><input type="text" id="scheduleR7" class="styled-input" required></div>
                         
-                        <div class="form-group"><label>L3</label><input type="text" id="scheduleL3" class="styled-input"></div>
-                        <div class="form-group"><label>R6</label><input type="text" id="scheduleR6" class="styled-input"></div>
+                        <div class="form-group"><label>L3</label><input type="text" id="scheduleL3" class="styled-input" required></div>
+                        <div class="form-group"><label>R6</label><input type="text" id="scheduleR6" class="styled-input" required></div>
                         
-                        <div class="form-group"><label>L4</label><input type="text" id="scheduleL4" class="styled-input"></div>
-                        <div class="form-group"><label>R5</label><input type="text" id="scheduleR5" class="styled-input"></div>
+                        <div class="form-group"><label>L4</label><input type="text" id="scheduleL4" class="styled-input" required></div>
+                        <div class="form-group"><label>R5</label><input type="text" id="scheduleR5" class="styled-input" required></div>
                     </div>
                     
                     <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text); font-size: 0.9rem;">Stiffener Plate</h4>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group"><label>PP End</label><input type="text" id="schedulePPEnd" class="styled-input"></div>
-                        <div class="form-group"><label>NPP End</label><input type="text" id="scheduleNPPEnd" class="styled-input"></div>
+                        <div class="form-group"><label>PP End</label><input type="text" id="schedulePPEnd" class="styled-input" required></div>
+                        <div class="form-group"><label>NPP End</label><input type="text" id="scheduleNPPEnd" class="styled-input" required></div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                        <div class="form-group"><label>CBC Make</label><input type="text" id="scheduleCBCMake" class="styled-input" required></div>
+                        <div class="form-group"><label>Staff Token Number</label><input type="text" id="scheduleStaffToken" class="styled-input" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required></div>
                     </div>
 
                     <div class="form-group" style="margin-top: 1rem;">
                         <label>Remarks</label>
-                        <input type="text" id="scheduleRemarks" class="styled-input">
+                        <input type="text" id="scheduleRemarks" class="styled-input" required>
                     </div>
                     
                     <button type="submit" class="btn primary-btn btn-block" id="scheduleSubmitBtn" style="margin-top: 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb);">
@@ -543,6 +552,10 @@
                                 <th>RLY</th>
                                 <th>Coach No</th>
                                 <th>Type</th>
+                                <th>Left Date</th>
+                                <th>Arrival Date</th>
+                                <th>WSP Type</th>
+                                <th>Train No</th>
                                 <th>Indication</th>
                             </tr>
                         </thead>
@@ -771,6 +784,6 @@
         </main>
     </div>
 
-    <script src="app.js?v=202607091052"></script>
+    <script src="app.js?v=202607140226"></script>
 </body>
 </html>

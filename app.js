@@ -21,7 +21,8 @@ const screens = {
     wspResults: document.getElementById('wspResultsScreen'),
     scheduleSearch: document.getElementById('scheduleSearchScreen'),
     scheduleResults: document.getElementById('scheduleResultsScreen'),
-    dueCoaches: document.getElementById('dueCoachesScreen')
+    dueCoaches: document.getElementById('dueCoachesScreen'),
+    wspPendingResults: document.getElementById('wspPendingResultsScreen')
 };
 
 // --- SweetAlert Helpers ---
@@ -689,6 +690,10 @@ async function viewRakeCoaches() {
             <td>${rly}</td>
             <td>${coachNum}</td>
             <td>${type}</td>
+            <td>${coach['Left Date'] ? formatIfDate(coach['Left Date']) : '-'}</td>
+            <td>${coach['Arrival Date'] ? formatIfDate(coach['Arrival Date']) : '-'}</td>
+            <td>${coach['Type of WSPD'] || '-'}</td>
+            <td>${coach['DB Train No'] || coach['Position'] || '-'}</td>
             <td>${indication}</td>
         `;
         // Remove bottom border from main row cells to connect with sub-row
@@ -701,7 +706,7 @@ async function viewRakeCoaches() {
         subTr.style.cursor = 'pointer';
         subTr.onclick = tr.onclick;
         subTr.innerHTML = `
-            <td colspan="5" style="padding-top: 0; padding-bottom: 0.75rem; color: #94a3b8; font-size: 0.85rem;">
+            <td colspan="9" style="padding-top: 0; padding-bottom: 0.75rem; color: #94a3b8; font-size: 0.85rem;">
                 <div style="display: flex; flex-direction: column; gap: 0.4rem;">
                     <div>
                         <span style="display: inline-block; width: 120px;">
@@ -1089,6 +1094,48 @@ function formatDateDMY(dStr) {
 // Keep formatIfDate as an alias for formatDateDMY for compatibility with existing calls
 function formatIfDate(displayValue) {
     return formatDateDMY(displayValue);
+}
+
+function formatDateYMD(dStr) {
+    if (!dStr || dStr === '-') return '';
+    let d = String(dStr).trim();
+    
+    // If it's a full ISO timestamp (contains T), parse it to get the local date
+    if (d.includes('T')) {
+        const parsed = new Date(d);
+        if (!isNaN(parsed.getTime())) {
+            return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+        }
+        // Fallback if Date parsing fails
+        d = d.split('T')[0];
+    }
+    
+    // If it's already YYYY-MM-DD
+    if (d.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return d;
+    }
+    
+    // Check if it's DD-MM-YYYY (or DD/MM/YYYY)
+    const parts = d.split(/[-\/]/);
+    if (parts.length === 3) {
+        if (parts[2].length === 4) {
+            // DD-MM-YYYY -> YYYY-MM-DD
+            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        } else if (parts[0].length === 4) {
+            // YYYY-MM-DD -> YYYY-MM-DD
+            return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+        }
+    }
+    
+    // Fallback parsing
+    if (!/^\d+$/.test(d)) {
+        const parsed = new Date(d);
+        if (!isNaN(parsed.getTime())) {
+            return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+        }
+    }
+    
+    return '';
 }
 
 // --- Mock Data Helpers (For Demo) ---
@@ -1566,11 +1613,20 @@ function viewWspRakeCoaches() {
             
             const hasWheelCond = wheelCond !== '-';
             
+            const leftDate = coach['Left Date'] ? formatIfDate(coach['Left Date']) : '-';
+            const arrivalDate = coach['Arrival Date'] ? formatIfDate(coach['Arrival Date']) : '-';
+            const wspType = coach['Type of WSPD'] || '-';
+            const dbPos = coach['DB Train No'] || coach['Position'] || '-';
+            
             tr.innerHTML = `
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${pos}</td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${rly}</td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}><span class="highlight-badge">${coachNum}</span></td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${type}</td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${leftDate}</td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${arrivalDate}</td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${wspType}</td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${dbPos}</td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${indication}</td>
             `;
             
@@ -1581,7 +1637,7 @@ function viewWspRakeCoaches() {
                 const subTr = document.createElement('tr');
                 subTr.style.cursor = 'pointer';
                 subTr.innerHTML = `
-                    <td colspan="5" style="padding-top: 0; color: var(--text-muted); font-size: 0.85rem; border-top: none;">
+                    <td colspan="9" style="padding-top: 0; color: var(--text-muted); font-size: 0.85rem; border-top: none;">
                         <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px; opacity: 0.9; color: #e74c3c;"></i> <span style="color: #e74c3c;">${wheelCond}</span>
                     </td>
                 `;
@@ -1782,6 +1838,24 @@ async function fetchWspHistory(coachNumber) {
         const historyContainer = document.getElementById('wspHistoryContainer');
         historyContainer.innerHTML = '';
         
+        // Reset defect form state and hide it
+        const defectForm = document.getElementById('wspDefectForm');
+        if (defectForm) defectForm.reset();
+        const editRowIdx = document.getElementById('wspEditRowIndex');
+        if (editRowIdx) editRowIdx.value = '';
+        const wrapper = document.getElementById('wspDefectFormWrapper');
+        if (wrapper && !wrapper.classList.contains('hidden')) {
+            wrapper.classList.add('hidden');
+            const header = wrapper.previousElementSibling;
+            if (header) {
+                const chevron = header.querySelector('.chevron');
+                if (chevron) {
+                    chevron.classList.remove('fa-chevron-up');
+                    chevron.classList.add('fa-chevron-down');
+                }
+            }
+        }
+        
         document.getElementById('wspResultCoachId').innerText = coachNumber;
         document.getElementById('wspDefectCoachNum').value = coachNumber;
         
@@ -1798,12 +1872,7 @@ async function fetchWspHistory(coachNumber) {
                 card.style.borderLeft = '3px solid #10b981';
                 
                 const dDate = entry['Download Date'] || entry['download date'] || '-';
-                let fmtDDate = String(dDate);
-                if (fmtDDate.includes('T')) fmtDDate = fmtDDate.split('T')[0];
-                const parts = fmtDDate.split('-');
-                if (parts.length === 3 && parts[0].length === 4) {
-                    fmtDDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                }
+                const fmtDDate = formatDateDMY(dDate);
                 
                 let html = `
                     <div class="accordion-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('fa-chevron-up'); this.querySelector('.chevron').classList.toggle('fa-chevron-down');">
@@ -1965,16 +2034,7 @@ function renderScheduleResults(dataObj) {
     
     const detailsContainer = document.getElementById('scheduleCoachDetailsContainer');
     
-    const fmtDate = (dStr) => {
-        if(!dStr || dStr === '-') return '-';
-        let d = String(dStr);
-        if(d.includes('T')) d = d.split('T')[0];
-        const parts = d.split('-');
-        if(parts.length === 3 && parts[0].length === 4) {
-            return `${parts[2]}-${parts[1]}-${parts[0]}`;
-        }
-        return d;
-    };
+    const fmtDate = (dStr) => formatDateDMY(dStr);
     
     let trainNo = '-';
     let ci = '-';
@@ -2030,17 +2090,7 @@ function renderScheduleResults(dataObj) {
     `;
     
     // Helper to format date for input type="date"
-    const inputDateFmt = (dStr) => {
-        if(!dStr || dStr === '-') return '';
-        let d = String(dStr);
-        if(d.includes('T')) return d.split('T')[0];
-        // If DD/MM/YYYY
-        const parts = d.split('/');
-        if(parts.length === 3) {
-            return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
-        }
-        return '';
-    };
+    const inputDateFmt = (dStr) => formatDateYMD(dStr);
 
     // Populate form
     document.getElementById('scheduleRowIndex').value = dataObj['_rowIndex'] || '';
@@ -2060,6 +2110,9 @@ function renderScheduleResults(dataObj) {
     document.getElementById('schedulePPEnd').value = dataObj['stiffener plate PP end'] || '';
     document.getElementById('scheduleNPPEnd').value = dataObj['stiffener plate NPP end'] || '';
     
+    document.getElementById('scheduleCBCMake').value = dataObj['CBC Make'] || '';
+    document.getElementById('scheduleStaffToken').value = dataObj['Staff Token Number'] || '';
+    
     document.getElementById('scheduleRemarks').value = dataObj['ATTENTION GIVEN IF ANY'] || '';
     
     navigateTo('scheduleResultsScreen');
@@ -2067,6 +2120,32 @@ function renderScheduleResults(dataObj) {
 
 async function handleScheduleSubmit(e) {
     e.preventDefault();
+    
+    const { value: password } = await Swal.fire({
+        title: 'Enter Password',
+        input: 'password',
+        inputLabel: 'Please enter the password to update schedule data',
+        inputPlaceholder: 'Enter password',
+        inputAttributes: {
+            autocapitalize: 'off',
+            autocorrect: 'off'
+        },
+        showCancelButton: true,
+        background: 'var(--surface)',
+        color: 'var(--text)',
+        confirmButtonColor: '#3b82f6',
+        cancelButtonColor: '#64748b'
+    });
+
+    if (password === undefined) {
+        // User clicked cancel
+        return;
+    }
+
+    if (password !== '1212') {
+        showErrorAlert('Wrong password');
+        return;
+    }
     
     const btn = document.getElementById('scheduleSubmitBtn');
     btn.disabled = true;
@@ -2089,6 +2168,8 @@ async function handleScheduleSubmit(e) {
         r5: document.getElementById('scheduleR5').value,
         ppEnd: document.getElementById('schedulePPEnd').value,
         nppEnd: document.getElementById('scheduleNPPEnd').value,
+        cbcMake: document.getElementById('scheduleCBCMake').value,
+        staffToken: document.getElementById('scheduleStaffToken').value,
         remarks: document.getElementById('scheduleRemarks').value
     };
     
@@ -2265,9 +2346,7 @@ function editWspEntry(rowIndex) {
     // Handle Date (Download Date)
     const dateKey = Object.keys(entry).find(k => String(k).toLowerCase().trim() === 'download date');
     if(dateKey && entry[dateKey]) {
-        let dDate = String(entry[dateKey]);
-        if(dDate.includes('T')) dDate = dDate.split('T')[0];
-        document.getElementById('wspDownloadDate').value = dDate;
+        document.getElementById('wspDownloadDate').value = formatDateYMD(entry[dateKey]);
     }
     
     // Ensure we are on the correct screen
@@ -2285,7 +2364,49 @@ function editWspEntry(rowIndex) {
         }
         const detailsContainer = document.getElementById('wspCoachDetailsContainer');
         if (detailsContainer) {
-            detailsContainer.innerHTML = '';
+            const fmtDate = (dStr) => formatDateDMY(dStr);
+            const rly = entry['RLY'] || entry['rly'] || '-';
+            const type = entry['Coach Type'] || entry['coach type'] || '-';
+            const typeOfWspd = entry['Type of WSPD'] || entry['type of wspd'] || '-';
+            const trainNo = entry['DB Train No'] || entry['train no'] || '-';
+            const ci = entry['CI'] || entry['ci'] || '-';
+            const leftDate = entry['Left Date'] || entry['left date'] || '-';
+            const arrivalDate = entry['Arrival Date'] || entry['arrival date'] || '-';
+            
+            detailsContainer.innerHTML = `
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Number</span>
+                    <span style="font-weight:600; font-size:1.1rem; color: #10b981;">${coachNo}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Owning Railway</span>
+                    <span style="font-weight:500;">${rly}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Type</span>
+                    <span style="font-weight:500;">${type}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Type of WSPD</span>
+                    <span style="font-weight:500;">${typeOfWspd}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Train Number</span>
+                    <span style="font-weight:500;" id="wspDetailsTrainNo">${trainNo}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">CI</span>
+                    <span style="font-weight:500;">${ci}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Left Date</span>
+                    <span style="font-weight:500;">${fmtDate(leftDate)}</span>
+                </div>
+                <div>
+                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Arrival Date</span>
+                    <span style="font-weight:500;">${fmtDate(arrivalDate)}</span>
+                </div>
+            `;
         }
     }
 
@@ -2346,8 +2467,31 @@ async function fetchWspPendingWork() {
                 window.wspHistoryMap[entry._rowIndex] = entry; // Save for editing
             });
             
+            // Sort grouped entries by arrival date
+            const parseDateString = (dateStr) => {
+                if (!dateStr || dateStr === '-') return Infinity;
+                const parts = String(dateStr).split('-');
+                if (parts.length === 3 && parts[2].length === 4) {
+                    return new Date(`${parts[2]}-${parts[1]}-${parts[0]}T00:00:00Z`).getTime();
+                }
+                const ts = Date.parse(dateStr);
+                return isNaN(ts) ? Infinity : ts;
+            };
+
+            const sortedEntries = Object.entries(grouped).sort((a, b) => {
+                const dateA = a[1][0]['Arrival Date'] || a[1][0]['arrival date'] || '-';
+                const dateB = b[1][0]['Arrival Date'] || b[1][0]['arrival date'] || '-';
+                return parseDateString(dateA) - parseDateString(dateB);
+            });
+
             // Render Accordion
-            for (const [coachNo, entries] of Object.entries(grouped)) {
+            for (const [coachNo, entries] of sortedEntries) {
+                const firstEntry = entries[0];
+                const leftDate = firstEntry['Left Date'] || firstEntry['left date'] || '-';
+                const arrivalDate = firstEntry['Arrival Date'] || firstEntry['arrival date'] || '-';
+                const wspType = firstEntry['Type of WSPD'] || firstEntry['type of wspd'] || '-';
+                const pos = firstEntry['DB Train No'] || firstEntry['Position'] || firstEntry['position'] || '-';
+                
                 const coachCard = document.createElement('div');
                 coachCard.className = 'glass-card slide-up';
                 coachCard.style.padding = '0';
@@ -2356,7 +2500,18 @@ async function fetchWspPendingWork() {
                 
                 let coachHtml = `
                     <div class="accordion-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 1.2rem; background: rgba(255,255,255,0.05);" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('fa-chevron-up'); this.querySelector('.chevron').classList.toggle('fa-chevron-down');">
-                        <div style="font-weight: 600; font-size: 1.1rem;"><i class="fa-solid fa-train-tram" style="color:#10b981; margin-right: 0.5rem;"></i> Coach: <span style="color:var(--text);">${coachNo}</span> <span style="font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 2px 6px; border-radius: 4px; margin-left: 0.5rem;">${entries.length} Pending</span></div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.4rem;">
+                                <i class="fa-solid fa-train-tram" style="color:#10b981; margin-right: 0.5rem;"></i> Coach: <span style="color:var(--text);">${coachNo}</span> 
+                                <span style="font-size: 0.8rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 2px 6px; border-radius: 4px; margin-left: 0.5rem;">${entries.length} Pending</span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem; font-size: 0.85rem;">
+                                <div style="background: rgba(255,255,255,0.03); padding: 0.4rem 0.6rem; border-radius: 4px; display: flex; align-items: center;"><i class="fa-solid fa-train" style="opacity:0.7; width: 16px; margin-right: 4px; color: #3b82f6;"></i> <span style="color:var(--text-muted); margin-right: 4px;">Train:</span> <span>${pos}</span></div>
+                                <div style="background: rgba(255,255,255,0.03); padding: 0.4rem 0.6rem; border-radius: 4px; display: flex; align-items: center;"><i class="fa-solid fa-gear" style="opacity:0.7; width: 16px; margin-right: 4px; color: #8b5cf6;"></i> <span style="color:var(--text-muted); margin-right: 4px;">WSP:</span> <span>${wspType}</span></div>
+                                <div style="background: rgba(255,255,255,0.03); padding: 0.4rem 0.6rem; border-radius: 4px; display: flex; align-items: center;"><i class="fa-solid fa-arrow-right-from-bracket" style="opacity:0.7; width: 16px; margin-right: 4px; color: #10b981;"></i> <span style="color:var(--text-muted); margin-right: 4px;">Left:</span> <span>${formatIfDate(leftDate)}</span></div>
+                                <div style="background: rgba(255,255,255,0.03); padding: 0.4rem 0.6rem; border-radius: 4px; display: flex; align-items: center;"><i class="fa-solid fa-arrow-right-to-bracket" style="opacity:0.7; width: 16px; margin-right: 4px; color: #f59e0b;"></i> <span style="color:var(--text-muted); margin-right: 4px;">Arr:</span> <span>${formatIfDate(arrivalDate)}</span></div>
+                            </div>
+                        </div>
                         <i class="fa-solid fa-chevron-down chevron"></i>
                     </div>
                     <div class="accordion-content hidden" style="padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -2364,12 +2519,7 @@ async function fetchWspPendingWork() {
                 
                 entries.forEach((entry, idx) => {
                     const dDate = entry['Download Date'] || entry['download date'] || '-';
-                    let fmtDDate = String(dDate);
-                    if (fmtDDate.includes('T')) fmtDDate = fmtDDate.split('T')[0];
-                    const parts = fmtDDate.split('-');
-                    if (parts.length === 3 && parts[0].length === 4) {
-                        fmtDDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
-                    }
+                    const fmtDDate = formatDateDMY(dDate);
                     
                     coachHtml += `
                         <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-left: 3px solid #f59e0b; margin-bottom: 1rem; border-radius: 4px;">

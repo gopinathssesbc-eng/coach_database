@@ -144,29 +144,38 @@ function doGet(e) {
     }
     
     const parseRow = (row, index) => {
+      const formatVal = (val) => {
+        if (val instanceof Date) {
+          if (isNaN(val.getTime())) return '';
+          return val.getFullYear() + '-' + String(val.getMonth() + 1).padStart(2, '0') + '-' + String(val.getDate()).padStart(2, '0');
+        }
+        return val;
+      };
       const resultObj = {};
       for (let j = 0; j < headers.length; j++) {
         if (headers[j]) {
-          resultObj[headers[j]] = row[j];
+          resultObj[headers[j]] = formatVal(row[j]);
         }
       }
-      resultObj['COACH NO.'] = row[8];
-      resultObj['D 2'] = row[12];
-      resultObj['D 3'] = row[13];
-      resultObj['L1'] = row[19];
-      resultObj['R8'] = row[20];
-      resultObj['L2'] = row[21];
-      resultObj['R7'] = row[22];
-      resultObj['L3'] = row[23];
-      resultObj['R6'] = row[24];
-      resultObj['L4'] = row[25];
-      resultObj['R5'] = row[26];
-      resultObj['stiffener plate PP end'] = row[27];
-      resultObj['stiffener plate NPP end'] = row[28];
-      resultObj['ATTENTION GIVEN IF ANY'] = row[30];
+      resultObj['COACH NO.'] = formatVal(row[8]);
+      resultObj['D 2'] = formatVal(row[12]);
+      resultObj['D 3'] = formatVal(row[13]);
+      resultObj['L1'] = formatVal(row[19]);
+      resultObj['R8'] = formatVal(row[20]);
+      resultObj['L2'] = formatVal(row[21]);
+      resultObj['R7'] = formatVal(row[22]);
+      resultObj['L3'] = formatVal(row[23]);
+      resultObj['R6'] = formatVal(row[24]);
+      resultObj['L4'] = formatVal(row[25]);
+      resultObj['R5'] = formatVal(row[26]);
+      resultObj['stiffener plate PP end'] = formatVal(row[27]);
+      resultObj['stiffener plate NPP end'] = formatVal(row[28]);
+      resultObj['CBC Make'] = formatVal(row[29]);
+      resultObj['ATTENTION GIVEN IF ANY'] = formatVal(row[30]);
+      resultObj['Staff Token Number'] = formatVal(row[37]);
       
       resultObj['_rowIndex'] = index + 1;
-      resultObj['_rawRow'] = row;
+      resultObj['_rawRow'] = row.map(formatVal);
       return resultObj;
     };
 
@@ -225,8 +234,19 @@ function doGet(e) {
                 headers = importedData[0]; // Or row 1
             }
             
+            let impCoachIdx = 0;
+            const findIdx = (texts) => {
+                for(let k=0; k<headers.length; k++) {
+                   const h = String(headers[k]).toLowerCase();
+                   if(texts.some(t => h.includes(t))) return k;
+                }
+                return -1;
+            };
+            const cIdx = findIdx(['coach no', 'coach num']);
+            if (cIdx !== -1) impCoachIdx = cIdx;
+            
             for (let i = 1; i < importedData.length; i++) { // Check from row 2
-                if (String(importedData[i][0]).trim() === String(coachNumber).trim()) {
+                if (String(importedData[i][impCoachIdx]).trim() === String(coachNumber).trim()) {
                     importedFound = true;
                     // Map headers to row
                     for (let j = 0; j < headers.length; j++) {
@@ -234,6 +254,9 @@ function doGet(e) {
                             importedMatchData[headers[j]] = importedData[i][j];
                         }
                     }
+                    // Extract DB Train No from column R (index 17) or 'status' header
+                    const tIdx = findIdx(['status']);
+                    importedMatchData['DB Train No'] = tIdx !== -1 ? importedData[i][tIdx] : importedData[i][17];
                     
                     // Normalize keys for the frontend
                     if (!importedMatchData['OWN RLY'] && importedMatchData['RLY']) {
@@ -325,6 +348,9 @@ function doPost(e) {
       
       if (body.ppEnd !== undefined) sheet.getRange(rowIndex, 28).setValue(body.ppEnd);
       if (body.nppEnd !== undefined) sheet.getRange(rowIndex, 29).setValue(body.nppEnd);
+      
+      if (body.cbcMake !== undefined) sheet.getRange(rowIndex, 30).setValue(body.cbcMake);
+      if (body.staffToken !== undefined) sheet.getRange(rowIndex, 38).setValue(body.staffToken);
       
       if (body.remarks !== undefined) sheet.getRange(rowIndex, 31).setValue(body.remarks);
       

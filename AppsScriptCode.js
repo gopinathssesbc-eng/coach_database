@@ -153,6 +153,9 @@ function doGet(e) {
       let impRlyIdx = 1;
       let impTypeWspdIdx = -1;
       let impWspMakeIdx = -1;
+      let impLeftDateIdx = -1;
+      let impArrivalDateIdx = -1;
+      let impTrainNoIdx = 17; // Column R
       
       if (impHeaders) {
           const findIdx = (texts) => {
@@ -167,6 +170,12 @@ function doGet(e) {
           const rIdx = findIdx(['rly', 'railway']);
           if (rIdx !== -1) impRlyIdx = rIdx;
           impTypeWspdIdx = findIdx(['type of wspd']);
+          impLeftDateIdx = findIdx(['left date', 'left']);
+          impArrivalDateIdx = findIdx(['arrival date', 'arrival']);
+          
+          // Train number is in column R (index 17), falling back to exact index if header match fails
+          const tIdx = findIdx(['status']); 
+          if (tIdx !== -1) impTrainNoIdx = tIdx;
           
           const exactWspIdx = impHeaders.findIndex(h => {
               const str = String(h).toLowerCase().trim();
@@ -206,6 +215,14 @@ function doGet(e) {
          }
       }
       
+      const formatVal = (val) => {
+        if (val instanceof Date) {
+          if (isNaN(val.getTime())) return '';
+          return val.getFullYear() + '-' + String(val.getMonth() + 1).padStart(2, '0') + '-' + String(val.getDate()).padStart(2, '0');
+        }
+        return val;
+      };
+
       for (let k = 0; k < foundMatches.length; k++) {
         const matchRow = foundMatches[k].data;
         const rowIndex = foundMatches[k].rowIndex;
@@ -214,7 +231,7 @@ function doGet(e) {
         // Loop through columns. We include all columns now.
         for (let j = 0; j < headers.length; j++) {
           if (headers[j]) {
-            resultObj[headers[j]] = matchRow[j];
+            resultObj[headers[j]] = formatVal(matchRow[j]);
           }
         }
         
@@ -224,18 +241,30 @@ function doGet(e) {
           let foundRly = '-';
           let foundTypeOfWspd = '-';
           let foundWspMake = '-';
+          let foundLeftDate = '-';
+          let foundArrivalDate = '-';
+          let foundDbTrainNo = '-';
           
           for (let d = 2; d < importedDbData.length; d++) {
              if (String(importedDbData[d][impCoachIdx]).trim() === coachNumber) {
                 foundRly = importedDbData[d][impRlyIdx];
                 if (impTypeWspdIdx !== -1) foundTypeOfWspd = importedDbData[d][impTypeWspdIdx];
                 if (impWspMakeIdx !== -1) foundWspMake = importedDbData[d][impWspMakeIdx];
+                if (impLeftDateIdx !== -1) foundLeftDate = formatVal(importedDbData[d][impLeftDateIdx]);
+                if (impArrivalDateIdx !== -1) foundArrivalDate = formatVal(importedDbData[d][impArrivalDateIdx]);
+                
+                if (impTrainNoIdx !== -1 && importedDbData[d][impTrainNoIdx]) {
+                    foundDbTrainNo = importedDbData[d][impTrainNoIdx];
+                }
                 break;
              }
           }
           resultObj['RLY'] = foundRly;
           resultObj['Type of WSPD'] = foundTypeOfWspd;
           resultObj['WSP Make'] = foundWspMake;
+          resultObj['Left Date'] = foundLeftDate;
+          resultObj['Arrival Date'] = foundArrivalDate;
+          resultObj['DB Train No'] = foundDbTrainNo;
         }
         
         // Look up Wheel Condition from DOWNLOAD status modified
@@ -285,11 +314,11 @@ function doGet(e) {
         }
         
         // Add explicit properties for columns to avoid header typos
-        resultObj['_colO'] = matchRow[14]; // Rake String
-        resultObj['_colP'] = matchRow[15]; // Left Date (Departure)
-        resultObj['_colQ'] = matchRow[16]; // Arrival Date
-        resultObj['_colS'] = matchRow[18]; // Indication
-        resultObj['_rawRow'] = matchRow;   // Full unmapped array for column index access
+        resultObj['_colO'] = formatVal(matchRow[14]); // Rake String
+        resultObj['_colP'] = formatVal(matchRow[15]); // Left Date (Departure)
+        resultObj['_colQ'] = formatVal(matchRow[16]); // Arrival Date
+        resultObj['_colS'] = formatVal(matchRow[18]); // Indication
+        resultObj['_rawRow'] = matchRow.map(formatVal);   // Full unmapped array for column index access
         resultObj['_headers'] = headers;   // Headers array for index-to-name mapping
         resultObj['_rowIndex'] = rowIndex; // Keep track of the exact row in Google Sheet
         
