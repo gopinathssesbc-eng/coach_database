@@ -20,12 +20,106 @@ function doGet(e) {
   const isGetTrains = !!e.parameter.getTrains;
   const isDateSearch = !!e.parameter.date;
   const isPendingWorkSearch = !!e.parameter.pendingWork;
+  const isLogVisit = !!e.parameter.logVisit;
+  const isGetAnalytics = !!e.parameter.getAnalytics;
   
-  if (!isTrainSearch && !isCoachSearch && !isGetTrains && !isDateSearch && !isPendingWorkSearch) {
+  if (!isTrainSearch && !isCoachSearch && !isGetTrains && !isDateSearch && !isPendingWorkSearch && !isLogVisit && !isGetAnalytics) {
     return createJsonResponse({
       status: 'error',
       message: 'No Search Parameter provided.'
     });
+  }
+
+  // --- NEW: Handle Analytics Logging ---
+  if (isLogVisit) {
+    try {
+      const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Analytics");
+      if (!sheet) return createJsonResponse({status: 'error', message: 'Analytics sheet not found'});
+      
+      // If empty, set headers
+      if (sheet.getLastRow() === 0) {
+        sheet.appendRow(["Timestamp", "Date", "Session ID", "Device Type", "Browser"]);
+      }
+      
+      const timestamp = new Date();
+      const dateStr = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "yyyy-MM-dd");
+      
+      sheet.appendRow([
+        timestamp, 
+        dateStr, 
+        e.parameter.sessionId || "Unknown", 
+        e.parameter.device || "Unknown",
+        e.parameter.browser || "Unknown"
+      ]);
+      
+      return createJsonResponse({status: 'success'});
+    } catch (err) {
+      return createJsonResponse({status: 'error', message: err.toString()});
+    }
+  }
+
+  // --- NEW: Fetch Analytics for Admin Page ---
+  if (isGetAnalytics) {
+    try {
+      const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Analytics");
+      if (!sheet) return createJsonResponse({status: 'error', message: 'Analytics sheet not found'});
+      
+      const data = sheet.getDataRange().getValues();
+      if (data.length <= 1) return createJsonResponse({status: 'success', data: {dailyVisits: 0, activeUsers: 0, devices: {mobile: 0, desktop: 0}}});
+      
+      const rows = data.slice(1);
+      const todayStr = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
+      
+      let dailyVisitors = 0;
+      let mobileCount = 0;
+      let desktopCount = 0;
+      let recentSessions = new Set();
+      const tenMinutesAgo = new Date(new Date().getTime() - 10 * 60000);
+      
+      rows.forEach(row => {
+        const rowDateRaw = row[1];
+        let rowDate = "";
+        try {
+          if (rowDateRaw instanceof Date) {
+            rowDate = Utilities.formatDate(rowDateRaw, Session.getScriptTimeZone(), "yyyy-MM-dd");
+          } else {
+            // Also try to parse if it's a date string
+            rowDate = Utilities.formatDate(new Date(rowDateRaw), Session.getScriptTimeZone(), "yyyy-MM-dd");
+          }
+        } catch (e) {
+          rowDate = String(rowDateRaw);
+        }
+        
+        const sessionId = row[2];
+        const device = row[3];
+        const timestamp = new Date(row[0]);
+        
+        // Count today's visitors (unique sessions)
+        if (rowDate === todayStr) {
+          dailyVisitors++; // Or use a Set for unique today visitors
+          
+          if (String(device).toLowerCase().includes('mobile')) mobileCount++;
+          else desktopCount++;
+          
+          if (timestamp >= tenMinutesAgo) {
+            recentSessions.add(sessionId);
+          }
+        }
+      });
+      
+      const responseData = {
+        dailyVisits: dailyVisitors, // Total page loads today
+        activeUsers: recentSessions.size, // Unique sessions in last 10 mins
+        devices: {
+          mobile: mobileCount,
+          desktop: desktopCount
+        }
+      };
+      
+      return createJsonResponse({status: 'success', data: responseData});
+    } catch (err) {
+      return createJsonResponse({status: 'error', message: err.toString()});
+    }
   }
 
   try {

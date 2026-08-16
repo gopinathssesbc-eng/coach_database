@@ -22,7 +22,9 @@ const screens = {
     scheduleSearch: document.getElementById('scheduleSearchScreen'),
     scheduleResults: document.getElementById('scheduleResultsScreen'),
     dueCoaches: document.getElementById('dueCoachesScreen'),
-    wspPendingResults: document.getElementById('wspPendingResultsScreen')
+    wspPendingResults: document.getElementById('wspPendingResultsScreen'),
+    adminLogin: document.getElementById('adminLoginScreen'),
+    adminDashboard: document.getElementById('adminDashboardScreen')
 };
 
 // --- SweetAlert Helpers ---
@@ -54,9 +56,18 @@ function showWarningAlert(message) {
 document.addEventListener('DOMContentLoaded', () => {
     // Preload train options immediately so data is ready when the user passes the password screen
     fetchAvailableTrains();
+    
+    // Log user visit for Admin Analytics
+    logVisit();
 
     // Login
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    
+    // Admin Login
+    const adminLoginForm = document.getElementById('adminLoginForm');
+    if (adminLoginForm) {
+        adminLoginForm.addEventListener('submit', handleAdminLogin);
+    }
     
     // Toggle Password Visibility
     const togglePasswordBtn = document.getElementById('togglePasswordBtn');
@@ -213,6 +224,22 @@ function navigateTo(screenId) {
     }
 }
 
+function goBackFromWspResults() {
+    if (window.wspLastSearchScreen) {
+        navigateTo(window.wspLastSearchScreen);
+    } else {
+        navigateTo('wspSearchScreen');
+    }
+}
+
+function goBackFromResults() {
+    if (window.lastSearchScreen) {
+        navigateTo(window.lastSearchScreen);
+    } else {
+        navigateTo('searchScreen');
+    }
+}
+
 function logout() {
     document.getElementById('passwordInput').value = '';
     navigateTo('loginScreen');
@@ -255,6 +282,89 @@ async function switchSearchTab(tabName) {
         if (!trainsFetched) {
             await fetchAvailableTrains();
         }
+    }
+}
+
+// --- Admin & Analytics Logic ---
+function generateSessionId() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+function getDeviceType() {
+    const ua = navigator.userAgent;
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) return "Tablet";
+    if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) return "Mobile";
+    return "Desktop";
+}
+
+function getBrowserName() {
+    const ua = navigator.userAgent;
+    if (ua.includes("Firefox/")) return "Firefox";
+    if (ua.includes("Edg/")) return "Edge";
+    if (ua.includes("Chrome/") && !ua.includes("Edg/")) return "Chrome";
+    if (ua.includes("Safari/") && !ua.includes("Chrome/")) return "Safari";
+    return "Other";
+}
+
+let sessionId = localStorage.getItem('sessionId');
+if (!sessionId) {
+    sessionId = generateSessionId();
+    localStorage.setItem('sessionId', sessionId);
+}
+
+async function logVisit() {
+    try {
+        const device = getDeviceType();
+        const browser = getBrowserName();
+        const url = `${GOOGLE_APP_SCRIPT_URL}?logVisit=true&sessionId=${sessionId}&device=${encodeURIComponent(device)}&browser=${encodeURIComponent(browser)}`;
+        // Fire and forget
+        fetch(url).catch(e => console.error("Analytics ping failed", e));
+    } catch (err) {}
+}
+
+function handleAdminLogin(e) {
+    e.preventDefault();
+    const passwordInput = document.getElementById('adminPasswordInput');
+    const errorEl = document.getElementById('adminLoginError');
+
+    if (passwordInput.value === '0488') {
+        errorEl.classList.add('hidden');
+        passwordInput.value = '';
+        navigateTo('adminDashboardScreen');
+        fetchAdminAnalytics();
+    } else {
+        errorEl.classList.remove('hidden');
+        passwordInput.value = '';
+    }
+}
+
+async function fetchAdminAnalytics() {
+    const container = document.getElementById('adminDataContainer');
+    const loading = document.getElementById('adminLoading');
+    
+    container.classList.add('hidden');
+    loading.classList.remove('hidden');
+    
+    try {
+        const url = `${GOOGLE_APP_SCRIPT_URL}?getAnalytics=true`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.status === 'success' && data.data) {
+            document.getElementById('adminDailyVisitors').innerText = data.data.dailyVisits;
+            document.getElementById('adminActiveUsers').innerText = data.data.activeUsers;
+            document.getElementById('adminMobileCount').innerText = data.data.devices.mobile;
+            document.getElementById('adminDesktopCount').innerText = data.data.devices.desktop;
+            
+            loading.classList.add('hidden');
+            container.classList.remove('hidden');
+        } else {
+            loading.innerHTML = `<p class="error-text">Failed to load analytics: ${data.message || 'Unknown error'}</p>`;
+            console.error("Analytics fetch failed:", data);
+        }
+    } catch (e) {
+        console.error(e);
+        loading.innerHTML = `<p class="error-text">Error fetching analytics: ${e.message}</p>`;
     }
 }
 
@@ -347,6 +457,7 @@ async function handleSearch(e) {
             const data = JSON.parse(cachedCoach);
             if (data.status === 'success') {
                 if (data.data.length === 1) {
+                    window.lastSearchScreen = 'searchScreen';
                     await renderResults(data.data[0]);
                 } else if (data.data.length > 1) {
                     renderSelectionList(data.data);
@@ -378,6 +489,7 @@ async function handleSearch(e) {
             if (data.status === 'success') {
                 localStorage.setItem(cacheKey, JSON.stringify(data));
                 if (data.data.length === 1) {
+                    window.lastSearchScreen = 'searchScreen';
                     await renderResults(data.data[0]);
                 } else if (data.data.length > 1) {
                     renderSelectionList(data.data);
@@ -655,6 +767,7 @@ async function viewRakeCoaches() {
         const tr = document.createElement('tr');
         tr.style.cursor = 'pointer';
         tr.onclick = async () => {
+            window.lastSearchScreen = 'rakeResultsScreen';
             const icon = tr.querySelector('.fa-chevron-right, .fa-spinner');
             if (icon) icon.className = 'fa-solid fa-spinner fa-spin text-primary';
             await renderResults(coach);
@@ -784,8 +897,10 @@ function renderSelectionList(matchesArray, isWsp = false) {
         
         item.onclick = async () => {
             if (isWsp) {
+                window.wspLastSearchScreen = 'selectionScreen';
                 renderWspResults(match);
             } else {
+                window.lastSearchScreen = 'selectionScreen';
                 const icon = item.querySelector('.list-item-icon');
                 icon.className = 'fa-solid fa-spinner fa-spin list-item-icon';
                 await renderResults(match);
@@ -1212,7 +1327,6 @@ function switchWspTab(tab) {
     const coachForm = document.getElementById('wspSearchCoachForm');
     const rakeForm = document.getElementById('wspSearchRakeForm');
     const dateForm = document.getElementById('wspSearchDateForm');
-    const pendingForm = document.getElementById('wspSearchPendingForm');
     
     if(coachBtn) coachBtn.classList.remove('active');
     if(rakeBtn) rakeBtn.classList.remove('active');
@@ -1222,7 +1336,6 @@ function switchWspTab(tab) {
     if(coachForm) coachForm.classList.add('hidden');
     if(rakeForm) rakeForm.classList.add('hidden');
     if(dateForm) dateForm.classList.add('hidden');
-    if(pendingForm) pendingForm.classList.add('hidden');
     
     const wspResultScreens = ['wspResultsScreen', 'wspRakeResultsScreen', 'wspDateResultsScreen', 'wspPendingResultsScreen'];
     wspResultScreens.forEach(id => {
@@ -1261,9 +1374,6 @@ function switchWspTab(tab) {
     } else if (tab === 'date') {
         if(dateBtn) dateBtn.classList.add('active');
         if(dateForm) dateForm.classList.remove('hidden');
-    } else if (tab === 'pending') {
-        if(pendingBtn) pendingBtn.classList.add('active');
-        if(pendingForm) pendingForm.classList.remove('hidden');
     }
 }
 
@@ -1402,6 +1512,7 @@ async function fetchWspByDate() {
                 `;
                 
                 tr.onclick = () => {
+                    window.wspLastSearchScreen = 'wspDateResultsScreen';
                     const icon = tr.querySelector('.fa-chevron-down');
                     if (detailsTr.style.display === 'none') {
                         detailsTr.style.display = 'table-row';
@@ -1658,7 +1769,10 @@ function viewWspRakeCoaches() {
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${indication}</td>
             `;
             
-            tr.onclick = () => { renderWspResults(coach); };
+            tr.onclick = () => { 
+                window.wspLastSearchScreen = 'wspRakeResultsScreen';
+                renderWspResults(coach); 
+            };
             tbody.appendChild(tr);
             
             if (hasWheelCond) {
@@ -1669,7 +1783,10 @@ function viewWspRakeCoaches() {
                         <i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px; opacity: 0.9; color: #e74c3c;"></i> <span style="color: #e74c3c;">${wheelCond}</span>
                     </td>
                 `;
-                subTr.onclick = () => { renderWspResults(coach); };
+                subTr.onclick = () => { 
+                    window.wspLastSearchScreen = 'wspRakeResultsScreen';
+                    renderWspResults(coach); 
+                };
                 tbody.appendChild(subTr);
             }
         });
@@ -1701,6 +1818,7 @@ async function handleWspSearch(e) {
             const data = JSON.parse(cachedCoach);
             if (data.status === 'success') {
                 if (data.data.length === 1) {
+                    window.wspLastSearchScreen = 'wspSearchScreen';
                     renderWspResults(data.data[0]);
                 } else if (data.data.length > 1) {
                     renderSelectionList(data.data, true);
@@ -1725,6 +1843,7 @@ async function handleWspSearch(e) {
         if (data.status === 'success') {
             localStorage.setItem(cacheKey, JSON.stringify(data));
             if (data.data.length === 1) {
+                window.wspLastSearchScreen = 'wspSearchScreen';
                 renderWspResults(data.data[0]);
             } else if (data.data.length > 1) {
                 renderSelectionList(data.data, true);
@@ -2336,8 +2455,9 @@ async function fetchDueCoaches() {
 }
 
 function editWspEntry(rowIndex) {
-    if (!window.wspHistoryMap || !window.wspHistoryMap[rowIndex]) return;
-    const entry = window.wspHistoryMap[rowIndex];
+    if (!window.wspHistoryMap && !window.pendingWorkMap) return;
+    const entry = (window.wspHistoryMap && window.wspHistoryMap[rowIndex]) || (window.pendingWorkMap && window.pendingWorkMap[rowIndex]);
+    if (!entry) return;
     
     // Set Edit Row ID
     document.getElementById('wspEditRowIndex').value = rowIndex;
@@ -2380,6 +2500,7 @@ function editWspEntry(rowIndex) {
     // Ensure we are on the correct screen
     const resultsScreen = document.getElementById('wspResultsScreen');
     if (resultsScreen && resultsScreen.classList.contains('hidden')) {
+        window.wspLastSearchScreen = 'wspPendingResultsScreen';
         navigateTo('wspResultsScreen');
         const coachNo = entry['COACH NO'] || entry['coach no'] || entry._rawRow[0] || 'Unknown';
         document.getElementById('wspResultCoachId').innerText = coachNo;

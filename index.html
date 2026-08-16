@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Coach Database</title>
     <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=202607152146">
+    <link rel="stylesheet" href="style.css?v=202608162335">
     <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
 </head>
 <body>
     <!-- Background Elements for Premium Look -->
@@ -39,7 +41,10 @@
                 <p id="loginError" class="error-text hidden">Invalid password</p>
             </form>
         </div>
-        <div class="footer-branding">SBC COACHING DEPOT</div>
+        <div class="footer-branding" style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+            <div>SBC COACHING DEPOT</div>
+            <div style="font-size: 0.75rem; opacity: 0.7; font-family: monospace;">v1.2.0 | Updated: 2026-08-16 23:35</div>
+        </div>
     </div>
 
     <!-- Dashboard Screen -->
@@ -91,6 +96,84 @@
                 </div>
                 <i class="fa-solid fa-chevron-right chevron"></i>
             </button>
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="icon-btn" onclick="navigateTo('adminLoginScreen')" style="opacity: 0.5; transform: scale(0.9);" title="Admin Access">
+                    <i class="fa-solid fa-lock"></i>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Admin Login Screen -->
+    <div id="adminLoginScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>Admin Access</h1>
+                <p class="subtitle">Enter Admin PIN</p>
+            </div>
+        </header>
+        <main class="slide-up" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh;">
+            <div class="glass-card login-card" style="width: 100%; max-width: 350px;">
+                <form id="adminLoginForm">
+                    <div class="input-group">
+                        <i class="fa-solid fa-key input-icon"></i>
+                        <input type="password" id="adminPasswordInput" placeholder="Admin PIN" required>
+                    </div>
+                    <button type="submit" class="btn primary-btn btn-block" style="background: linear-gradient(135deg, #e11d48, #be123c);">
+                        <span>Access Dashboard</span>
+                    </button>
+                    <p id="adminLoginError" class="error-text hidden">Invalid PIN</p>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Admin Dashboard Screen -->
+    <div id="adminDashboardScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>Admin Dashboard</h1>
+                <p class="subtitle">Live User Analytics</p>
+            </div>
+            <button class="icon-btn sync-btn" onclick="fetchAdminAnalytics()" title="Refresh Analytics"><i class="fa-solid fa-rotate-right"></i></button>
+        </header>
+        <main class="slide-up">
+            <div id="adminLoading" style="text-align: center; margin-top: 2rem; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin fa-2x"></i>
+                <p style="margin-top: 1rem;">Fetching live analytics...</p>
+            </div>
+            <div id="adminDataContainer" class="hidden">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div class="glass-card" style="text-align: center; padding: 1.5rem;">
+                        <i class="fa-solid fa-users" style="font-size: 2rem; color: #3b82f6; margin-bottom: 0.5rem;"></i>
+                        <h3 id="adminDailyVisitors" style="font-size: 2rem; margin: 0; color: #f8fafc;">0</h3>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Daily Visits</p>
+                    </div>
+                    <div class="glass-card" style="text-align: center; padding: 1.5rem;">
+                        <i class="fa-solid fa-user-clock" style="font-size: 2rem; color: #10b981; margin-bottom: 0.5rem;"></i>
+                        <h3 id="adminActiveUsers" style="font-size: 2rem; margin: 0; color: #f8fafc;">0</h3>
+                        <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Active Now</p>
+                    </div>
+                </div>
+                
+                <div class="glass-card" style="padding: 1.5rem;">
+                    <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #e2e8f0;"><i class="fa-solid fa-laptop-mobile" style="margin-right: 8px;"></i>Devices Today</h3>
+                    <div style="display: flex; justify-content: space-around; align-items: center;">
+                        <div style="text-align: center;">
+                            <i class="fa-solid fa-mobile-screen" style="font-size: 2rem; color: #8b5cf6; margin-bottom: 0.5rem;"></i>
+                            <h4 id="adminMobileCount" style="margin: 0; font-size: 1.2rem;">0</h4>
+                            <small style="color: var(--text-muted);">Mobile</small>
+                        </div>
+                        <div style="text-align: center;">
+                            <i class="fa-solid fa-desktop" style="font-size: 2rem; color: #f59e0b; margin-bottom: 0.5rem;"></i>
+                            <h4 id="adminDesktopCount" style="margin: 0; font-size: 1.2rem;">0</h4>
+                            <small style="color: var(--text-muted);">Desktop</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -248,7 +331,7 @@
     <!-- Results Screen -->
     <div id="resultsScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('searchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="goBackFromResults()"><i class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1 id="resultCoachId">Coach Details</h1>
                 <p class="subtitle">Fetched from database</p>
@@ -259,7 +342,7 @@
             <div class="glass-card results-container" id="resultsContainer">
                 <!-- Dynamically populated properties will go here -->
             </div>
-            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="navigateTo('searchScreen')">
+            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="goBackFromResults()">
                 <i class="fa-solid fa-arrow-left"></i> Go Back
             </button>
         </main>
@@ -439,7 +522,7 @@
                     <button class="tab-btn active" id="wspTabCoach" onclick="switchWspTab('coach')">Coach Number</button>
                     <button class="tab-btn" id="wspTabRake" onclick="switchWspTab('rake')">By Rake</button>
                     <button class="tab-btn" id="wspTabDate" onclick="switchWspTab('date')">By Date</button>
-                    <button class="tab-btn" id="wspTabPending" onclick="switchWspTab('pending')">Pending Work</button>
+                    <button class="tab-btn" id="wspTabPending" onclick="fetchWspPendingWork()">Pending Work</button>
                 </div>
                 
                 <!-- Coach Number Search Form -->
@@ -505,16 +588,7 @@
                     </button>
                 </form>
 
-                <!-- Pending Work Search Form -->
-                <form id="wspSearchPendingForm" class="hidden">
-                    <div style="text-align: center; margin-bottom: 1.5rem; color: var(--text-muted);">
-                        Find all coaches with pending WSP work.
-                    </div>
-                    <button type="button" class="btn primary-btn btn-block" id="wspFetchPendingBtn" onclick="fetchWspPendingWork()" style="background: linear-gradient(135deg, #10b981, #059669);">
-                        <span class="btn-text">Find Pending Work</span>
-                        <div class="spinner hidden"></div>
-                    </button>
-                </form>
+                <!-- Pending Work Search Form Removed: Now triggers directly on tab click -->
             </div>
         </main>
     </div>
@@ -621,7 +695,7 @@
     <!-- WSP Results Screen -->
     <div id="wspResultsScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="goBackFromWspResults()"><i class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1 id="wspResultCoachId">Coach WSP</h1>
                 <p class="subtitle">History & Entry</p>
@@ -708,6 +782,7 @@
                             <option value="" disabled selected>Select Category</option>
                             <option value="No defect">No defect</option>
                             <option value="Sensor defect">Sensor defect</option>
+                            <option value="Sensor gap">Sensor gap</option>
                             <option value="Dump valve defect">Dump valve defect</option>
                             <option value="Pressure switch defect">Pressure switch defect</option>
                             <option value="Card defect">Card defect</option>
@@ -784,6 +859,6 @@
         </main>
     </div>
 
-    <script src="app.js?v=202607152146"></script>
+    <script src="app.js?v=202608162335" defer></script>
 </body>
 </html>
