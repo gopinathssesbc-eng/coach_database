@@ -1,5 +1,5 @@
 // Replace this URL with the actual Web App URL provided by Google Apps Script after deployment
-const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbycHVMuZHAGFNM3_wwrxBOHXPN1E2UrcHNLsOglKUjkR5vpiJgqj1y0gFseuRCvejfb/exec';
+const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx80F-Pl_HlqDO833n2MutRkBRuhGzqqIDIGC2l9Wkds9WTAFC9eN9g4dx8YCxSEaggYw/exec';
 
 // URL for the new Schedule Database Apps Script
 const SCHEDULE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzSrcye1yLxG5fsOsOScrSHAPgPGaP1EsNyeLML9JQusykQ-xWzt5i4oYbTQT1LDTL/exec';
