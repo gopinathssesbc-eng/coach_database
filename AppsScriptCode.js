@@ -6,7 +6,7 @@
  * 4. Save the project (Ctrl+S).
  * 5. Click Deploy > New deployment.
  * 6. Select type: "Web app".
- * 7. Description: "Coach Database API v1" (or similar).
+ * 7. Description: "Coach Database API v2 (Optimized)"
  * 8. Execute as: "Me" (your email).
  * 9. Who has access: "Anyone".
  * 10. Click Deploy and authorize the app if prompted.
@@ -30,7 +30,7 @@ function doGet(e) {
     });
   }
 
-  // --- NEW: Handle Analytics Logging ---
+  // --- Handle Analytics Logging ---
   if (isLogVisit) {
     try {
       const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Analytics");
@@ -58,7 +58,7 @@ function doGet(e) {
     }
   }
 
-  // --- NEW: Fetch Analytics for Admin Page ---
+  // --- Fetch Analytics for Admin Page ---
   if (isGetAnalytics) {
     try {
       const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Analytics");
@@ -83,7 +83,6 @@ function doGet(e) {
           if (rowDateRaw instanceof Date) {
             rowDate = Utilities.formatDate(rowDateRaw, Session.getScriptTimeZone(), "yyyy-MM-dd");
           } else {
-            // Also try to parse if it's a date string
             rowDate = Utilities.formatDate(new Date(rowDateRaw), Session.getScriptTimeZone(), "yyyy-MM-dd");
           }
         } catch (e) {
@@ -94,10 +93,8 @@ function doGet(e) {
         const device = row[3];
         const timestamp = new Date(row[0]);
         
-        // Count today's visitors (unique sessions)
         if (rowDate === todayStr) {
-          dailyVisitors++; // Or use a Set for unique today visitors
-          
+          dailyVisitors++; 
           if (String(device).toLowerCase().includes('mobile')) mobileCount++;
           else desktopCount++;
           
@@ -108,12 +105,9 @@ function doGet(e) {
       });
       
       const responseData = {
-        dailyVisits: dailyVisitors, // Total page loads today
-        activeUsers: recentSessions.size, // Unique sessions in last 10 mins
-        devices: {
-          mobile: mobileCount,
-          desktop: desktopCount
-        }
+        dailyVisits: dailyVisitors, 
+        activeUsers: recentSessions.size, 
+        devices: { mobile: mobileCount, desktop: desktopCount }
       };
       
       return createJsonResponse({status: 'success', data: responseData});
@@ -128,91 +122,97 @@ function doGet(e) {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(targetSheetName);
     
     if (!sheet) {
-      return createJsonResponse({
-        status: 'error',
-        message: 'Sheet "' + targetSheetName + '" not found.'
-      });
+      return createJsonResponse({ status: 'error', message: 'Sheet "' + targetSheetName + '" not found.' });
     }
 
-    const data = sheet.getDataRange().getValues();
-    
-    // Check if there is enough data
-    if (data.length < 1) {
-      return createJsonResponse({
-        status: 'error',
-        message: 'Not enough data in the sheet.'
-      });
+    const lastRow = sheet.getLastRow();
+    const lastCol = sheet.getLastColumn();
+
+    if (lastRow < 1 || lastCol < 1) {
+      return createJsonResponse({ status: 'error', message: 'Not enough data in the sheet.' });
     }
 
     let headers;
     let startIndex;
     
     if (targetSheetName === "Imported Database") {
-      headers = data[1]; // Headers on 2nd row
-      startIndex = 2;    // Data starts on 3rd row
+      headers = sheet.getRange(2, 1, 1, lastCol).getValues()[0]; 
+      startIndex = 2;    
     } else {
-      headers = data[0]; // Standard sheet headers on 1st row
-      startIndex = 1;    // Data starts on 2nd row
+      headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0]; 
+      startIndex = 1;    
     }
     
     // If requesting all trains, extract unique train codes and return immediately
     if (isGetTrains) {
       const trainSet = {};
-      for (let i = 2; i < data.length; i++) {
-        const colO = String(data[i][14]).trim();
-        if (colO.startsWith('RK')) {
-          const match = colO.match(/^RK([A-Z]+)/i);
-          if (match && match[1]) {
-            trainSet[match[1]] = true;
+      if (lastRow >= 3) {
+        const colOData = sheet.getRange(3, 15, lastRow - 2, 1).getValues();
+        for (let i = 0; i < colOData.length; i++) {
+          const colO = String(colOData[i][0]).trim();
+          if (colO.startsWith('RK')) {
+            const match = colO.match(/^RK([A-Z]+)/i);
+            if (match && match[1]) {
+              trainSet[match[1]] = true;
+            }
           }
         }
       }
-      return createJsonResponse({
-        status: 'success',
-        data: Object.keys(trainSet)
-      });
+      return createJsonResponse({ status: 'success', data: Object.keys(trainSet) });
     }
     
     let foundMatches = [];
 
-    // Loop through rows starting from startIndex
-    for (let i = startIndex; i < data.length; i++) {
-      const row = data[i];
+    // --- OPTIMIZED COACH SEARCH USING TEXTFINDER ---
+    if (isCoachSearch) {
+      const coachNumber = String(e.parameter.coachNumber).trim();
+      // Search only in Column A
+      const tf = sheet.getRange("A:A").createTextFinder(coachNumber).matchEntireCell(true);
+      const results = tf.findAll();
       
-      if (isCoachSearch) {
-        const coachNumber = String(row[0]).trim(); // Col1 (index 0)
-        if (coachNumber === String(e.parameter.coachNumber).trim()) {
-          foundMatches.push({ data: row, rowIndex: i + 1 });
+      for (let j = 0; j < results.length; j++) {
+        const rIdx = results[j].getRow();
+        if (rIdx > startIndex) {
+          const rowData = sheet.getRange(rIdx, 1, 1, lastCol).getValues()[0];
+          foundMatches.push({ data: rowData, rowIndex: rIdx });
         }
-      } else if (isTrainSearch) {
-        const colO = String(row[14]).trim(); // Column O (index 14)
-        const targetPrefix = 'RK' + String(e.parameter.train).trim();
-        // Check if Col O starts with RK + Train Code (e.g., RKCAPE)
-        if (colO.startsWith(targetPrefix)) {
-          foundMatches.push({ data: row, rowIndex: i + 1 });
-        }
-      } else if (isDateSearch && targetSheetName === "DOWNLOAD status modified") {
-        const dateColIndex = 9; // Download Date is index 9
-        const rowDateStr = String(row[dateColIndex]).trim();
-        let formattedRowDate = rowDateStr;
+      }
+    } 
+    // --- BULK SEARCHES (TRAIN, DATE, PENDING) LOAD ALL DATA ---
+    else {
+      const data = sheet.getDataRange().getValues();
+      for (let i = startIndex; i < data.length; i++) {
+        const row = data[i];
         
-        if (row[dateColIndex] instanceof Date) {
-            const d = row[dateColIndex];
-            formattedRowDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        } else if (rowDateStr) {
-            const d = new Date(rowDateStr);
-            if (!isNaN(d.getTime())) {
-                formattedRowDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-            }
-        }
+        if (isTrainSearch) {
+          const colO = String(row[14]).trim(); // Column O (index 14)
+          const targetPrefix = 'RK' + String(e.parameter.train).trim();
+          if (colO.startsWith(targetPrefix)) {
+            foundMatches.push({ data: row, rowIndex: i + 1 });
+          }
+        } else if (isDateSearch && targetSheetName === "DOWNLOAD status modified") {
+          const dateColIndex = 9; // Download Date is index 9
+          const rowDateStr = String(row[dateColIndex]).trim();
+          let formattedRowDate = rowDateStr;
+          
+          if (row[dateColIndex] instanceof Date) {
+              const d = row[dateColIndex];
+              formattedRowDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+          } else if (rowDateStr) {
+              const d = new Date(rowDateStr);
+              if (!isNaN(d.getTime())) {
+                  formattedRowDate = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+              }
+          }
 
-        if (formattedRowDate === String(e.parameter.date).trim()) {
-          foundMatches.push({ data: row, rowIndex: i + 1 });
-        }
-      } else if (isPendingWorkSearch && targetSheetName === "DOWNLOAD status modified") {
-        const colZ = String(row[25]).trim().toLowerCase();
-        if (colZ === 'yes') {
-          foundMatches.push({ data: row, rowIndex: i + 1 });
+          if (formattedRowDate === String(e.parameter.date).trim()) {
+            foundMatches.push({ data: row, rowIndex: i + 1 });
+          }
+        } else if (isPendingWorkSearch && targetSheetName === "DOWNLOAD status modified") {
+          const colZ = String(row[25]).trim().toLowerCase();
+          if (colZ === 'yes') {
+            foundMatches.push({ data: row, rowIndex: i + 1 });
+          }
         }
       }
     }
@@ -224,21 +224,29 @@ function doGet(e) {
       let impHeaders = null;
       let downloadStatusData = null;
       let dlHeaders = null;
+      let dlSheet = null;
       
+      // Load secondary sheets headers (and data if bulk search)
       if (targetSheetName === "DOWNLOAD status modified") {
         const importedSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Imported Database");
         if (importedSheet) {
-          importedDbData = importedSheet.getDataRange().getValues();
-          if (importedDbData.length > 1) {
-            impHeaders = importedDbData[1]; // Headers on 2nd row for Imported Database
+          const impLastCol = importedSheet.getLastColumn();
+          if (impLastCol > 0) {
+             impHeaders = importedSheet.getRange(2, 1, 1, impLastCol).getValues()[0];
+             if (!isCoachSearch) { // For bulk searches, pre-load all data to avoid loop queries
+                importedDbData = importedSheet.getDataRange().getValues();
+             }
           }
         }
       } else if (targetSheetName === "Imported Database") {
-        const dlSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DOWNLOAD status modified");
+        dlSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DOWNLOAD status modified");
         if (dlSheet) {
-          downloadStatusData = dlSheet.getDataRange().getValues();
-          if (downloadStatusData.length > 0) {
-            dlHeaders = downloadStatusData[0]; // Headers on 1st row
+          const dlLastCol = dlSheet.getLastColumn();
+          if (dlLastCol > 0) {
+             dlHeaders = dlSheet.getRange(1, 1, 1, dlLastCol).getValues()[0];
+             if (!isCoachSearch) {
+                downloadStatusData = dlSheet.getDataRange().getValues();
+             }
           }
         }
       }
@@ -267,7 +275,6 @@ function doGet(e) {
           impLeftDateIdx = findIdx(['left date', 'left']);
           impArrivalDateIdx = findIdx(['arrival date', 'arrival']);
           
-          // Train number is in column R (index 17), falling back to exact index if header match fails
           const tIdx = findIdx(['status']); 
           if (tIdx !== -1) impTrainNoIdx = tIdx;
           
@@ -322,16 +329,19 @@ function doGet(e) {
         const rowIndex = foundMatches[k].rowIndex;
         const resultObj = {};
         
-        // Loop through columns. We include all columns now.
+        // Populate standard columns
         for (let j = 0; j < headers.length; j++) {
           if (headers[j]) {
             resultObj[headers[j]] = formatVal(matchRow[j]);
           }
         }
         
-        // Look up RLY, Type of WSPD, WSP Make from Imported Database
-        if (importedDbData) {
-          const coachNumber = String(matchRow[sourceCoachIdx]).trim();
+        const coachNumber = String(matchRow[sourceCoachIdx]).trim();
+
+        // ----------------------------------------------------
+        // CROSS-REFERENCE: Look up from Imported Database
+        // ----------------------------------------------------
+        if (targetSheetName === "DOWNLOAD status modified" && impHeaders) {
           let foundRly = '-';
           let foundTypeOfWspd = '-';
           let foundWspMake = '-';
@@ -339,18 +349,37 @@ function doGet(e) {
           let foundArrivalDate = '-';
           let foundDbTrainNo = '-';
           
-          for (let d = 2; d < importedDbData.length; d++) {
-             if (String(importedDbData[d][impCoachIdx]).trim() === coachNumber) {
-                foundRly = importedDbData[d][impRlyIdx];
-                if (impTypeWspdIdx !== -1) foundTypeOfWspd = importedDbData[d][impTypeWspdIdx];
-                if (impWspMakeIdx !== -1) foundWspMake = importedDbData[d][impWspMakeIdx];
-                if (impLeftDateIdx !== -1) foundLeftDate = formatVal(importedDbData[d][impLeftDateIdx]);
-                if (impArrivalDateIdx !== -1) foundArrivalDate = formatVal(importedDbData[d][impArrivalDateIdx]);
-                
-                if (impTrainNoIdx !== -1 && importedDbData[d][impTrainNoIdx]) {
-                    foundDbTrainNo = importedDbData[d][impTrainNoIdx];
+          if (isCoachSearch) {
+             // OPTIMIZED LOOKUP
+             const impSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Imported Database");
+             if (impSheet) {
+               const tfImp = impSheet.getRange("A:A").createTextFinder(coachNumber).matchEntireCell(true);
+               const impResults = tfImp.findAll();
+               if (impResults.length > 0) {
+                 const rIdx = impResults[0].getRow();
+                 if (rIdx > 2) { // Skip headers
+                   const impRowData = impSheet.getRange(rIdx, 1, 1, impSheet.getLastColumn()).getValues()[0];
+                   foundRly = impRowData[impRlyIdx];
+                   if (impTypeWspdIdx !== -1) foundTypeOfWspd = impRowData[impTypeWspdIdx];
+                   if (impWspMakeIdx !== -1) foundWspMake = impRowData[impWspMakeIdx];
+                   if (impLeftDateIdx !== -1) foundLeftDate = formatVal(impRowData[impLeftDateIdx]);
+                   if (impArrivalDateIdx !== -1) foundArrivalDate = formatVal(impRowData[impArrivalDateIdx]);
+                   if (impTrainNoIdx !== -1 && impRowData[impTrainNoIdx]) foundDbTrainNo = impRowData[impTrainNoIdx];
+                 }
+               }
+             }
+          } else if (importedDbData) {
+             // MEMORY LOOKUP FOR BULK SEARCH
+             for (let d = 2; d < importedDbData.length; d++) {
+                if (String(importedDbData[d][impCoachIdx]).trim() === coachNumber) {
+                   foundRly = importedDbData[d][impRlyIdx];
+                   if (impTypeWspdIdx !== -1) foundTypeOfWspd = importedDbData[d][impTypeWspdIdx];
+                   if (impWspMakeIdx !== -1) foundWspMake = importedDbData[d][impWspMakeIdx];
+                   if (impLeftDateIdx !== -1) foundLeftDate = formatVal(importedDbData[d][impLeftDateIdx]);
+                   if (impArrivalDateIdx !== -1) foundArrivalDate = formatVal(importedDbData[d][impArrivalDateIdx]);
+                   if (impTrainNoIdx !== -1 && importedDbData[d][impTrainNoIdx]) foundDbTrainNo = importedDbData[d][impTrainNoIdx];
+                   break;
                 }
-                break;
              }
           }
           resultObj['RLY'] = foundRly;
@@ -361,38 +390,63 @@ function doGet(e) {
           resultObj['DB Train No'] = foundDbTrainNo;
         }
         
-        // Look up Wheel Condition from DOWNLOAD status modified
-        if (downloadStatusData && dlWheelCondIdx !== -1) {
-           const coachNumber = String(matchRow[sourceCoachIdx]).trim();
+        // ----------------------------------------------------
+        // CROSS-REFERENCE: Look up from DOWNLOAD status modified
+        // ----------------------------------------------------
+        if (targetSheetName === "Imported Database" && dlHeaders && dlSheet) {
            let foundWheelCondition = '-';
-           
            let latestDate = null;
            let latestCond = '-';
            
-           // Search all entries to get the one with the latest date
-           for (let d = 1; d < downloadStatusData.length; d++) {
-              if (String(downloadStatusData[d][dlCoachIdx]).trim() === coachNumber) {
-                 const cond = downloadStatusData[d][dlWheelCondIdx];
-                 if (cond && String(cond).trim() !== '') {
-                     let rowDate = null;
-                     if (dlDateIdx !== -1) {
-                         const dateVal = downloadStatusData[d][dlDateIdx];
-                         if (dateVal instanceof Date) {
-                             rowDate = dateVal;
-                         } else if (dateVal && String(dateVal).trim() !== '') {
-                             rowDate = new Date(dateVal);
-                         }
-                     }
-                     
-                     if (rowDate && !isNaN(rowDate)) {
-                         if (!latestDate || rowDate > latestDate) {
-                             latestDate = rowDate;
-                             latestCond = cond;
-                         }
-                     } else {
-                         // Fallback if no valid date, just take the last one we find
-                         latestCond = cond;
-                     }
+           if (isCoachSearch) {
+              // OPTIMIZED LOOKUP
+              const tfDl = dlSheet.getRange("A:A").createTextFinder(coachNumber).matchEntireCell(true);
+              const dlResults = tfDl.findAll();
+              
+              for (let r = 0; r < dlResults.length; r++) {
+                 const dlRowIdx = dlResults[r].getRow();
+                 if (dlRowIdx > 1) { // Skip headers
+                    const dlRowData = dlSheet.getRange(dlRowIdx, 1, 1, dlSheet.getLastColumn()).getValues()[0];
+                    const cond = dlRowData[dlWheelCondIdx];
+                    if (cond && String(cond).trim() !== '') {
+                        let rowDate = null;
+                        if (dlDateIdx !== -1) {
+                            const dateVal = dlRowData[dlDateIdx];
+                            if (dateVal instanceof Date) rowDate = dateVal;
+                            else if (dateVal && String(dateVal).trim() !== '') rowDate = new Date(dateVal);
+                        }
+                        if (rowDate && !isNaN(rowDate)) {
+                            if (!latestDate || rowDate > latestDate) {
+                                latestDate = rowDate;
+                                latestCond = cond;
+                            }
+                        } else {
+                            latestCond = cond;
+                        }
+                    }
+                 }
+              }
+           } else if (downloadStatusData) {
+              // MEMORY LOOKUP FOR BULK SEARCH
+              for (let d = 1; d < downloadStatusData.length; d++) {
+                 if (String(downloadStatusData[d][dlCoachIdx]).trim() === coachNumber) {
+                    const cond = downloadStatusData[d][dlWheelCondIdx];
+                    if (cond && String(cond).trim() !== '') {
+                        let rowDate = null;
+                        if (dlDateIdx !== -1) {
+                            const dateVal = downloadStatusData[d][dlDateIdx];
+                            if (dateVal instanceof Date) rowDate = dateVal;
+                            else if (dateVal && String(dateVal).trim() !== '') rowDate = new Date(dateVal);
+                        }
+                        if (rowDate && !isNaN(rowDate)) {
+                            if (!latestDate || rowDate > latestDate) {
+                                latestDate = rowDate;
+                                latestCond = cond;
+                            }
+                        } else {
+                            latestCond = cond;
+                        }
+                    }
                  }
               }
            }
@@ -407,34 +461,25 @@ function doGet(e) {
            resultObj['Wheel Condition'] = foundWheelCondition;
         }
         
-        // Add explicit properties for columns to avoid header typos
+        // Add explicit properties for columns
         resultObj['_colO'] = formatVal(matchRow[14]); // Rake String
         resultObj['_colP'] = formatVal(matchRow[15]); // Left Date (Departure)
         resultObj['_colQ'] = formatVal(matchRow[16]); // Arrival Date
         resultObj['_colS'] = formatVal(matchRow[18]); // Indication
-        resultObj['_rawRow'] = matchRow.map(formatVal);   // Full unmapped array for column index access
-        resultObj['_headers'] = headers;   // Headers array for index-to-name mapping
-        resultObj['_rowIndex'] = rowIndex; // Keep track of the exact row in Google Sheet
+        resultObj['_rawRow'] = matchRow.map(formatVal);
+        resultObj['_headers'] = headers;
+        resultObj['_rowIndex'] = rowIndex; 
         
         resultsArray.push(resultObj);
       }
       
-      return createJsonResponse({
-        status: 'success',
-        data: resultsArray
-      });
+      return createJsonResponse({ status: 'success', data: resultsArray });
     } else {
-      return createJsonResponse({
-        status: 'error',
-        message: 'Coach not found'
-      });
+      return createJsonResponse({ status: 'error', message: 'Coach not found' });
     }
     
   } catch (error) {
-    return createJsonResponse({
-      status: 'error',
-      message: 'Server error: ' + error.toString()
-    });
+    return createJsonResponse({ status: 'error', message: 'Server error: ' + error.toString() });
   }
 }
 
@@ -443,8 +488,6 @@ function createJsonResponse(responseObject) {
   return ContentService.createTextOutput(JSON.stringify(responseObject))
     .setMimeType(ContentService.MimeType.JSON);
 }
-
-
 
 function doPost(e) {
   try {
@@ -455,7 +498,6 @@ function doPost(e) {
       var sheet = doc.getSheetByName('DOWNLOAD status modified');
       
       if (!sheet) {
-        // Create if it doesn't exist to prevent crashes
         sheet = doc.insertSheet('DOWNLOAD status modified');
         sheet.appendRow([
           'COACH NO', 'RAKE', 'TRAIN NO', 'COACH TYPE', 'CI', 'LEFT DATE', 
@@ -479,29 +521,27 @@ function doPost(e) {
       
       var targetRow = body.editRow ? parseInt(body.editRow, 10) : (lastRow + 1);
       
-      // 1. COACH NO
       sheet.getRange(targetRow, 1).setValue(body.coachNumber || '');
       
-      // Columns 10 to 27 (J to AA)
       var col10to27 = [
-        body.downloadDate || '', // 10. Download Date
-        body.month || '', // 11. Month
-        body.psStatus || '', // 12. PS status
-        body.wspCode || '', // 13. wsp code
-        body.dumpValve || '', // 14. Self test dump valve
-        body.sensorGap || '', // 15. Sensor gap
-        body.observation || '', // 16. downloading obseravtion
-        body.otherObservation || '', // 17. OTHER OBSERVATION
-        body.wheelCondition || '', // 18. Wheel condition
-        body.defectCategory || '', // 19. defect category
-        body.attention || '', // 20. ATTENTION IF ANY
+        body.downloadDate || '', 
+        body.month || '', 
+        body.psStatus || '', 
+        body.wspCode || '', 
+        body.dumpValve || '', 
+        body.sensorGap || '', 
+        body.observation || '', 
+        body.otherObservation || '', 
+        body.wheelCondition || '', 
+        body.defectCategory || '', 
+        body.attention || '', 
         '', // 21. PENDING WORK (Removed)
-        body.description || '', // 22. DEFECT DESCRIPTION
-        body.itemRequired || '', // 23. ITEM REQUIRED / USED
-        body.checklistSubmitted || '', // 24. CHECKLIST SUBMITTED
-        body.dataEntryBy || '', // 25. Data Entry By
-        body.anyWorkPending || '', // 26. ANY WORK PENDING
-        body.pendingWorkDesc || '' // 27. PENDING WORK DESCRIPTION
+        body.description || '', 
+        body.itemRequired || '', 
+        body.checklistSubmitted || '', 
+        body.dataEntryBy || '', 
+        body.anyWorkPending || '', 
+        body.pendingWorkDesc || '' 
       ];
       
       sheet.getRange(targetRow, 10, 1, col10to27.length).setValues([col10to27]);
