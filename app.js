@@ -2,7 +2,7 @@
 const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx80F-Pl_HlqDO833n2MutRkBRuhGzqqIDIGC2l9Wkds9WTAFC9eN9g4dx8YCxSEaggYw/exec';
 
 // URL for the new Schedule Database Apps Script
-const SCHEDULE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzSrcye1yLxG5fsOsOScrSHAPgPGaP1EsNyeLML9JQusykQ-xWzt5i4oYbTQT1LDTL/exec';
+const SCHEDULE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhXxdJp9xH_wagvryAUyGR_9gSJw-kwb5LM0dSFpCfoXkQMp_pvV_nWjKbd9OpapGE/exec';
 
 // Simple static password for demonstration (you can change this)
 const APP_PASSWORD = '1234';
