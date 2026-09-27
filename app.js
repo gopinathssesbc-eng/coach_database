@@ -994,16 +994,7 @@ function renderSelectionList(matchesArray, isWsp = false) {
 }
 
 async function renderResults(dataObj) {
-    Swal.fire({
-        title: 'Loading Coach Data...',
-        text: 'Please wait while we fetch the details.',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        },
-        background: 'var(--surface)',
-        color: 'var(--text)'
-    });
+
     
     const container = document.getElementById('resultsContainer');
     
@@ -1030,7 +1021,6 @@ async function renderResults(dataObj) {
                 <p>No data available for this coach.</p>
             </div>
         `;
-        Swal.close();
         navigateTo('resultsScreen');
         return;
     }
@@ -1143,7 +1133,6 @@ async function renderResults(dataObj) {
         await appendScheduleDetailsToResults(coachNum, container, delayCounter);
     }
     
-    Swal.close();
     navigateTo('resultsScreen');
 }
 
@@ -2038,11 +2027,7 @@ async function fetchWspHistory(coachNumber) {
         submitBtn.querySelector('.btn-text').style.opacity = '0';
     }
     
-    Swal.fire({
-        title: 'Loading History...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-    });
+
     
     try {
         const data = await fetchFromDatabase('history', coachNumber);
@@ -2132,7 +2117,6 @@ async function fetchWspHistory(coachNumber) {
             `;
         }
         
-        Swal.close();
         navigateTo('wspResultsScreen');
         
     } catch (error) {
@@ -2647,11 +2631,7 @@ async function fetchWspPendingWork() {
         btn.querySelector('.btn-text').style.opacity = '0';
     }
     
-    Swal.fire({
-        title: 'Loading Pending Work...',
-        allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
-    });
+
     
     try {
         const data = await fetchFromDatabase('pending');
@@ -2771,7 +2751,6 @@ async function fetchWspPendingWork() {
             `;
         }
         
-        Swal.close();
         navigateTo('wspPendingResultsScreen');
         
     } catch (error) {
