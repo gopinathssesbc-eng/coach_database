@@ -485,6 +485,15 @@ function doPost(e) {
 
       sheet.getRange(targetRow, 10, 1, col10to27.length).setValues([col10to27]);
 
+      // Trigger Firebase Sync Immediately
+      try {
+        if (typeof bulkSyncToFirebase === 'function') {
+          bulkSyncToFirebase();
+        }
+      } catch (e) {
+        // Silently ignore if function is missing or errors out during sync
+      }
+
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
