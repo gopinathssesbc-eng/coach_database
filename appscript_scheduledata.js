@@ -357,12 +357,40 @@ function doPost(e) {
       if (body.remarks !== undefined) sheet.getRange(rowIndex, 31).setValue(body.remarks);
 
       // Trigger Firebase Sync Immediately
+      // Trigger Firebase Sync Immediately for this specific row
       try {
-        if (typeof bulkSyncScheduleToFirebase === 'function') {
-          bulkSyncScheduleToFirebase();
+        var headers = sheet.getRange(2, 1, 1, sheet.getLastColumn()).getValues()[0];
+        var updatedRow = sheet.getRange(rowIndex, 1, 1, sheet.getLastColumn()).getValues()[0];
+        var resultObj = {};
+        for(var j=0; j<headers.length; j++) {
+           if(headers[j]) {
+              var key = String(headers[j]).replace(/[\.\#\$\/\[\]]/g, "");
+              if (!key) key = "Empty_Key";
+              var val = updatedRow[j];
+              if (val instanceof Date) {
+                  if (isNaN(val.getTime())) val = '';
+                  else val = val.getFullYear() + '-' + String(val.getMonth() + 1).padStart(2, '0') + '-' + String(val.getDate()).padStart(2, '0');
+              }
+              resultObj[key] = val;
+           }
+        }
+        var coachNoStr = String(updatedRow[8]).trim();
+        resultObj['_rowIndex'] = rowIndex;
+        
+        if (coachNoStr) {
+           var cleanCoachNo = String(coachNoStr).replace(/[\.\#\$\/\[\]]/g, "");
+           var firebaseUrl = "https://coachdatawebapp-default-rtdb.firebaseio.com/scheduleDatabase/coaches/" + cleanCoachNo + ".json";
+           
+           var options = {
+              method: 'put',
+              contentType: 'application/json',
+              payload: JSON.stringify(resultObj),
+              muteHttpExceptions: true
+           };
+           UrlFetchApp.fetch(firebaseUrl, options);
         }
       } catch (e) {
-        // Silently ignore if function is missing or errors out during sync
+        // Silently ignore errors
       }
 
       return createJsonResponse({ status: 'success' });
