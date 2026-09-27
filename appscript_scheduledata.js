@@ -359,6 +359,8 @@ function doPost(e) {
       // Trigger Firebase Sync Immediately
       // Trigger Firebase Sync Immediately for this specific row
       try {
+        SpreadsheetApp.flush(); // Force write to sheet before reading back
+        
         var headers = sheet.getRange(2, 1, 1, sheet.getLastColumn()).getValues()[0];
         var updatedRow = sheet.getRange(rowIndex, 1, 1, sheet.getLastColumn()).getValues()[0];
         var resultObj = {};
@@ -379,10 +381,10 @@ function doPost(e) {
         
         if (coachNoStr) {
            var cleanCoachNo = String(coachNoStr).replace(/[\.\#\$\/\[\]]/g, "");
-           var firebaseUrl = "https://coachdatawebapp-default-rtdb.firebaseio.com/schedule/coaches/" + cleanCoachNo + ".json";
+           var firebaseUrl = "https://coachdatawebapp-default-rtdb.firebaseio.com/schedule/coaches/" + encodeURIComponent(cleanCoachNo) + ".json";
            
            var options = {
-              method: 'put',
+              method: 'patch',
               contentType: 'application/json',
               payload: JSON.stringify(resultObj),
               muteHttpExceptions: true
