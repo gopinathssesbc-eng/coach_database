@@ -9,12 +9,13 @@ const FIREBASE_DB_URL = 'https://coachdatawebapp-default-rtdb.firebaseio.com/wsp
 async function fetchFromDatabase(queryType, param) {
     try {
         let url = '';
-        if (queryType === 'coach') url = `${FIREBASE_DB_URL}/searchCoach/${param}.json`;
-        else if (queryType === 'train') url = `${FIREBASE_DB_URL}/searchTrain/${param}.json`;
-        else if (queryType === 'date') url = `${FIREBASE_DB_URL}/searchDate/${param}.json`;
-        else if (queryType === 'pending') url = `${FIREBASE_DB_URL}/searchPending.json`;
-        else if (queryType === 'history') url = `${FIREBASE_DB_URL}/history/${param}.json`;
-        else if (queryType === 'trainList') url = `${FIREBASE_DB_URL}/trainList.json`;
+        const cb = `?t=${new Date().getTime()}`;
+        if (queryType === 'coach') url = `${FIREBASE_DB_URL}/searchCoach/${param}.json${cb}`;
+        else if (queryType === 'train') url = `${FIREBASE_DB_URL}/searchTrain/${param}.json${cb}`;
+        else if (queryType === 'date') url = `${FIREBASE_DB_URL}/searchDate/${param}.json${cb}`;
+        else if (queryType === 'pending') url = `${FIREBASE_DB_URL}/searchPending.json${cb}`;
+        else if (queryType === 'history') url = `${FIREBASE_DB_URL}/history/${param}.json${cb}`;
+        else if (queryType === 'trainList') url = `${FIREBASE_DB_URL}/trainList.json${cb}`;
         
         const response = await fetch(url);
         if (!response.ok) return { status: 'error', message: 'Network error' };
@@ -33,8 +34,9 @@ async function fetchFromDatabase(queryType, param) {
 async function fetchFromScheduleDatabase(queryType, param) {
     try {
         const base = 'https://coachdatawebapp-default-rtdb.firebaseio.com/schedule/coaches';
+        const cb = `?t=${new Date().getTime()}`;
         if (queryType === 'coach') {
-            const res = await fetch(`${base}/${param}.json`);
+            const res = await fetch(`${base}/${param}.json${cb}`);
             if(!res.ok) return {status: 'error', message: 'Network error'};
             const coachData = await res.json();
             if(coachData) {
@@ -50,13 +52,13 @@ async function fetchFromScheduleDatabase(queryType, param) {
         }
         else if (queryType === 'coachesList') {
             const list = param.split(',').map(s => s.trim());
-            const promises = list.map(c => fetch(`${base}/${c}.json`).then(r => r.json()));
+            const promises = list.map(c => fetch(`${base}/${c}.json${cb}`).then(r => r.json()));
             const results = await Promise.all(promises);
             const validData = results.filter(d => d !== null);
             return { status: 'success', data: validData };
         }
         else if (queryType === 'due') {
-            const res = await fetch(`${base}.json`);
+            const res = await fetch(`${base}.json${cb}`);
             if(!res.ok) return {status: 'error', message: 'Network error'};
             const allCoaches = await res.json();
             if(!allCoaches) return { status: 'success', data: [] };
@@ -2219,8 +2221,6 @@ async function handleScheduleSearch(e) {
 }
 
 function renderScheduleResults(dataObj) {
-    document.getElementById('scheduleResultCoachId').innerText = cNo !== '-' ? cNo : (dataObj['COACH NO.'] || 'Schedule Entry');
-    
     const detailsContainer = document.getElementById('scheduleCoachDetailsContainer');
     
     const fmtDate = (dStr) => formatDateDMY(dStr);
@@ -2259,6 +2259,8 @@ function renderScheduleResults(dataObj) {
     if (rly === '-') rly = dataObj['OWN RLY'] || dataObj['RLY'] || dataObj['Rly'] || '-';
     if (cType === '-') cType = dataObj['COACH TYPE'] || dataObj['TYPE'] || dataObj['Coach Type'] || '-';
     if (rake === '-') rake = dataObj['RAKE'] || dataObj['Rake'] || '-';
+    
+    document.getElementById('scheduleResultCoachId').innerText = cNo !== '-' ? cNo : (dataObj['COACH NO.'] || 'Schedule Entry');
 
     detailsContainer.innerHTML = `
         <div>
