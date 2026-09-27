@@ -379,7 +379,7 @@ function doPost(e) {
         
         if (coachNoStr) {
            var cleanCoachNo = String(coachNoStr).replace(/[\.\#\$\/\[\]]/g, "");
-           var firebaseUrl = "https://coachdatawebapp-default-rtdb.firebaseio.com/scheduleDatabase/coaches/" + cleanCoachNo + ".json";
+           var firebaseUrl = "https://coachdatawebapp-default-rtdb.firebaseio.com/schedule/coaches/" + cleanCoachNo + ".json";
            
            var options = {
               method: 'put',
