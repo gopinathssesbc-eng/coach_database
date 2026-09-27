@@ -11,7 +11,9 @@
  * 9. Who has access: "Anyone".
  * 10. Click Deploy and authorize the app if prompted.
  * 11. Copy the "Web app URL" provided and paste it into app.js in your frontend project as SCHEDULE_APP_SCRIPT_URL.
- */
+
+Name of the google sheet" SCH data base" 
+*/
 
 const SHEET_NAME = "all rake schedule";
 
@@ -19,7 +21,7 @@ function doGet(e) {
   const action = e.parameter.action;
   const coachNumber = e.parameter.coachNumber;
   const coachNumbersStr = e.parameter.coachNumbers;
-  
+
   if (!action && !coachNumber && !coachNumbersStr) {
     return createJsonResponse({
       status: 'error',
@@ -29,7 +31,7 @@ function doGet(e) {
 
   try {
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-    
+
     if (!sheet) {
       return createJsonResponse({
         status: 'error',
@@ -38,7 +40,7 @@ function doGet(e) {
     }
 
     const data = sheet.getDataRange().getValues();
-    
+
     if (data.length < 3) {
       return createJsonResponse({
         status: 'error',
@@ -47,7 +49,7 @@ function doGet(e) {
     }
 
     const headers = data[1]; // Row 2 headers
-    
+
     if (action === 'getDueCoaches') {
       const selectedDateStr = e.parameter.date;
       if (!selectedDateStr) {
@@ -59,7 +61,7 @@ function doGet(e) {
       const findIdx = (headerName) => {
         const lowerName = headerName.toLowerCase();
         for (let j = 0; j < headers.length; j++) {
-           if (String(headers[j]).toLowerCase().includes(lowerName)) return j;
+          if (String(headers[j]).toLowerCase().includes(lowerName)) return j;
         }
         return -1;
       };
@@ -74,75 +76,75 @@ function doGet(e) {
       const coachNoIdx = 8; // Column I
 
       const dueCoaches = [];
-      
+
       for (let i = 2; i < data.length; i++) {
-         const row = data[i];
-         if (!row[coachNoIdx]) continue;
-         
-         let pit1Match = false;
-         let pit2Match = false;
-         
-         if (pitDate1Idx !== -1 && row[pitDate1Idx]) {
-            let p1 = new Date(row[pitDate1Idx]);
-            if (!isNaN(p1)) {
-              p1.setHours(0,0,0,0);
-              if (p1.getTime() === selectedDate.getTime()) pit1Match = true;
+        const row = data[i];
+        if (!row[coachNoIdx]) continue;
+
+        let pit1Match = false;
+        let pit2Match = false;
+
+        if (pitDate1Idx !== -1 && row[pitDate1Idx]) {
+          let p1 = new Date(row[pitDate1Idx]);
+          if (!isNaN(p1)) {
+            p1.setHours(0, 0, 0, 0);
+            if (p1.getTime() === selectedDate.getTime()) pit1Match = true;
+          }
+        }
+
+        if (pitDate2Idx !== -1 && row[pitDate2Idx]) {
+          let p2 = new Date(row[pitDate2Idx]);
+          if (!isNaN(p2)) {
+            p2.setHours(0, 0, 0, 0);
+            if (p2.getTime() === selectedDate.getTime()) pit2Match = true;
+          }
+        }
+
+        if (pit1Match || pit2Match) {
+          let d2Match = false;
+          let d3Match = false;
+          let d2DateStr = '-';
+          let d3DateStr = '-';
+
+          if (d2Idx !== -1 && row[d2Idx]) {
+            let d2Date = new Date(row[d2Idx]);
+            if (!isNaN(d2Date)) {
+              d2Date.setHours(0, 0, 0, 0);
+              if (d2Date.getTime() <= selectedDate.getTime()) d2Match = true;
+              d2DateStr = String(d2Date.getDate()).padStart(2, '0') + '-' + String(d2Date.getMonth() + 1).padStart(2, '0') + '-' + d2Date.getFullYear();
             }
-         }
-         
-         if (pitDate2Idx !== -1 && row[pitDate2Idx]) {
-            let p2 = new Date(row[pitDate2Idx]);
-            if (!isNaN(p2)) {
-              p2.setHours(0,0,0,0);
-              if (p2.getTime() === selectedDate.getTime()) pit2Match = true;
+          }
+
+          if (d3Idx !== -1 && row[d3Idx]) {
+            let d3Date = new Date(row[d3Idx]);
+            if (!isNaN(d3Date)) {
+              d3Date.setHours(0, 0, 0, 0);
+              if (d3Date.getTime() <= selectedDate.getTime()) d3Match = true;
+              d3DateStr = String(d3Date.getDate()).padStart(2, '0') + '-' + String(d3Date.getMonth() + 1).padStart(2, '0') + '-' + d3Date.getFullYear();
             }
-         }
-         
-         if (pit1Match || pit2Match) {
-             let d2Match = false;
-             let d3Match = false;
-             let d2DateStr = '-';
-             let d3DateStr = '-';
-             
-             if (d2Idx !== -1 && row[d2Idx]) {
-                 let d2Date = new Date(row[d2Idx]);
-                 if (!isNaN(d2Date)) {
-                     d2Date.setHours(0,0,0,0);
-                     if (d2Date.getTime() <= selectedDate.getTime()) d2Match = true;
-                     d2DateStr = String(d2Date.getDate()).padStart(2,'0') + '-' + String(d2Date.getMonth()+1).padStart(2,'0') + '-' + d2Date.getFullYear();
-                 }
-             }
-             
-             if (d3Idx !== -1 && row[d3Idx]) {
-                 let d3Date = new Date(row[d3Idx]);
-                 if (!isNaN(d3Date)) {
-                     d3Date.setHours(0,0,0,0);
-                     if (d3Date.getTime() <= selectedDate.getTime()) d3Match = true;
-                     d3DateStr = String(d3Date.getDate()).padStart(2,'0') + '-' + String(d3Date.getMonth()+1).padStart(2,'0') + '-' + d3Date.getFullYear();
-                 }
-             }
-             
-             if (d2Match || d3Match) {
-                 dueCoaches.push({
-                     rly: row[rlyIdx] || '-',
-                     type: row[typeIdx] || '-',
-                     coachNo: row[coachNoIdx] || '-',
-                     trainNo: row[trainNoIdx] || '-',
-                     d2Date: d2DateStr,
-                     d3Date: d3DateStr,
-                     isD2Due: d2Match,
-                     isD3Due: d3Match
-                 });
-             }
-         }
+          }
+
+          if (d2Match || d3Match) {
+            dueCoaches.push({
+              rly: row[rlyIdx] || '-',
+              type: row[typeIdx] || '-',
+              coachNo: row[coachNoIdx] || '-',
+              trainNo: row[trainNoIdx] || '-',
+              d2Date: d2DateStr,
+              d3Date: d3DateStr,
+              isD2Due: d2Match,
+              isD3Due: d3Match
+            });
+          }
+        }
       }
-      
+
       return createJsonResponse({
         status: 'success',
         data: dueCoaches
       });
     }
-    
+
     const parseRow = (row, index) => {
       const formatVal = (val) => {
         if (val instanceof Date) {
@@ -173,7 +175,7 @@ function doGet(e) {
       resultObj['CBC Make'] = formatVal(row[29]);
       resultObj['ATTENTION GIVEN IF ANY'] = formatVal(row[30]);
       resultObj['Staff Token Number'] = formatVal(row[37]);
-      
+
       resultObj['_rowIndex'] = index + 1;
       resultObj['_rawRow'] = row.map(formatVal);
       return resultObj;
@@ -213,74 +215,74 @@ function doGet(e) {
         // Open the WSP Data extraction spreadsheet by ID to access "Imported Database"
         let importedSheet = null;
         let errorMessage = 'Coach details not available in database';
-        
+
         try {
           const wspSpreadsheet = SpreadsheetApp.openById('10_RpT1irSd8yxE_9UL7q5oypUtRPV0oVU8QYwWlevVM');
           importedSheet = wspSpreadsheet.getSheetByName("Imported Database");
         } catch (e) {
           errorMessage = 'Error opening spreadsheet: ' + e.message;
         }
-        
+
         let importedFound = false;
         let importedMatchData = { 'COACH NO.': coachNumber, _rowIndex: -1 };
-        
+
         if (importedSheet) {
-            const importedData = importedSheet.getDataRange().getValues();
-            
-            let headers = [];
-            if (importedData.length > 1) {
-                headers = importedData[1]; // Usually row 2
-            } else if (importedData.length > 0) {
-                headers = importedData[0]; // Or row 1
+          const importedData = importedSheet.getDataRange().getValues();
+
+          let headers = [];
+          if (importedData.length > 1) {
+            headers = importedData[1]; // Usually row 2
+          } else if (importedData.length > 0) {
+            headers = importedData[0]; // Or row 1
+          }
+
+          let impCoachIdx = 0;
+          const findIdx = (texts) => {
+            for (let k = 0; k < headers.length; k++) {
+              const h = String(headers[k]).toLowerCase();
+              if (texts.some(t => h.includes(t))) return k;
             }
-            
-            let impCoachIdx = 0;
-            const findIdx = (texts) => {
-                for(let k=0; k<headers.length; k++) {
-                   const h = String(headers[k]).toLowerCase();
-                   if(texts.some(t => h.includes(t))) return k;
+            return -1;
+          };
+          const cIdx = findIdx(['coach no', 'coach num']);
+          if (cIdx !== -1) impCoachIdx = cIdx;
+
+          for (let i = 1; i < importedData.length; i++) { // Check from row 2
+            if (String(importedData[i][impCoachIdx]).trim() === String(coachNumber).trim()) {
+              importedFound = true;
+              // Map headers to row
+              for (let j = 0; j < headers.length; j++) {
+                if (headers[j]) {
+                  importedMatchData[headers[j]] = importedData[i][j];
                 }
-                return -1;
-            };
-            const cIdx = findIdx(['coach no', 'coach num']);
-            if (cIdx !== -1) impCoachIdx = cIdx;
-            
-            for (let i = 1; i < importedData.length; i++) { // Check from row 2
-                if (String(importedData[i][impCoachIdx]).trim() === String(coachNumber).trim()) {
-                    importedFound = true;
-                    // Map headers to row
-                    for (let j = 0; j < headers.length; j++) {
-                        if (headers[j]) {
-                            importedMatchData[headers[j]] = importedData[i][j];
-                        }
-                    }
-                    // Extract DB Train No from column R (index 17) or 'status' header
-                    const tIdx = findIdx(['status']);
-                    importedMatchData['DB Train No'] = tIdx !== -1 ? importedData[i][tIdx] : importedData[i][17];
-                    
-                    // Normalize keys for the frontend
-                    if (!importedMatchData['OWN RLY'] && importedMatchData['RLY']) {
-                        importedMatchData['OWN RLY'] = importedMatchData['RLY'];
-                    }
-                    if (!importedMatchData['COACH TYPE'] && (importedMatchData['TYPE'] || importedMatchData['Coach Type'])) {
-                        importedMatchData['COACH TYPE'] = importedMatchData['TYPE'] || importedMatchData['Coach Type'];
-                    }
-                    
-                    break;
-                }
+              }
+              // Extract DB Train No from column R (index 17) or 'status' header
+              const tIdx = findIdx(['status']);
+              importedMatchData['DB Train No'] = tIdx !== -1 ? importedData[i][tIdx] : importedData[i][17];
+
+              // Normalize keys for the frontend
+              if (!importedMatchData['OWN RLY'] && importedMatchData['RLY']) {
+                importedMatchData['OWN RLY'] = importedMatchData['RLY'];
+              }
+              if (!importedMatchData['COACH TYPE'] && (importedMatchData['TYPE'] || importedMatchData['Coach Type'])) {
+                importedMatchData['COACH TYPE'] = importedMatchData['TYPE'] || importedMatchData['Coach Type'];
+              }
+
+              break;
             }
-            if (!importedFound) errorMessage = 'Coach details not available in database';
+          }
+          if (!importedFound) errorMessage = 'Coach details not available in database';
         } else if (!errorMessage.includes('Error opening spreadsheet')) {
-            errorMessage = 'Imported Database sheet not found in the spreadsheet.';
+          errorMessage = 'Imported Database sheet not found in the spreadsheet.';
         }
-        
+
         if (!importedFound) {
-            return createJsonResponse({
-                status: 'error',
-                message: errorMessage
-            });
+          return createJsonResponse({
+            status: 'error',
+            message: errorMessage
+          });
         }
-        
+
         return createJsonResponse({
           status: 'success',
           isNewCoach: true,
@@ -289,7 +291,7 @@ function doGet(e) {
       }
     }
 
-    
+
   } catch (error) {
     return createJsonResponse({
       status: 'error',
@@ -301,42 +303,42 @@ function doGet(e) {
 function doPost(e) {
   try {
     var body = JSON.parse(e.postData.contents);
-    
+
     if (body.action === 'updateSchedule') {
       var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-      
+
       if (!sheet) {
         return createJsonResponse({ status: 'error', message: 'Sheet not found' });
       }
-      
+
       let rowIndex = body.rowIndex;
-      
+
       if (!rowIndex && rowIndex !== 0) {
         return createJsonResponse({ status: 'error', message: 'Row index not provided' });
       }
 
       if (rowIndex == -1) {
-          var dataRange = sheet.getDataRange().getValues();
-          var firstEmptyRow = dataRange.length + 1; // Default to after the last row
-          for (var i = 1; i < dataRange.length; i++) {
-              if (!String(dataRange[i][8]).trim()) { // Check coach column (I - index 8)
-                  firstEmptyRow = i + 1;
-                  break;
-              }
+        var dataRange = sheet.getDataRange().getValues();
+        var firstEmptyRow = dataRange.length + 1; // Default to after the last row
+        for (var i = 1; i < dataRange.length; i++) {
+          if (!String(dataRange[i][8]).trim()) { // Check coach column (I - index 8)
+            firstEmptyRow = i + 1;
+            break;
           }
-          rowIndex = firstEmptyRow;
-          
-          if (body.coachNumber) {
-              sheet.getRange(rowIndex, 9).setValue(body.coachNumber);
-          }
+        }
+        rowIndex = firstEmptyRow;
+
+        if (body.coachNumber) {
+          sheet.getRange(rowIndex, 9).setValue(body.coachNumber);
+        }
       }
 
       // Columns map (1-based index for getRange)
       // M: 13, N: 14, T: 20, U: 21, V: 22, W: 23, X: 24, Y: 25, Z: 26, AA: 27, AB: 28, AC: 29, AE: 31
-      
+
       if (body.d2 !== undefined) sheet.getRange(rowIndex, 13).setValue(body.d2);
       if (body.d3 !== undefined) sheet.getRange(rowIndex, 14).setValue(body.d3);
-      
+
       if (body.l1 !== undefined) sheet.getRange(rowIndex, 20).setValue(body.l1);
       if (body.r8 !== undefined) sheet.getRange(rowIndex, 21).setValue(body.r8);
       if (body.l2 !== undefined) sheet.getRange(rowIndex, 22).setValue(body.l2);
@@ -345,20 +347,20 @@ function doPost(e) {
       if (body.r6 !== undefined) sheet.getRange(rowIndex, 25).setValue(body.r6);
       if (body.l4 !== undefined) sheet.getRange(rowIndex, 26).setValue(body.l4);
       if (body.r5 !== undefined) sheet.getRange(rowIndex, 27).setValue(body.r5);
-      
+
       if (body.ppEnd !== undefined) sheet.getRange(rowIndex, 28).setValue(body.ppEnd);
       if (body.nppEnd !== undefined) sheet.getRange(rowIndex, 29).setValue(body.nppEnd);
-      
+
       if (body.cbcMake !== undefined) sheet.getRange(rowIndex, 30).setValue(body.cbcMake);
       if (body.staffToken !== undefined) sheet.getRange(rowIndex, 38).setValue(body.staffToken);
-      
+
       if (body.remarks !== undefined) sheet.getRange(rowIndex, 31).setValue(body.remarks);
-      
+
       return createJsonResponse({ status: 'success' });
     }
-    
+
     return createJsonResponse({ status: 'error', message: 'Unknown action' });
-      
+
   } catch (error) {
     return createJsonResponse({ status: 'error', message: error.toString() });
   }
