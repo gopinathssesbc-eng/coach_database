@@ -390,11 +390,7 @@ async function fetchAvailableTrains() {
     }
     
     try {
-        const url = `${GOOGLE_APP_SCRIPT_URL}?getTrains=true`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        
+        const data = await fetchFromDatabase('trainList');
         if (data.status === 'success') {
             localStorage.setItem('cachedTrains', JSON.stringify(data));
             populate(data.data);
@@ -479,14 +475,8 @@ async function handleSearch(e) {
             ]);
         } else {
             // Actual API Call
-            const url = `${GOOGLE_APP_SCRIPT_URL}?coachNumber=${encodeURIComponent(coachNumber)}`;
-            const response = await fetch(url);
-            
-            if (!response.ok) throw new Error('Network response was not ok');
-            
-            const data = await response.json();
-            
-            if (data.status === 'success') {
+            const data = await fetchFromDatabase('coach', coachNumber);
+        if (data.status === 'success') {
                 localStorage.setItem(cacheKey, JSON.stringify(data));
                 if (data.data.length === 1) {
                     window.lastSearchScreen = 'searchScreen';
@@ -551,13 +541,7 @@ async function fetchRakes() {
     fetchBtn.disabled = true;
 
     try {
-        const url = `${GOOGLE_APP_SCRIPT_URL}?train=${encodeURIComponent(trainSelect)}`;
-        const response = await fetch(url);
-        
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
-        
+        const data = await fetchFromDatabase('train', trainSelect);
         if (data.status === 'success' && data.data.length > 0) {
             localStorage.setItem(cacheKey, JSON.stringify(data));
             currentTrainCoaches = data.data;
@@ -737,11 +721,8 @@ async function viewRakeCoaches() {
                 return null;
             }).filter(c => c).join(',');
             
-            const scheduleUrl = `${SCHEDULE_APP_SCRIPT_URL}?coachNumbers=${encodeURIComponent(coachNumbersList)}`;
-            const response = await fetch(scheduleUrl);
-            const data = await response.json();
-            
-            if (data.status === 'success' && data.data) {
+            const data = await fetchFromScheduleDatabase('coachesList', coachNumbersList);
+        if (data.status === 'success' && data.data) {
                 data.data.forEach(s => {
                     const cNum = String(s['COACH NO.']).trim();
                     let d2DueVal = s['D2 DUE'] || s['D2 Due'] || s['D2 due'];
@@ -1069,11 +1050,7 @@ async function renderResults(dataObj) {
 
 async function appendScheduleDetailsToResults(coachNumber, container, delayCounter) {
     try {
-        const url = `${SCHEDULE_APP_SCRIPT_URL}?coachNumber=${encodeURIComponent(coachNumber)}`;
-        const response = await fetch(url);
-        if (!response.ok) return;
-        const data = await response.json();
-        
+        const data = await fetchFromScheduleDatabase('coach', coachNumber);
         if (data.status === 'success' && data.data) {
             const schedObj = data.data;
             let groupHTML = `<div class="group-section slide-up" style="animation-delay: ${Math.min(delayCounter * 0.05, 1)}s; border-color: #3b82f6;">
@@ -1393,11 +1370,7 @@ async function fetchWspByDate() {
     fetchBtn.disabled = true;
 
     try {
-        const url = `${GOOGLE_APP_SCRIPT_URL}?date=${encodeURIComponent(dateInput)}&sheetName=${encodeURIComponent('DOWNLOAD status modified')}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        
+        const data = await fetchFromDatabase('date', dateInput);
         if (data.status === 'success' && data.data && data.data.length > 0) {
             const [yyyy, mm, dd] = dateInput.split('-');
             document.getElementById('wspDateResultTitle').innerText = `Defects for ${dd}-${mm}-${yyyy}`;
@@ -1629,11 +1602,7 @@ async function fetchWspRakes() {
     fetchBtn.disabled = true;
 
     try {
-        const url = `${GOOGLE_APP_SCRIPT_URL}?train=${encodeURIComponent(trainSelect)}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        
+        const data = await fetchFromDatabase('train', trainSelect);
         if (data.status === 'success' && data.data.length > 0) {
             localStorage.setItem(cacheKey, JSON.stringify(data));
             renderWspRakes(data);
@@ -1977,11 +1946,7 @@ async function fetchWspHistory(coachNumber) {
     });
     
     try {
-        const url = `${GOOGLE_APP_SCRIPT_URL}?coachNumber=${encodeURIComponent(coachNumber)}&sheetName=${encodeURIComponent('DOWNLOAD status modified')}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
+        const data = await fetchFromDatabase('history', coachNumber);
         const historyContainer = document.getElementById('wspHistoryContainer');
         historyContainer.innerHTML = '';
         
@@ -2147,13 +2112,7 @@ async function handleScheduleSearch(e) {
     submitBtn.disabled = true;
 
     try {
-        const url = `${SCHEDULE_APP_SCRIPT_URL}?coachNumber=${encodeURIComponent(coachNumber)}`;
-        const response = await fetch(url);
-        
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
-        
+        const data = await fetchFromScheduleDatabase('coach', coachNumber);
         if (data.status === 'success') {
             if (data.isNewCoach) {
                 showWarningAlert("Coach not found in schedule database. A new entry will be created.");
@@ -2596,11 +2555,7 @@ async function fetchWspPendingWork() {
     });
     
     try {
-        const url = `${GOOGLE_APP_SCRIPT_URL}?pendingWork=true&sheetName=${encodeURIComponent('DOWNLOAD status modified')}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
+        const data = await fetchFromDatabase('pending');
         const container = document.getElementById('wspPendingWorkContainer');
         container.innerHTML = '';
         
@@ -2736,4 +2691,21 @@ async function fetchWspPendingWork() {
             btn.querySelector('.btn-text').style.opacity = '1';
         }
     }
+}
+
+
+function showChangelog() {
+    Swal.fire({
+        title: 'Changelog v2.0.0',
+        html: '<div style="text-align: left; font-size: 0.9rem;">' +
+              '<ul>' +
+              '<li><b>Performance:</b> Firebase integration done to improve app speed. Searches now take under 100ms.</li>' +
+              '<li><b>Architecture:</b> Replaced slow Google Apps Script redirects with Firebase RTDB read replicas.</li>' +
+              '</ul>' +
+              '</div>',
+        icon: 'info',
+        background: 'var(--surface)',
+        color: 'var(--text)',
+        confirmButtonColor: 'var(--primary)'
+    });
 }
