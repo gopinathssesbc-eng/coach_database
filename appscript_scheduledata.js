@@ -356,6 +356,15 @@ function doPost(e) {
 
       if (body.remarks !== undefined) sheet.getRange(rowIndex, 31).setValue(body.remarks);
 
+      // Trigger Firebase Sync Immediately
+      try {
+        if (typeof bulkSyncScheduleToFirebase === 'function') {
+          bulkSyncScheduleToFirebase();
+        }
+      } catch (e) {
+        // Silently ignore if function is missing or errors out during sync
+      }
+
       return createJsonResponse({ status: 'success' });
     }
 
