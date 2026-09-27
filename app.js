@@ -2219,7 +2219,7 @@ async function handleScheduleSearch(e) {
 }
 
 function renderScheduleResults(dataObj) {
-    document.getElementById('scheduleResultCoachId').innerText = dataObj['COACH NO.'] || 'Schedule Entry';
+    document.getElementById('scheduleResultCoachId').innerText = cNo !== '-' ? cNo : (dataObj['COACH NO.'] || 'Schedule Entry');
     
     const detailsContainer = document.getElementById('scheduleCoachDetailsContainer');
     
@@ -2229,6 +2229,10 @@ function renderScheduleResults(dataObj) {
     let ci = '-';
     let arrivalDate = '-';
     let leftDate = '-';
+    let cNo = '-';
+    let rly = '-';
+    let cType = '-';
+    let rake = '-';
     
     for (const key of Object.keys(dataObj)) {
         const h = String(key).toLowerCase().trim();
@@ -2240,25 +2244,38 @@ function renderScheduleResults(dataObj) {
             if (arrivalDate === '-') arrivalDate = dataObj[key] || '-';
         } else if (h === 'left date' || h.includes('left date') || h.includes('departure')) {
             if (leftDate === '-') leftDate = dataObj[key] || '-';
+        } else if (h.includes('coach no') || h.includes('coach num')) {
+            if (cNo === '-') cNo = dataObj[key] || '-';
+        } else if (h === 'own rly' || h === 'rly' || h === 'railway') {
+            if (rly === '-') rly = dataObj[key] || '-';
+        } else if (h === 'coach type' || h === 'type') {
+            if (cType === '-') cType = dataObj[key] || '-';
+        } else if (h === 'rake') {
+            if (rake === '-') rake = dataObj[key] || '-';
         }
     }
+    
+    if (cNo === '-') cNo = dataObj['COACH NO.'] || dataObj['Coach Number'] || '-';
+    if (rly === '-') rly = dataObj['OWN RLY'] || dataObj['RLY'] || dataObj['Rly'] || '-';
+    if (cType === '-') cType = dataObj['COACH TYPE'] || dataObj['TYPE'] || dataObj['Coach Type'] || '-';
+    if (rake === '-') rake = dataObj['RAKE'] || dataObj['Rake'] || '-';
 
     detailsContainer.innerHTML = `
         <div>
             <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Number</span>
-            <span style="font-weight:600; font-size:1.1rem; color: #3b82f6;">${dataObj['COACH NO.'] || '-'}</span>
+            <span style="font-weight:600; font-size:1.1rem; color: #3b82f6;">${cNo}</span>
         </div>
         <div>
             <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Owning Railway</span>
-            <span style="font-weight:500;">${dataObj['OWN RLY'] || '-'}</span>
+            <span style="font-weight:500;">${rly}</span>
         </div>
         <div>
             <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Type</span>
-            <span style="font-weight:500;">${dataObj['COACH TYPE'] || '-'}</span>
+            <span style="font-weight:500;">${cType}</span>
         </div>
         <div>
             <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Rake</span>
-            <span style="font-weight:500;">${dataObj['RAKE'] || '-'}</span>
+            <span style="font-weight:500;">${rake}</span>
         </div>
         <div>
             <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Train Number</span>
