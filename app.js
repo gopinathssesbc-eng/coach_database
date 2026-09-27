@@ -4,6 +4,105 @@ const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwa2T8bY4
 // URL for the new Schedule Database Apps Script
 const SCHEDULE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhXxdJp9xH_wagvryAUyGR_9gSJw-kwb5LM0dSFpCfoXkQMp_pvV_nWjKbd9OpapGE/exec';
 
+const FIREBASE_DB_URL = 'https://coachdatawebapp-default-rtdb.firebaseio.com/wsp';
+
+async function fetchFromDatabase(queryType, param) {
+    try {
+        let url = '';
+        if (queryType === 'coach') url = `${FIREBASE_DB_URL}/searchCoach/${param}.json`;
+        else if (queryType === 'train') url = `${FIREBASE_DB_URL}/searchTrain/${param}.json`;
+        else if (queryType === 'date') url = `${FIREBASE_DB_URL}/searchDate/${param}.json`;
+        else if (queryType === 'pending') url = `${FIREBASE_DB_URL}/searchPending.json`;
+        else if (queryType === 'history') url = `${FIREBASE_DB_URL}/history/${param}.json`;
+        else if (queryType === 'trainList') url = `${FIREBASE_DB_URL}/trainList.json`;
+        
+        const response = await fetch(url);
+        if (!response.ok) return { status: 'error', message: 'Network error' };
+        
+        const data = await response.json();
+        if (data) {
+            return data;
+        } else {
+            return { status: 'error', message: 'Coach/Data not found in database' };
+        }
+    } catch (e) {
+        return { status: 'error', message: e.toString() };
+    }
+}
+
+async function fetchFromScheduleDatabase(queryType, param) {
+    try {
+        const base = 'https://coachdatawebapp-default-rtdb.firebaseio.com/schedule/coaches';
+        if (queryType === 'coach') {
+            const res = await fetch(`${base}/${param}.json`);
+            if(!res.ok) return {status: 'error', message: 'Network error'};
+            const coachData = await res.json();
+            if(coachData) {
+                return { status: 'success', data: coachData };
+            } else {
+                const wspRes = await fetchFromDatabase('coach', param);
+                if (wspRes && wspRes.status === 'success' && wspRes.data.length > 0) {
+                    const wspCoach = wspRes.data[0];
+                    return { status: 'success', isNewCoach: true, data: wspCoach };
+                }
+                return { status: 'error', message: 'Coach details not available in database' };
+            }
+        }
+        else if (queryType === 'coachesList') {
+            const list = param.split(',').map(s => s.trim());
+            const promises = list.map(c => fetch(`${base}/${c}.json`).then(r => r.json()));
+            const results = await Promise.all(promises);
+            const validData = results.filter(d => d !== null);
+            return { status: 'success', data: validData };
+        }
+        else if (queryType === 'due') {
+            const res = await fetch(`${base}.json`);
+            if(!res.ok) return {status: 'error', message: 'Network error'};
+            const allCoaches = await res.json();
+            if(!allCoaches) return { status: 'success', data: [] };
+            
+            const selectedDate = new Date(param);
+            selectedDate.setHours(0,0,0,0);
+            const dueCoaches = [];
+            for (const coachNo in allCoaches) {
+                const row = allCoaches[coachNo];
+                let pit1Match = false, pit2Match = false;
+                
+                if (row['_pit1']) {
+                    let p1 = new Date(row['_pit1']);
+                    if(!isNaN(p1)){ p1.setHours(0,0,0,0); if (p1.getTime() === selectedDate.getTime()) pit1Match = true; }
+                }
+                if (row['_pit2']) {
+                    let p2 = new Date(row['_pit2']);
+                    if(!isNaN(p2)){ p2.setHours(0,0,0,0); if (p2.getTime() === selectedDate.getTime()) pit2Match = true; }
+                }
+                
+                if (pit1Match || pit2Match) {
+                    let d2Match = false, d3Match = false;
+                    let d2DateStr = '-', d3DateStr = '-';
+                    if (row['_d2']) {
+                        let d2Date = new Date(row['_d2']);
+                        if(!isNaN(d2Date)) { d2Date.setHours(0,0,0,0); if(d2Date.getTime() <= selectedDate.getTime()) d2Match = true; d2DateStr = String(d2Date.getDate()).padStart(2, '0') + '-' + String(d2Date.getMonth() + 1).padStart(2, '0') + '-' + d2Date.getFullYear(); }
+                    }
+                    if (row['_d3']) {
+                        let d3Date = new Date(row['_d3']);
+                        if(!isNaN(d3Date)) { d3Date.setHours(0,0,0,0); if(d3Date.getTime() <= selectedDate.getTime()) d3Match = true; d3DateStr = String(d3Date.getDate()).padStart(2, '0') + '-' + String(d3Date.getMonth() + 1).padStart(2, '0') + '-' + d3Date.getFullYear(); }
+                    }
+                    if (d2Match || d3Match) {
+                        dueCoaches.push({
+                            rly: row['_rly'], type: row['_type'], coachNo: coachNo, trainNo: row['_trainNo'],
+                            d2Date: d2DateStr, d3Date: d3DateStr, isD2Due: d2Match, isD3Due: d3Match
+                        });
+                    }
+                }
+            }
+            return { status: 'success', data: dueCoaches };
+        }
+    } catch(e) {
+        return { status: 'error', message: e.toString() };
+    }
+}
+
 // Simple static password for demonstration (you can change this)
 const APP_PASSWORD = '1234';
 
