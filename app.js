@@ -51,8 +51,19 @@ async function fetchFromScheduleDatabase(queryType, param) {
             }
         }
         else if (queryType === 'coachesList') {
-            const list = param.split(',').map(s => s.trim());
-            const promises = list.map(c => fetch(`${base}/${c}.json${cb}`).then(r => r.json()));
+            const list = param.split(',').map(s => s.trim()).filter(Boolean);
+            const promises = list.map(c => 
+                fetch(`${base}/${c}.json${cb}`)
+                    .then(r => r.json())
+                    .then(d => {
+                        if (d) {
+                            d._coachQueryNum = c;
+                            return d;
+                        }
+                        return null;
+                    })
+                    .catch(() => null)
+            );
             const results = await Promise.all(promises);
             const validData = results.filter(d => d !== null);
             return { status: 'success', data: validData };
@@ -823,16 +834,32 @@ async function viewRakeCoaches() {
             }).filter(c => c).join(',');
             
             const data = await fetchFromScheduleDatabase('coachesList', coachNumbersList);
-        if (data.status === 'success' && data.data) {
+            if (data.status === 'success' && data.data) {
                 data.data.forEach(s => {
-                    const cNum = String(s['COACH NO.']).trim();
-                    let d2DueVal = s['D2 DUE'] || s['D2 Due'] || s['D2 due'];
-                    let d3DueVal = s['D3 DUE'] || s['D3 Due'] || s['D3 due'];
+                    let cNum = s._coachQueryNum || s['COACH NO'] || s['COACH NO.'] || s['COACH No'] || s['COach Number'] || s['coachNo'];
+                    if (!cNum) {
+                        for (const k of Object.keys(s)) {
+                            if (k.toLowerCase().includes('coach') && k.toLowerCase().includes('no')) {
+                                cNum = s[k];
+                                break;
+                            }
+                        }
+                    }
+                    cNum = String(cNum || '').trim();
+                    if (!cNum) return;
+
+                    let d2Val = s['D 2'] || s['D2'] || s['d2'];
+                    let d3Val = s['D 3'] || s['D3'] || s['d3'];
+                    let d2DueVal = s['D2 DUE'] || s['D2 Due'] || s['D2 due'] || s['_d2'];
+                    let d3DueVal = s['D3 DUE'] || s['D3 Due'] || s['D3 due'] || s['_d3'];
                     scheduleMap[cNum] = { 
-                        d2: s['D 2'], 
-                        d3: s['D 3'],
+                        d2: d2Val, 
+                        d3: d3Val,
                         d2Due: d2DueVal,
-                        d3Due: d3DueVal
+                        d3Due: d3DueVal,
+                        trainNo: s['TRAIN NO'] || s['_trainNo'] || s['trainNo'],
+                        leftDate: s['LEFT DATE'],
+                        arrivalDate: s['ARRIVAL DATE']
                     };
                 });
             }
@@ -867,7 +894,8 @@ async function viewRakeCoaches() {
             if (key.toLowerCase().includes('coach num')) coachNum = coach[key];
         }
         
-        const indication = coach['_colS'] || '-';
+        const coachNumStr = String(coachNum).trim();
+        const sched = scheduleMap[coachNumStr] || scheduleMap[coachNum];
         
         let d2 = '-';
         let d3 = '-';
@@ -876,13 +904,11 @@ async function viewRakeCoaches() {
         let d2Color = 'inherit';
         let d3Color = 'inherit';
         
-
-        
-        if (scheduleMap[coachNum]) {
-            const rawD2 = scheduleMap[coachNum].d2;
-            const rawD3 = scheduleMap[coachNum].d3;
-            const rawD2Due = scheduleMap[coachNum].d2Due;
-            const rawD3Due = scheduleMap[coachNum].d3Due;
+        if (sched) {
+            const rawD2 = sched.d2;
+            const rawD3 = sched.d3;
+            const rawD2Due = sched.d2Due;
+            const rawD3Due = sched.d3Due;
             
             d2 = rawD2 ? formatIfDate(rawD2) : '-';
             d3 = rawD3 ? formatIfDate(rawD3) : '-';
@@ -894,16 +920,22 @@ async function viewRakeCoaches() {
             d3Color = rawD3Due ? getDueDateColor(rawD3Due) : 'inherit';
         }
         
+        const leftDateVal = coach['LEFT DATE'] || coach['Left Date'] || coach['_colP'] || (sched ? sched.leftDate : null);
+        const arrivalDateVal = coach['ARRIVAL DATE'] || coach['ARRIVAL'] || coach['Arrival Date'] || coach['Arrival'] || coach['_colQ'] || (sched ? sched.arrivalDate : null);
+        const wspTypeVal = coach['TYPE OF WSPD'] || coach['Type of WSPD'] || coach['WSP'] || coach['TYPE OF FT WSPD'] || '-';
+        const trainNoVal = (sched && sched.trainNo) || coach['STATUS'] || coach['DB Train No'] || coach['TRAIN NO'] || coach['Position'] || '-';
+        const indicationVal = coach['_colS'] || coach['CI'] || coach['Indication'] || coach['Coach Indication'] || '-';
+
         tr.innerHTML = `
-            <td>${coach._position}</td>
+            <td>${coach._position !== undefined ? coach._position : '-'}</td>
             <td>${rly}</td>
-            <td>${coachNum}</td>
+            <td><span class="highlight-badge">${coachNum}</span></td>
             <td>${type}</td>
-            <td>${coach['Left Date'] ? formatIfDate(coach['Left Date']) : '-'}</td>
-            <td>${coach['Arrival Date'] ? formatIfDate(coach['Arrival Date']) : '-'}</td>
-            <td>${coach['Type of WSPD'] || '-'}</td>
-            <td>${coach['DB Train No'] || coach['Position'] || '-'}</td>
-            <td>${indication}</td>
+            <td>${leftDateVal ? formatIfDate(leftDateVal) : '-'}</td>
+            <td>${arrivalDateVal ? formatIfDate(arrivalDateVal) : '-'}</td>
+            <td>${wspTypeVal}</td>
+            <td>${trainNoVal}</td>
+            <td>${indicationVal}</td>
         `;
         // Remove bottom border from main row cells to connect with sub-row
         tr.querySelectorAll('td').forEach(td => td.style.borderBottom = 'none');
@@ -1811,18 +1843,19 @@ function viewWspRakeCoaches() {
             
             const hasWheelCond = wheelCond !== '-';
             
-            const leftDate = coach['Left Date'] ? formatIfDate(coach['Left Date']) : '-';
-            const arrivalDate = coach['Arrival Date'] ? formatIfDate(coach['Arrival Date']) : '-';
-            const wspType = coach['Type of WSPD'] || '-';
-            const dbPos = coach['DB Train No'] || coach['Position'] || '-';
+            const leftDate = coach['LEFT DATE'] || coach['Left Date'] || coach['_colP'] || '-';
+            const arrivalDate = coach['ARRIVAL DATE'] || coach['ARRIVAL'] || coach['Arrival Date'] || coach['_colQ'] || '-';
+            const wspType = coach['TYPE OF WSPD'] || coach['Type of WSPD'] || coach['WSP'] || coach['TYPE OF FT WSPD'] || '-';
+            const dbPos = coach['STATUS'] || coach['DB Train No'] || coach['TRAIN NO'] || coach['Position'] || '-';
+            const indication = coach['_colS'] || coach['CI'] || coach['Indication'] || '-';
             
             tr.innerHTML = `
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${pos}</td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${rly}</td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}><span class="highlight-badge">${coachNum}</span></td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${type}</td>
-                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${leftDate}</td>
-                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${arrivalDate}</td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${leftDate ? formatIfDate(leftDate) : '-'}</td>
+                <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${arrivalDate ? formatIfDate(arrivalDate) : '-'}</td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${wspType}</td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${dbPos}</td>
                 <td ${hasWheelCond ? 'style="border-bottom: none;"' : ''}>${indication}</td>

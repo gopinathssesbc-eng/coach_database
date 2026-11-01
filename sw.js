@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coach-db-pwa-v1';
+const CACHE_NAME = 'coach-db-pwa-v2';
 
 // Core local shell assets to pre-cache on install
 const PRECACHE_ASSETS = [
