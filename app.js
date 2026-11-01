@@ -2793,15 +2793,17 @@ async function fetchWspPendingWork() {
 
 function showChangelog() {
     Swal.fire({
-        title: 'Changelog v2.0.0',
-        html: '<div style="text-align: left; font-size: 0.9rem;">' +
+        title: 'Changelog v2.1.0',
+        html: '<div style="text-align: left; font-size: 0.9rem; line-height: 1.5;">' +
               '<ul>' +
-              '<li><b>Performance:</b> Firebase integration done to improve app speed. Searches now take under 100ms.</li>' +
-              '<li><b>Architecture:</b> Replaced slow Google Apps Script redirects with Firebase RTDB read replicas.</li>' +
+              '<li><b>Progressive Web App (PWA):</b> Full install support on Android, iOS, Windows & Mac with standalone app window and home screen icon.</li>' +
+              '<li><b>Offline Capability:</b> Core app shell, fonts, icons, and cached depot data now accessible even with zero network connectivity.</li>' +
+              '<li><b>App Shortcuts:</b> Long-press or right-click app icon to jump directly into Search Coach, WSP Entry, Schedule Entry, or Due Coaches.</li>' +
+              '<li><b>Performance:</b> Firebase RTDB integration for sub-100ms ultra-fast query responses.</li>' +
               '</ul>' +
               '</div>',
         icon: 'info',
-        background: 'var(--surface)',
+        background: 'rgba(30, 41, 59, 0.95)',
         color: 'var(--text)',
         confirmButtonColor: 'var(--primary)'
     });

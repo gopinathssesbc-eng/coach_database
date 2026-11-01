@@ -2,8 +2,27 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Coach Database</title>
+    <!-- PWA Web App Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <!-- PWA & Mobile Meta Tags -->
+    <meta name="theme-color" content="#4F46E5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Coach DB">
+    <meta name="application-name" content="Coach DB">
+    <meta name="msapplication-TileColor" content="#4F46E5">
+    <meta name="msapplication-TileImage" content="icons/icon-144.png">
+    
+    <!-- PWA Favicons & Touch Icons -->
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,11 +30,44 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=202609271822">
+    <link rel="stylesheet" href="style.css?v=20261101">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
 </head>
 <body>
+    <!-- Offline Indicator Banner -->
+    <div id="offlineIndicator" class="offline-banner hidden">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Offline Mode &bull; Working with cached depot data</span>
+    </div>
+
+    <!-- PWA Install Banner Toast -->
+    <div id="pwaInstallBanner" class="pwa-toast pwa-install-toast hidden">
+        <div class="pwa-toast-body">
+            <img src="icons/icon-96.png" alt="Coach DB" class="pwa-toast-icon">
+            <div class="pwa-toast-info">
+                <strong>Install Coach DB</strong>
+                <p>Install for fast access & offline use</p>
+            </div>
+        </div>
+        <div class="pwa-toast-actions">
+            <button id="pwaInstallConfirmBtn" class="btn primary-btn btn-sm"><i class="fa-solid fa-download"></i> Install</button>
+            <button id="pwaInstallDismissBtn" class="icon-btn" title="Dismiss" style="padding: 0.3rem;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+
+    <!-- PWA Update Available Toast -->
+    <div id="pwaUpdateBanner" class="pwa-toast pwa-update-toast hidden">
+        <div class="pwa-toast-body">
+            <i class="fa-solid fa-arrows-rotate fa-spin" style="font-size: 1.4rem; color: #38BDF8; margin-right: 4px;"></i>
+            <div class="pwa-toast-info">
+                <strong>Update Ready</strong>
+                <p>A new version of Coach DB is available</p>
+            </div>
+        </div>
+        <button id="pwaUpdateBtn" class="btn primary-btn btn-sm">Reload</button>
+    </div>
+
     <!-- Background Elements for Premium Look -->
     <div class="bg-shape shape-1"></div>
     <div class="bg-shape shape-2"></div>
@@ -40,10 +92,16 @@
                 </button>
                 <p id="loginError" class="error-text hidden">Invalid password</p>
             </form>
+
+            <div id="loginInstallPrompt" class="hidden" style="margin-top: 1.25rem;">
+                <button onclick="triggerPwaInstall()" class="btn" style="background: rgba(79, 70, 229, 0.15); border: 1px solid rgba(129, 140, 248, 0.3); color: #c7d2fe; font-size: 0.88rem; padding: 0.65rem 1rem; border-radius: 10px; width: auto; margin: 0 auto; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-download" style="color: #38BDF8;"></i> Install App on Device
+                </button>
+            </div>
         </div>
         <div class="footer-branding" style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
             <div>SBC COACHING DEPOT</div>
-            <div style="font-size: 0.75rem; opacity: 0.7; font-family: monospace;">v2.0.0 | Updated: 2026-09-27 18:22</div>
+            <div style="font-size: 0.75rem; opacity: 0.7; font-family: monospace;">v2.1.0 (PWA) | Updated: 2026-11-01</div>
             <button onclick="showChangelog()" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; margin-top: 5px;">View Changelog</button>
         </div>
     </div>
@@ -55,7 +113,10 @@
                 <h1>Dashboard</h1>
                 <p class="subtitle">Select a module</p>
             </div>
-            <div style="display: flex; gap: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button id="pwaHeaderInstallBtn" class="pwa-header-btn hidden" onclick="triggerPwaInstall()" title="Install Coach DB as App">
+                    <i class="fa-solid fa-download"></i> <span>Install</span>
+                </button>
                 <button class="icon-btn sync-btn" onclick="forceRefreshData()" title="Refresh Data"><i class="fa-solid fa-rotate-right"></i></button>
                 <button class="icon-btn logout-btn" onclick="logout()" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
@@ -860,6 +921,7 @@
         </main>
     </div>
 
+    <script src="pwa.js?v=20261101" defer></script>
     <script src="app.js?v=202609272310" defer></script>
 </body>
 </html>

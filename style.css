@@ -684,3 +684,151 @@ select option {
 .swal2-title, .swal2-html-container {
     color: var(--text) !important;
 }
+
+/* ==========================================================================
+   Progressive Web App (PWA) Styles
+   ========================================================================== */
+
+/* Mobile Notch & Navigation Bar Safe Area Support */
+@supports (padding-top: env(safe-area-inset-top)) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+}
+
+/* Offline Indicator Banner */
+.offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    color: #ffffff;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    animation: pwaSlideDown 0.3s ease-out;
+}
+
+@keyframes pwaSlideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+}
+
+/* PWA Header Install Button */
+.pwa-header-btn {
+    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3);
+    transition: var(--transition);
+}
+
+.pwa-header-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(6, 182, 212, 0.45);
+}
+
+.pwa-header-btn:active {
+    transform: translateY(0);
+}
+
+/* PWA Floating Toasts (Install & Update) */
+.pwa-toast {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9998;
+    width: calc(100% - 32px);
+    max-width: 440px;
+    background: rgba(30, 41, 59, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    padding: 12px 16px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    animation: pwaSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pwaSlideUp {
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.pwa-toast-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1;
+}
+
+.pwa-toast-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.pwa-toast-info strong {
+    color: #f8fafc;
+    font-size: 0.92rem;
+    font-weight: 600;
+    display: block;
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.pwa-toast-info p {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.pwa-toast-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* Compact Button Utility */
+.btn-sm {
+    width: auto !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.85rem !important;
+    border-radius: 8px !important;
+    margin-top: 0 !important;
+}
+
+/* PWA Update Toast Specifics */
+.pwa-update-toast {
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
