@@ -765,15 +765,12 @@
         </header>
 
         <main class="slide-up">
-            <div class="glass-card" style="margin-bottom: 1rem;">
-                <h3 class="group-title"><i class="fa-solid fa-circle-info"></i> Coach Details</h3>
-                <div id="wspCoachDetailsContainer" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-                    <!-- Details injected here -->
-                </div>
+            <div id="wspCoachDetailsContainer" style="margin-bottom: 1rem;">
+                <!-- Coach Mini Hero injected here -->
             </div>
 
             <div class="glass-card" style="margin-bottom: 1rem;">
-                <h3 class="group-title"><i class="fa-solid fa-clock-rotate-left"></i> Previous WSP Issues</h3>
+                <h3 class="group-title" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-clock-rotate-left"></i> Previous WSP Issues</h3>
                 <div id="wspHistoryContainer">
                     <!-- History cards or 'no issues' message injected here -->
                 </div>
@@ -781,138 +778,155 @@
 
             <div class="glass-card">
                 <div class="accordion-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="document.getElementById('wspDefectFormWrapper').classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('fa-chevron-up'); this.querySelector('.chevron').classList.toggle('fa-chevron-down');">
-                    <h3 class="group-title" style="margin-bottom: 0; color: #10b981;"><i class="fa-solid fa-plus"></i> Add New Defect</h3>
+                    <h3 class="group-title" id="wspFormTitle" style="margin-bottom: 0; color: #10b981;"><i class="fa-solid fa-plus"></i> Add New Defect</h3>
                     <i class="fa-solid fa-chevron-down chevron"></i>
                 </div>
-                <div id="wspDefectFormWrapper" class="hidden" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <div id="wspDefectFormWrapper" class="hidden" style="margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08);">
                     <form id="wspDefectForm">
                         <input type="hidden" id="wspEditRowIndex" value="">
-                    <input type="hidden" id="wspDefectCoachNum">
-                    
-                    <div class="form-group">
-                        <label>Download Date</label>
-                        <input type="date" id="wspDownloadDate" class="styled-input" onclick="this.showPicker()" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Wheel Condition</label>
-                        <input type="text" id="wspWheelCondition" class="styled-input" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Pressure Switch (PS) Status</label>
-                        <select id="wspPsStatus" class="styled-input" required>
-                            <option value="" disabled selected>Select Status</option>
-                            <option value="ok">ok</option>
-                            <option value="Not ok">Not ok</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>WSP Code</label>
-                        <input type="text" id="wspCode" class="styled-input" placeholder="e.g. 72, 95" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Self Test Dump Valve</label>
-                        <select id="wspDumpValve" class="styled-input" required>
-                            <option value="" disabled selected>Select Status</option>
-                            <option value="ok">ok</option>
-                            <option value="Not ok">Not ok</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Sensor Gap</label>
-                        <input type="text" id="wspSensorGap" class="styled-input" placeholder="axle1-1mm, axle 2 - 1mm , axle 3 -1mm, axle 4 - 1mm" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Downloading Observation</label>
-                        <input type="text" id="wspObservation" class="styled-input" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Other Observation</label>
-                        <input type="text" id="wspOtherObservation" class="styled-input" required>
-                    </div>
-                    
-
-                    <div class="form-group">
-                        <label>Defect Category</label>
-                        <select id="wspDefectCategory" class="styled-input" required>
-                            <option value="" disabled selected>Select Category</option>
-                            <option value="No defect">No defect</option>
-                            <option value="Sensor defect">Sensor defect</option>
-                            <option value="Sensor gap">Sensor gap</option>
-                            <option value="Dump valve defect">Dump valve defect</option>
-                            <option value="Pressure switch defect">Pressure switch defect</option>
-                            <option value="Card defect">Card defect</option>
-                            <option value="Dump valve connector loose">Dump valve connector loose</option>
-                            <option value="Speed sensor connector loose">Speed sensor connector loose</option>
-                            <option value="Fuse">Fuse</option>
-                            <option value="K05 defective">K05 defective</option>
-                            <option value="Loose wiring in wago">Loose wiring in wago</option>
-                            <option value="Junction box defective">Junction box defective</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Attention (If Any)</label>
-                        <input type="text" id="wspAttention" class="styled-input" required>
-                    </div>
-                    
-
-                    <div class="form-group">
-                        <label>Defect Description</label>
-                        <textarea id="wspDescription" class="styled-input" rows="3" placeholder="Describe the issue..." required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Item Required / Used</label>
-                        <input type="text" id="wspItemRequired" class="styled-input" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Data Entry By</label>
-                        <select id="wspDataEntryBy" class="styled-input" required>
-                            <option value="" disabled selected>Select ID</option>
-                            <option value="295">295</option>
-                            <option value="294">294</option>
-                            <option value="274">274</option>
-                            <option value="755">755</option>
-                            <option value="639">639</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Checklist Submitted</label>
-                        <select id="wspChecklist" class="styled-input" required>
-                            <option value="" disabled selected>Select Yes / No</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Any work pending</label>
-                        <select id="wspAnyWorkPending" class="styled-input" required>
-                            <option value="" disabled selected>Select Yes / No</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Pending Work Description</label>
-                        <input type="text" id="wspPendingWorkDesc" class="styled-input">
-                    </div>
-                    
-                    <button type="submit" class="btn primary-btn btn-block" id="wspSubmitDefectBtn" style="margin-top: 1rem; background: linear-gradient(135deg, #10b981, #059669);">
-                        <span class="btn-text">Submit Defect</span>
-                        <div class="spinner hidden"></div>
-                    </button>
-                </form>
+                        <input type="hidden" id="wspDefectCoachNum">
+                        
+                        <!-- Section 1: Basic & Wheel Info -->
+                        <div class="form-section">
+                            <div class="form-section-title"><i class="fa-solid fa-calendar-day"></i> Basic & Wheel Info</div>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label for="wspDownloadDate">Download Date</label>
+                                    <input type="date" id="wspDownloadDate" class="styled-input" onclick="this.showPicker()" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="wspWheelCondition">Wheel Condition</label>
+                                    <input type="text" id="wspWheelCondition" class="styled-input" placeholder="e.g. 3rd axle old shining" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section 2: Diagnostics & Sensors -->
+                        <div class="form-section">
+                            <div class="form-section-title"><i class="fa-solid fa-bolt"></i> Diagnostics & Sensors</div>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label for="wspPsStatus">Pressure Switch (PS) Status</label>
+                                    <select id="wspPsStatus" class="styled-input" required>
+                                        <option value="" disabled selected>Select Status</option>
+                                        <option value="ok">ok</option>
+                                        <option value="Not ok">Not ok</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="wspDumpValve">Self Test Dump Valve</label>
+                                    <select id="wspDumpValve" class="styled-input" required>
+                                        <option value="" disabled selected>Select Status</option>
+                                        <option value="ok">ok</option>
+                                        <option value="Not ok">Not ok</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="wspCode">WSP Code</label>
+                                    <input type="text" id="wspCode" class="styled-input" placeholder="e.g. 99 (Normal), 72, 95" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="wspSensorGap">Sensor Gap</label>
+                                    <input type="text" id="wspSensorGap" class="styled-input" placeholder="e.g. 3rd axle 1.0" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section 3: Observations & Category -->
+                        <div class="form-section">
+                            <div class="form-section-title"><i class="fa-solid fa-magnifying-glass"></i> Observations & Category</div>
+                            <div class="form-group">
+                                <label for="wspDefectCategory">Defect Category</label>
+                                <select id="wspDefectCategory" class="styled-input" required>
+                                    <option value="" disabled selected>Select Category</option>
+                                    <option value="No defect">No defect</option>
+                                    <option value="Sensor defect">Sensor defect</option>
+                                    <option value="Sensor gap">Sensor gap</option>
+                                    <option value="Dump valve defect">Dump valve defect</option>
+                                    <option value="Pressure switch defect">Pressure switch defect</option>
+                                    <option value="Card defect">Card defect</option>
+                                    <option value="Dump valve connector loose">Dump valve connector loose</option>
+                                    <option value="Speed sensor connector loose">Speed sensor connector loose</option>
+                                    <option value="Fuse">Fuse</option>
+                                    <option value="K05 defective">K05 defective</option>
+                                    <option value="Loose wiring in wago">Loose wiring in wago</option>
+                                    <option value="Junction box defective">Junction box defective</option>
+                                </select>
+                            </div>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label for="wspObservation">Downloading Observation</label>
+                                    <input type="text" id="wspObservation" class="styled-input" placeholder="e.g. No error found" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="wspOtherObservation">Other Observation</label>
+                                    <input type="text" id="wspOtherObservation" class="styled-input" placeholder="e.g. ok" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="wspDescription">Defect Description</label>
+                                <textarea id="wspDescription" class="styled-input" rows="2" placeholder="Describe the issue or enter nil..." required></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Section 4: Action & Pending Work -->
+                        <div class="form-section">
+                            <div class="form-section-title"><i class="fa-solid fa-wrench"></i> Action & Pending Work</div>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label for="wspAttention">Attention (If Any)</label>
+                                    <input type="text" id="wspAttention" class="styled-input" placeholder="nil or specific attention" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="wspItemRequired">Item Required / Used</label>
+                                    <input type="text" id="wspItemRequired" class="styled-input" placeholder="no or item name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="wspAnyWorkPending">Any Work Pending?</label>
+                                    <select id="wspAnyWorkPending" class="styled-input" required>
+                                        <option value="" disabled selected>Select Yes / No</option>
+                                        <option value="No">No</option>
+                                        <option value="Yes">Yes</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" id="wspPendingWorkDescGroup">
+                                    <label for="wspPendingWorkDesc">Pending Work Description</label>
+                                    <input type="text" id="wspPendingWorkDesc" class="styled-input" placeholder="Detail the pending task or -">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Section 5: Verification & Staff -->
+                        <div class="form-section">
+                            <div class="form-section-title"><i class="fa-solid fa-user-check"></i> Verification & Staff</div>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label for="wspChecklist">Checklist Submitted</label>
+                                    <select id="wspChecklist" class="styled-input" required>
+                                        <option value="" disabled selected>Select Yes / No</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="wspDataEntryBy">Data Entry By</label>
+                                    <select id="wspDataEntryBy" class="styled-input" required>
+                                        <option value="" disabled selected>Select ID</option>
+                                        <option value="295">295</option>
+                                        <option value="294">294</option>
+                                        <option value="274">274</option>
+                                        <option value="755">755</option>
+                                        <option value="639">639</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn primary-btn btn-block" id="wspSubmitDefectBtn" style="margin-top: 1rem; background: linear-gradient(135deg, #10b981, #059669);">
+                            <span class="btn-text">Submit Defect</span>
+                            <div class="spinner hidden"></div>
+                        </button>
+                    </form>
                 </div>
             </div>
             <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="navigateTo('wspSearchScreen')">
@@ -922,6 +936,6 @@
     </div>
 
     <script src="pwa.js?v=20261101" defer></script>
-    <script src="app.js?v=202611010915" defer></script>
+    <script src="app.js?v=202611011015" defer></script>
 </body>
 </html>

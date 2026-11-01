@@ -278,6 +278,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).then(() => {
                     wspDefectForm.reset();
                     document.getElementById('wspEditRowIndex').value = '';
+                    const formTitle = document.getElementById('wspFormTitle');
+                    if (formTitle) formTitle.innerHTML = `<i class="fa-solid fa-plus"></i> Add New Defect`;
+                    const defectSubmitBtn = document.getElementById('wspSubmitDefectBtn');
+                    if (defectSubmitBtn) {
+                        const textSpan = defectSubmitBtn.querySelector('.btn-text');
+                        if (textSpan) textSpan.innerText = 'Submit Defect';
+                    }
                     
                     // Close the accordion
                     const wrapper = document.getElementById('wspDefectFormWrapper');
@@ -303,6 +310,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.querySelector('.btn-text').style.opacity = '1';
             }
         });
+        
+        const anyWorkPendingSelect = document.getElementById('wspAnyWorkPending');
+        if (anyWorkPendingSelect) {
+            anyWorkPendingSelect.addEventListener('change', () => {
+                const descGroup = document.getElementById('wspPendingWorkDescGroup');
+                const descInput = document.getElementById('wspPendingWorkDesc');
+                if (anyWorkPendingSelect.value === 'Yes') {
+                    if (descGroup) descGroup.style.borderColor = '#f59e0b';
+                    if (descInput) {
+                        descInput.required = true;
+                        descInput.focus();
+                    }
+                } else {
+                    if (descGroup) descGroup.style.borderColor = '';
+                    if (descInput) {
+                        descInput.required = false;
+                    }
+                }
+            });
+        }
     }
 
 });
@@ -1019,10 +1046,149 @@ function renderSelectionList(matchesArray, isWsp = false) {
     navigateTo('selectionScreen');
 }
 
-async function renderResults(dataObj) {
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
+function toggleSectionAccordion(sectionId) {
+    const sec = document.getElementById(sectionId);
+    if (!sec) return;
+    const content = sec.querySelector('.group-content');
+    const isCollapsed = sec.classList.toggle('is-collapsed');
+    if (content) {
+        content.style.display = isCollapsed ? 'none' : (content.classList.contains('compact-grid') ? 'grid' : 'flex');
+    }
+    const hint = sec.querySelector('.collapsed-hint');
+    if (hint) {
+        hint.style.display = isCollapsed ? 'inline' : 'none';
+    }
+    if (sectionId === 'section-other' && !isCollapsed) {
+        window._userOpenedOtherDetails = true;
+    }
+}
+
+function toggleAllCoachSections() {
+    const container = document.getElementById('resultsContainer');
+    if (!container) return;
+    const sections = container.querySelectorAll('.group-section');
+    const hasCollapsed = Array.from(sections).some(s => s.classList.contains('is-collapsed'));
+    
+    sections.forEach(sec => {
+        const content = sec.querySelector('.group-content');
+        const hint = sec.querySelector('.collapsed-hint');
+        if (hasCollapsed) {
+            sec.classList.remove('is-collapsed');
+            if (content) content.style.display = content.classList.contains('compact-grid') ? 'grid' : 'flex';
+            if (hint) hint.style.display = 'none';
+        } else {
+            sec.classList.add('is-collapsed');
+            if (content) content.style.display = 'none';
+            if (hint) hint.style.display = 'inline';
+        }
+    });
+    
+    const icon = document.getElementById('expandAllIcon');
+    if (icon) {
+        icon.className = hasCollapsed ? 'fa-solid fa-angles-up' : 'fa-solid fa-angles-down';
+    }
+}
+
+function filterCoachDetailsFields(query) {
+    const q = String(query || '').trim().toLowerCase();
+    const clearBtn = document.getElementById('clearCoachFieldSearchBtn');
+    if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
     
     const container = document.getElementById('resultsContainer');
+    if (!container) return;
+    
+    const rows = container.querySelectorAll('.data-row, .sched-tile, .axle-cell');
+    
+    if (!q) {
+        rows.forEach(r => r.style.display = '');
+        const otherSec = document.getElementById('section-other');
+        if (otherSec && !window._userOpenedOtherDetails) {
+            otherSec.classList.add('is-collapsed');
+            const content = otherSec.querySelector('.group-content');
+            if (content) content.style.display = 'none';
+            const hint = otherSec.querySelector('.collapsed-hint');
+            if (hint) hint.style.display = 'inline';
+        }
+        return;
+    }
+    
+    // Auto-expand all sections so matches are immediately visible
+    container.querySelectorAll('.group-section').forEach(sec => {
+        sec.classList.remove('is-collapsed');
+        const content = sec.querySelector('.group-content');
+        if (content) content.style.display = content.classList.contains('compact-grid') ? 'grid' : 'flex';
+        const hint = sec.querySelector('.collapsed-hint');
+        if (hint) hint.style.display = 'none';
+    });
+    
+    rows.forEach(r => {
+        const lbl = (r.getAttribute('data-label') || '').toLowerCase();
+        const val = (r.getAttribute('data-value') || '').toLowerCase();
+        const text = (r.innerText || '').toLowerCase();
+        
+        if (lbl.includes(q) || val.includes(q) || text.includes(q)) {
+            r.style.display = '';
+        } else {
+            r.style.display = 'none';
+        }
+    });
+}
+
+function clearCoachFieldSearch() {
+    const input = document.getElementById('coachSearchFieldInput');
+    if (input) {
+        input.value = '';
+        filterCoachDetailsFields('');
+    }
+}
+
+function jumpToSection(sectionId) {
+    const container = document.getElementById('resultsContainer');
+    if (!container) return;
+    
+    const strip = container.querySelector('.results-nav-strip');
+    if (strip && event && event.currentTarget) {
+        strip.querySelectorAll('.nav-chip').forEach(c => c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+    
+    if (sectionId === 'all') {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+    
+    const target = document.getElementById(sectionId);
+    if (target) {
+        if (target.classList.contains('is-collapsed')) {
+            toggleSectionAccordion(sectionId);
+        }
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function openScheduleEntryForCoach(coachNum) {
+    navigateTo('scheduleSearchScreen');
+    const searchInput = document.getElementById('scheduleCoachNumberInput');
+    if (searchInput) {
+        searchInput.value = coachNum;
+        const form = document.getElementById('scheduleSearchForm');
+        if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+}
+
+async function renderResults(dataObj) {
+    const container = document.getElementById('resultsContainer');
+    window._userOpenedOtherDetails = false;
     
     // Try to build a clean title
     const rly = dataObj['RLY'] ? String(dataObj['RLY']).substring(0, 2) : '';
@@ -1032,7 +1198,7 @@ async function renderResults(dataObj) {
         if (key.toLowerCase().includes('coach num')) coachNum = dataObj[key];
     }
     
-    const displayTitle = (rly && coachNum) ? rly + coachNum : 'Coach Details';
+    const displayTitle = (rly && coachNum) ? rly + coachNum : (coachNum || 'Coach Details');
     document.getElementById('resultCoachId').innerText = displayTitle;
     
     container.innerHTML = ''; // Clear previous
@@ -1065,25 +1231,120 @@ async function renderResults(dataObj) {
         return -1;
     }
     
-    let delayCounter = 0;
+    const idxCoachNo = findIndexByText(['coach no', 'coach number', 'coach num']);
+    const idxRly = findIndexByText(['rly']);
+    const idxType = findIndexByText(['type']);
+    const idxMake = letterToIndex('E');
+    const idxColX = letterToIndex('X');
+    const idxTypeOfWSPD = findIndexByText(['type of wspd']);
+    const idxTrainNo = letterToIndex('R');
+    const idxPos = letterToIndex('O');
+
+    const cleanRly = rly || (idxRly !== -1 && rawRow[idxRly]) || 'IR';
+    const cleanType = (idxType !== -1 && rawRow[idxType]) || 'Coach';
+    const cleanMake = (idxMake >= 0 && rawRow[idxMake]) || '-';
+    const cleanWspVal = (idxColX >= 0 && rawRow[idxColX]) ? rawRow[idxColX] : '';
+    const cleanWspType = (idxTypeOfWSPD !== -1 && rawRow[idxTypeOfWSPD]) ? rawRow[idxTypeOfWSPD] : '';
+    const cleanWspCombined = cleanWspVal ? (cleanWspType && cleanWspType !== cleanWspVal ? `${cleanWspVal} (${cleanWspType})` : cleanWspVal) : (cleanWspType || '-');
+    const cleanTrain = (idxTrainNo >= 0 && rawRow[idxTrainNo]) || '-';
+    const cleanPos = (idxPos >= 0 && rawRow[idxPos]) || '-';
+
+    // 1. Render Top Coach Hero Summary Card
+    const heroHTML = `
+        <div class="coach-hero-card slide-up">
+            <div class="hero-header-row">
+                <div class="hero-id-wrap">
+                    <span class="hero-rly-badge">${escapeHtml(cleanRly)}</span>
+                    <span class="hero-coach-num">${escapeHtml(coachNum || displayTitle)}</span>
+                </div>
+                <span class="hero-type-badge">${escapeHtml(cleanType)}</span>
+            </div>
+            
+            <div class="hero-specs-pills">
+                <span class="hero-pill"><i class="fa-solid fa-industry"></i> Make: <strong>${escapeHtml(cleanMake)}</strong></span>
+                <span class="hero-pill"><i class="fa-solid fa-shield-halved"></i> WSP: <strong>${escapeHtml(cleanWspCombined)}</strong></span>
+                <span class="hero-pill"><i class="fa-solid fa-train"></i> Train: <strong>${escapeHtml(cleanTrain)}</strong></span>
+                <span class="hero-pill"><i class="fa-solid fa-location-crosshairs"></i> Pos: <strong>${escapeHtml(cleanPos)}</strong></span>
+            </div>
+
+            <div class="hero-due-row" id="heroDueRow">
+                <div class="hero-due-chip" id="heroD2DueChip">
+                    <span class="due-chip-lbl">D2 DUE</span>
+                    <span class="due-chip-val" id="heroD2DueVal"><i class="fa-solid fa-circle-notch fa-spin"></i> Checking...</span>
+                </div>
+                <div class="hero-due-chip" id="heroD3DueChip">
+                    <span class="due-chip-lbl">D3 DUE</span>
+                    <span class="due-chip-val" id="heroD3DueVal"><i class="fa-solid fa-circle-notch fa-spin"></i> Checking...</span>
+                </div>
+            </div>
+        </div>
+    `;
+    const heroWrapper = document.createElement('div');
+    heroWrapper.innerHTML = heroHTML;
+    container.appendChild(heroWrapper.firstElementChild);
+
+    // 2. Render Results Toolbar (Category Navigation Chips + Instant Filter Search)
+    const toolbarHTML = `
+        <div class="results-toolbar slide-up">
+            <div class="results-nav-strip">
+                <button class="nav-chip active" onclick="jumpToSection('all')"><i class="fa-solid fa-layer-group"></i> All</button>
+                <button class="nav-chip" onclick="jumpToSection('schedule-details-box')"><i class="fa-solid fa-calendar-check"></i> Schedule</button>
+                <button class="nav-chip" onclick="jumpToSection('section-location')"><i class="fa-solid fa-location-dot"></i> Status</button>
+                <button class="nav-chip" onclick="jumpToSection('section-pro')"><i class="fa-solid fa-wrench"></i> PRO</button>
+                <button class="nav-chip" onclick="jumpToSection('section-other')"><i class="fa-solid fa-bars-staggered"></i> More</button>
+            </div>
+            <div class="results-search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="coachSearchFieldInput" placeholder="Filter details (e.g. wsp, date, axle)..." oninput="filterCoachDetailsFields(this.value)">
+                <button id="clearCoachFieldSearchBtn" class="clear-search-btn" style="display:none;" onclick="clearCoachFieldSearch()"><i class="fa-solid fa-xmark"></i></button>
+                <button class="expand-all-btn" id="expandAllSectionsBtn" onclick="toggleAllCoachSections()" title="Expand or collapse all sections">
+                    <i class="fa-solid fa-angles-down" id="expandAllIcon"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    const toolbarWrapper = document.createElement('div');
+    toolbarWrapper.innerHTML = toolbarHTML;
+    container.appendChild(toolbarWrapper.firstElementChild);
+
+    let delayCounter = 1;
     
-    function createGroup(title, columnsData) {
+    function createGroup(title, columnsData, options = {}) {
         if (columnsData.length === 0) return;
         
-        let groupHTML = `<div class="group-section slide-up" style="animation-delay: ${Math.min(delayCounter * 0.05, 1)}s">
-                            <h3 class="group-title">${title}</h3>
-                            <div class="group-content">`;
+        const icon = options.icon || 'fa-circle-info';
+        const sectionId = options.sectionId || ('sec-' + Math.random().toString(36).substr(2, 6));
+        const isCollapsed = !!options.collapsedByDefault;
+        const count = columnsData.length;
+        
+        let groupHTML = `
+            <div class="group-section slide-up ${isCollapsed ? 'is-collapsed' : ''}" id="${sectionId}" style="animation-delay: ${Math.min(delayCounter * 0.05, 1)}s">
+                <div class="group-header" onclick="toggleSectionAccordion('${sectionId}')">
+                    <div class="group-header-left">
+                        <i class="fa-solid ${icon} group-header-icon"></i>
+                        <h3 class="group-title">${title}</h3>
+                        <span class="group-count-badge">${count}</span>
+                    </div>
+                    <div class="group-header-right">
+                        ${isCollapsed ? '<span class="collapsed-hint">Tap to view</span>' : ''}
+                        <i class="fa-solid fa-chevron-up accordion-chevron"></i>
+                    </div>
+                </div>
+                <div class="group-content compact-grid" ${isCollapsed ? 'style="display:none;"' : ''}>`;
         delayCounter++;
-                            
+                                
         columnsData.forEach(col => {
             const val = rawRow[col.index];
             let displayValue = (val === '' || val === null || val === undefined) ? '-' : val;
             displayValue = formatIfDate(displayValue);
             
+            const isLong = String(displayValue).length > 20 || String(col.label).length > 22;
+            const fullWidthClass = isLong ? ' full-width' : '';
+            
             groupHTML += `
-                <div class="data-row">
-                    <div class="data-label">${col.label}</div>
-                    <div class="data-value">${displayValue}</div>
+                <div class="data-row${fullWidthClass}" data-label="${escapeHtml(String(col.label).toLowerCase())}" data-value="${escapeHtml(String(displayValue).toLowerCase())}">
+                    <div class="data-label">${escapeHtml(col.label)}</div>
+                    <div class="data-value">${escapeHtml(displayValue)}</div>
                 </div>`;
             usedIndices.add(col.index);
         });
@@ -1095,24 +1356,19 @@ async function renderResults(dataObj) {
     }
 
     // Group 1: Coach Details
-    const idxCoachNo = findIndexByText(['coach no', 'coach number', 'coach num']);
-    const idxRly = findIndexByText(['rly']);
-    const idxType = findIndexByText(['type']);
-    const idxMake = letterToIndex('E');
-    const idxColX = letterToIndex('X');
-    const idxTypeOfWSPD = findIndexByText(['type of wspd']);
-    
     const group1 = [];
     if (idxCoachNo !== -1) group1.push({ index: idxCoachNo, label: headers[idxCoachNo] || 'Coach Number' });
     if (idxRly !== -1) group1.push({ index: idxRly, label: headers[idxRly] || 'Railway' });
     if (idxType !== -1) group1.push({ index: idxType, label: headers[idxType] || 'Coach Type' });
     group1.push({ index: idxMake, label: headers[idxMake] || 'Make' });
-    
-    // Add specifically Column X and Type of WSPD
     group1.push({ index: idxColX, label: headers[idxColX] || 'Column X' });
     if (idxTypeOfWSPD !== -1 && idxTypeOfWSPD !== idxColX) group1.push({ index: idxTypeOfWSPD, label: headers[idxTypeOfWSPD] || 'Type of WSPD' });
     
-    createGroup('Coach Details', group1);
+    createGroup('Coach Details', group1, {
+        icon: 'fa-train',
+        sectionId: 'section-coach',
+        collapsedByDefault: false
+    });
     
     // Group 2: Location/Status
     const group2 = [
@@ -1122,7 +1378,11 @@ async function renderResults(dataObj) {
         { index: letterToIndex('P'), label: headers[letterToIndex('P')] || 'Departure Date' },
         { index: letterToIndex('Q'), label: headers[letterToIndex('Q')] || 'Arrival Date' }
     ];
-    createGroup('Location & Status', group2);
+    createGroup('Location & Status', group2, {
+        icon: 'fa-location-dot',
+        sectionId: 'section-location',
+        collapsedByDefault: false
+    });
 
     // Group 3: PRO Details
     const idxDOC = findIndexByText(['doc']);
@@ -1138,22 +1398,29 @@ async function renderResults(dataObj) {
     if (idxSS1 !== -1 && idxSS1 !== idxSS1Done) group3.push({ index: idxSS1, label: headers[idxSS1] || 'SS1' });
     if (idxSS1Done !== -1) group3.push({ index: idxSS1Done, label: headers[idxSS1Done] || 'SS1 Done Date' });
     if (idxWTT !== -1) group3.push({ index: idxWTT, label: headers[idxWTT] || 'WTT' });
-    createGroup('PRO Details', group3);
     
-    // Group 4: Other Details
+    createGroup('PRO Details', group3, {
+        icon: 'fa-wrench',
+        sectionId: 'section-pro',
+        collapsedByDefault: false
+    });
+    
+    // Group 4: Other Details (Collapsed by default on mobile to save vertical scrolling)
     const group4 = [];
     for (let i = 0; i < headers.length; i++) {
-        // Skip omitted columns, already used columns, and empty headers
         if (!usedIndices.has(i) && !omittedIndices.includes(i) && headers[i]) {
             const h = String(headers[i]).toLowerCase();
-            // Explicitly filter out any duplicate Coach Number columns from falling into Other Details
             if (h.includes('coach no') || h.includes('coach num')) {
                 continue;
             }
             group4.push({ index: i, label: headers[i] });
         }
     }
-    createGroup('Other Details', group4);
+    createGroup('Other Details', group4, {
+        icon: 'fa-bars-staggered',
+        sectionId: 'section-other',
+        collapsedByDefault: true
+    });
 
     if (coachNum && typeof SCHEDULE_APP_SCRIPT_URL !== 'undefined') {
         await appendScheduleDetailsToResults(coachNum, container, delayCounter);
@@ -1167,14 +1434,8 @@ async function appendScheduleDetailsToResults(coachNumber, container, delayCount
         const data = await fetchFromScheduleDatabase('coach', coachNumber);
         if (data.status === 'success' && data.data) {
             const schedObj = data.data;
-            let groupHTML = `<div class="group-section slide-up" style="animation-delay: ${Math.min(delayCounter * 0.05, 1)}s; border-color: #3b82f6;">
-                                <h3 class="group-title" style="color: #3b82f6;"><i class="fa-solid fa-calendar-check"></i> Schedule Details</h3>
-                                <div class="group-content">`;
             
-            const fmtDate = (dStr) => {
-                return formatDateDMY(dStr);
-            };
-
+            const fmtDate = (dStr) => formatDateDMY(dStr);
             const getVal = (key, isDate=false) => {
                 let val = schedObj[key];
                 let displayValue = (val === '' || val === null || val === undefined) ? '-' : val;
@@ -1184,86 +1445,159 @@ async function appendScheduleDetailsToResults(coachNumber, container, delayCount
 
             const d2DueVal = schedObj['D2 DUE'] || schedObj['D2 Due'] || schedObj['D2 due'];
             const d3DueVal = schedObj['D3 DUE'] || schedObj['D3 Due'] || schedObj['D3 due'];
-            const d2DueColor = d2DueVal ? getDueDateColor(d2DueVal) : 'inherit';
-            const d3DueColor = d3DueVal ? getDueDateColor(d3DueVal) : 'inherit';
+            const d2DueColor = d2DueVal ? getDueDateColor(d2DueVal) : '#94a3b8';
+            const d3DueColor = d3DueVal ? getDueDateColor(d3DueVal) : '#94a3b8';
 
-            // Full width rows for dates
-            groupHTML += `
-                <div class="data-row">
-                    <div class="data-label">D2 Done Date</div>
-                    <div class="data-value" style="font-weight: 500;">${getVal('D 2', true)}</div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">D2 Due Date</div>
-                    <div class="data-value" style="font-weight: bold; color: ${d2DueColor}">${fmtDate(d2DueVal)}</div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">D3 Done Date</div>
-                    <div class="data-value" style="font-weight: 500;">${getVal('D 3', true)}</div>
-                </div>
-                <div class="data-row">
-                    <div class="data-label">D3 Due Date</div>
-                    <div class="data-value" style="font-weight: bold; color: ${d3DueColor}">${fmtDate(d3DueVal)}</div>
-                </div>
-            `;
+            // 1. Update the Top Hero Card Due Badges immediately
+            const heroD2Val = document.getElementById('heroD2DueVal');
+            const heroD2Chip = document.getElementById('heroD2DueChip');
+            if (heroD2Val && heroD2Chip) {
+                const formattedD2 = fmtDate(d2DueVal);
+                heroD2Val.innerText = formattedD2;
+                if (d2DueColor !== 'inherit') {
+                    heroD2Val.style.color = d2DueColor;
+                    heroD2Chip.style.borderColor = d2DueColor;
+                    heroD2Chip.style.background = `${d2DueColor}18`;
+                }
+            }
 
-            // Helper for side-by-side rows
-            const sideBySide = (label1, key1, label2, key2) => `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-                    <div class="data-row" style="margin-bottom: 0;">
-                        <div class="data-label">${label1}</div>
-                        <div class="data-value" style="font-weight: 500;">${getVal(key1)}</div>
+            const heroD3Val = document.getElementById('heroD3DueVal');
+            const heroD3Chip = document.getElementById('heroD3DueChip');
+            if (heroD3Val && heroD3Chip) {
+                const formattedD3 = fmtDate(d3DueVal);
+                heroD3Val.innerText = formattedD3;
+                if (d3DueColor !== 'inherit') {
+                    heroD3Val.style.color = d3DueColor;
+                    heroD3Chip.style.borderColor = d3DueColor;
+                    heroD3Chip.style.background = `${d3DueColor}18`;
+                }
+            }
+
+            // 2. Build High-Density Schedule Accordion Box
+            let groupHTML = `
+                <div class="group-section slide-up" id="schedule-details-box" style="animation-delay: ${Math.min(delayCounter * 0.05, 1)}s; border-color: rgba(59, 130, 246, 0.45);">
+                    <div class="group-header" onclick="toggleSectionAccordion('schedule-details-box')">
+                        <div class="group-header-left">
+                            <i class="fa-solid fa-calendar-check group-header-icon" style="color: #60a5fa;"></i>
+                            <h3 class="group-title" style="color: #60a5fa;">Schedule Details</h3>
+                            <span class="group-count-badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd;">Active</span>
+                        </div>
+                        <div class="group-header-right">
+                            <i class="fa-solid fa-chevron-up accordion-chevron"></i>
+                        </div>
                     </div>
-                    <div class="data-row" style="margin-bottom: 0;">
-                        <div class="data-label">${label2}</div>
-                        <div class="data-value" style="font-weight: 500;">${getVal(key2)}</div>
+                    <div class="group-content">
+                        <!-- 2x2 D2/D3 Due & Done Matrix -->
+                        <div class="sched-matrix-grid">
+                            <div class="sched-tile" data-label="d2 done date" data-value="${escapeHtml(getVal('D 2', true))}">
+                                <span class="sched-tile-lbl">D2 Done</span>
+                                <span class="sched-tile-val">${escapeHtml(getVal('D 2', true))}</span>
+                            </div>
+                            <div class="sched-tile highlight" style="border-color: ${d2DueColor}; background: ${d2DueColor}15;" data-label="d2 due date" data-value="${escapeHtml(fmtDate(d2DueVal))}">
+                                <span class="sched-tile-lbl" style="color: ${d2DueColor}; font-weight: 700;">D2 Due</span>
+                                <span class="sched-tile-val bold" style="color: ${d2DueColor}; font-size: 0.95rem;">${escapeHtml(fmtDate(d2DueVal))}</span>
+                            </div>
+                            <div class="sched-tile" data-label="d3 done date" data-value="${escapeHtml(getVal('D 3', true))}">
+                                <span class="sched-tile-lbl">D3 Done</span>
+                                <span class="sched-tile-val">${escapeHtml(getVal('D 3', true))}</span>
+                            </div>
+                            <div class="sched-tile highlight" style="border-color: ${d3DueColor}; background: ${d3DueColor}15;" data-label="d3 due date" data-value="${escapeHtml(fmtDate(d3DueVal))}">
+                                <span class="sched-tile-lbl" style="color: ${d3DueColor}; font-weight: 700;">D3 Due</span>
+                                <span class="sched-tile-val bold" style="color: ${d3DueColor}; font-size: 0.95rem;">${escapeHtml(fmtDate(d3DueVal))}</span>
+                            </div>
+                        </div>
+
+                        <!-- Wheel Measurements 4x2 Axle Matrix -->
+                        <div class="wheel-section-box">
+                            <div class="wheel-box-title"><i class="fa-solid fa-circle-dot"></i> Wheel Diameters (mm)</div>
+                            <div class="wheel-axle-grid">
+                                <div class="axle-cell" data-label="wheel axle 1 l1 r8" data-value="${escapeHtml(getVal('L1'))} ${escapeHtml(getVal('R8'))}">
+                                    <span class="axle-label">Axle 1</span>
+                                    <div class="axle-vals">
+                                        <span>L1: <strong>${escapeHtml(getVal('L1'))}</strong></span>
+                                        <span class="axle-sep">|</span>
+                                        <span>R8: <strong>${escapeHtml(getVal('R8'))}</strong></span>
+                                    </div>
+                                </div>
+                                <div class="axle-cell" data-label="wheel axle 2 l2 r7" data-value="${escapeHtml(getVal('L2'))} ${escapeHtml(getVal('R7'))}">
+                                    <span class="axle-label">Axle 2</span>
+                                    <div class="axle-vals">
+                                        <span>L2: <strong>${escapeHtml(getVal('L2'))}</strong></span>
+                                        <span class="axle-sep">|</span>
+                                        <span>R7: <strong>${escapeHtml(getVal('R7'))}</strong></span>
+                                    </div>
+                                </div>
+                                <div class="axle-cell" data-label="wheel axle 3 l3 r6" data-value="${escapeHtml(getVal('L3'))} ${escapeHtml(getVal('R6'))}">
+                                    <span class="axle-label">Axle 3</span>
+                                    <div class="axle-vals">
+                                        <span>L3: <strong>${escapeHtml(getVal('L3'))}</strong></span>
+                                        <span class="axle-sep">|</span>
+                                        <span>R6: <strong>${escapeHtml(getVal('R6'))}</strong></span>
+                                    </div>
+                                </div>
+                                <div class="axle-cell" data-label="wheel axle 4 l4 r5" data-value="${escapeHtml(getVal('L4'))} ${escapeHtml(getVal('R5'))}">
+                                    <span class="axle-label">Axle 4</span>
+                                    <div class="axle-vals">
+                                        <span>L4: <strong>${escapeHtml(getVal('L4'))}</strong></span>
+                                        <span class="axle-sep">|</span>
+                                        <span>R5: <strong>${escapeHtml(getVal('R5'))}</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stiffener Plate 2-Column Row -->
+                        <div class="compact-grid" style="margin-top: 6px;">
+                            <div class="data-row" data-label="stiffener plate pp end" data-value="${escapeHtml(getVal('stiffener plate PP end'))}">
+                                <div class="data-label">PP End Stiffener</div>
+                                <div class="data-value">${escapeHtml(getVal('stiffener plate PP end'))}</div>
+                            </div>
+                            <div class="data-row" data-label="stiffener plate npp end" data-value="${escapeHtml(getVal('stiffener plate NPP end'))}">
+                                <div class="data-label">NPP End Stiffener</div>
+                                <div class="data-value">${escapeHtml(getVal('stiffener plate NPP end'))}</div>
+                            </div>
+                        </div>
+
+                        <!-- Remarks Full Width Tile -->
+                        <div class="data-row full-width" style="margin-top: 6px;" data-label="remarks attention given if any" data-value="${escapeHtml(getVal('ATTENTION GIVEN IF ANY'))}">
+                            <div class="data-label"><i class="fa-regular fa-comment-dots"></i> Remarks / Attention Given</div>
+                            <div class="data-value" style="font-weight: 500;">${escapeHtml(getVal('ATTENTION GIVEN IF ANY'))}</div>
+                        </div>
+
+                        <button class="btn secondary-btn" style="width: 100%; margin-top: 0.75rem; padding: 0.6rem; font-size: 0.88rem;" onclick="openScheduleEntryForCoach('${escapeHtml(coachNumber)}')">
+                            <i class="fa-solid fa-pen"></i> Update Schedule Details
+                        </button>
                     </div>
                 </div>
             `;
 
-            groupHTML += sideBySide('L1', 'L1', 'R8', 'R8');
-            groupHTML += sideBySide('L2', 'L2', 'R7', 'R7');
-            groupHTML += sideBySide('L3', 'L3', 'R6', 'R6');
-            groupHTML += sideBySide('L4', 'L4', 'R5', 'R5');
-            groupHTML += sideBySide('PP End', 'stiffener plate PP end', 'NPP End', 'stiffener plate NPP end');
-
-            // Full width row for remarks
-            groupHTML += `
-                <div class="data-row">
-                    <div class="data-label">Remarks</div>
-                    <div class="data-value" style="font-weight: 500;">${getVal('ATTENTION GIVEN IF ANY')}</div>
-                </div>
-            `;
-            
-            groupHTML += `</div></div>`;
             const wrapper = document.createElement('div');
             wrapper.innerHTML = groupHTML;
-            
-            const contentDiv = wrapper.querySelector('.group-content');
-            const editBtn = document.createElement('button');
-            editBtn.className = 'btn secondary-btn';
-            editBtn.style.width = '100%';
-            editBtn.style.marginTop = '1rem';
-            editBtn.innerHTML = '<i class="fa-solid fa-pen"></i> Update Schedule Details';
-            editBtn.onclick = () => renderScheduleResults(schedObj);
-            contentDiv.appendChild(editBtn);
-            
             const firstChild = wrapper.firstElementChild;
-            firstChild.id = 'schedule-details-box';
             
-            // Remove any existing schedule details box to prevent duplicates
+            // Remove existing if any
             const existing = container.querySelector('#schedule-details-box');
             if (existing) existing.remove();
-            
-            // Insert after the first child (Coach Details)
-            if (container.children.length > 1) {
-                container.insertBefore(firstChild, container.children[1]);
+
+            // Insert after Coach Details
+            const coachSec = container.querySelector('#section-coach');
+            if (coachSec && coachSec.nextSibling) {
+                container.insertBefore(firstChild, coachSec.nextSibling);
             } else {
                 container.appendChild(firstChild);
             }
+        } else {
+            const heroD2Val = document.getElementById('heroD2DueVal');
+            if (heroD2Val) heroD2Val.innerText = '-';
+            const heroD3Val = document.getElementById('heroD3DueVal');
+            if (heroD3Val) heroD3Val.innerText = '-';
         }
     } catch (e) {
         console.error('Failed to append schedule data:', e);
+        const heroD2Val = document.getElementById('heroD2DueVal');
+        if (heroD2Val) heroD2Val.innerText = '-';
+        const heroD3Val = document.getElementById('heroD3DueVal');
+        if (heroD3Val) heroD3Val.innerText = '-';
     }
 }
 
@@ -1468,6 +1802,290 @@ function switchWspTab(tab) {
     }
 }
 
+// ==========================================================================
+// WSP Defect Restructured Helpers & Card Builders
+// ==========================================================================
+
+function getWspField(entry, ...aliases) {
+    if (!entry) return '-';
+    for (const alias of aliases) {
+        if (entry[alias] !== undefined && entry[alias] !== null && String(entry[alias]).trim() !== '') {
+            return String(entry[alias]).trim();
+        }
+        const lowerAlias = alias.toLowerCase().trim();
+        for (const k of Object.keys(entry)) {
+            if (k.toLowerCase().trim() === lowerAlias && entry[k] !== undefined && entry[k] !== null && String(entry[k]).trim() !== '') {
+                return String(entry[k]).trim();
+            }
+        }
+        for (const k of Object.keys(entry)) {
+            if (k.toLowerCase().includes(lowerAlias) && entry[k] !== undefined && entry[k] !== null && String(entry[k]).trim() !== '') {
+                return String(entry[k]).trim();
+            }
+        }
+    }
+    return '-';
+}
+
+function renderWspCoachHero(coachNum, rly, type, typeOfWspd, trainNo, ci, leftDate, arrivalDate) {
+    const fmt = (d) => formatDateDMY(d);
+    return `
+        <div class="wsp-coach-hero">
+            <div class="wsp-hero-top">
+                <div class="wsp-hero-badges">
+                    <span class="wsp-badge-coach"><i class="fa-solid fa-train"></i> ${rly && rly !== '-' ? rly : 'IR'} ${coachNum}</span>
+                    <span class="badge" style="background: rgba(255,255,255,0.08); color: #cbd5e1; font-weight: 600;">${type}</span>
+                </div>
+                <div class="wsp-hero-badges">
+                    <span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.35);"><i class="fa-solid fa-gear"></i> ${typeOfWspd}</span>
+                </div>
+            </div>
+            <div class="wsp-kv-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="wsp-kv-item"><span class="wsp-kv-label"><i class="fa-solid fa-train text-primary" style="opacity:0.7"></i> Train No</span><span class="wsp-kv-value" id="wspDetailsTrainNo">${trainNo}</span></div>
+                <div class="wsp-kv-item"><span class="wsp-kv-label"><i class="fa-solid fa-location-crosshairs text-primary" style="opacity:0.7"></i> CI / Position</span><span class="wsp-kv-value">${ci}</span></div>
+                <div class="wsp-kv-item"><span class="wsp-kv-label"><i class="fa-solid fa-arrow-right-from-bracket text-success" style="opacity:0.7"></i> Left Date</span><span class="wsp-kv-value">${fmt(leftDate)}</span></div>
+                <div class="wsp-kv-item"><span class="wsp-kv-label"><i class="fa-solid fa-arrow-right-to-bracket text-warning" style="opacity:0.7"></i> Arrival Date</span><span class="wsp-kv-value" id="wspDetailsArrivalDate">${fmt(arrivalDate)}</span></div>
+            </div>
+        </div>
+    `;
+}
+
+function buildWspDefectCardHTML(entry, options = {}) {
+    if (!entry) return '';
+    
+    // Extract fields
+    let coachNum = getWspField(entry, 'Coach No', 'COACH NO', 'coach num', 'Coach Number');
+    if (coachNum === '-' && entry['_rawRow']) coachNum = entry['_rawRow'][0] || '-';
+    
+    let rly = getWspField(entry, 'RLY', 'Rly');
+    if (rly === '-' && typeof currentTrainCoaches !== 'undefined' && currentTrainCoaches.length > 0) {
+        const match = currentTrainCoaches.find(c => {
+            const ck = Object.keys(c).find(k => String(k).toLowerCase().includes('coach no') || String(k).toLowerCase().includes('coach num'));
+            return ck && c[ck] == coachNum;
+        });
+        if (match) rly = match['RLY'] || match['Rly'] || '-';
+    }
+    
+    let wheelCondition = getWspField(entry, 'Wheel condition', 'wheel condition');
+    if (wheelCondition !== '-') {
+        wheelCondition = String(wheelCondition).replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
+    }
+    
+    let type = getWspField(entry, 'Coach Type', 'coach type', 'TYPE', 'type');
+    let rake = getWspField(entry, 'Rake', 'rake');
+    let trainNo = getWspField(entry, 'Train No', 'DB Train No', 'train no', 'train');
+    let ci = getWspField(entry, 'CI', 'ci', 'Position', 'position');
+    let leftDate = getWspField(entry, 'Left Date', 'left date', 'departure');
+    let arrivalDate = getWspField(entry, 'Arrival Date', 'arrival date');
+    let downloadDate = getWspField(entry, 'Download Date', 'download date');
+    let wspMake = getWspField(entry, 'WSP Make', 'wsp make');
+    let typeOfWspd = getWspField(entry, 'Type of WSPD', 'type of wspd', 'wspd type');
+    let psStatus = getWspField(entry, 'PS Status', 'ps status', 'Pressure switch');
+    let wspCode = getWspField(entry, 'WSP Code', 'wsp code', 'code');
+    let dumpValve = getWspField(entry, 'Dump Valve', 'dump valve', 'Self Test Dump Valve');
+    let sensorGap = getWspField(entry, 'Sensor Gap', 'sensor gap');
+    let observation = getWspField(entry, 'Downloading Observation', 'downloading obseravtion', 'downloading observation', 'downloading');
+    let otherObservation = getWspField(entry, 'Other Observation', 'other observation');
+    let defectCat = getWspField(entry, 'Defect Category', 'defect category');
+    let attention = getWspField(entry, 'Attention If Any', 'attention if any', 'attention');
+    let defectDesc = getWspField(entry, 'Defect Description', 'defect description', 'defect desc', 'description');
+    let pendingWork = getWspField(entry, 'Pending Work', 'pending work desc', 'pending work description', 'follo up', 'follow up');
+    let anyPending = getWspField(entry, 'Any work pending', 'any work pending');
+    let itemRequired = getWspField(entry, 'Item Required / Used', 'item required', 'item required/used');
+    let checklist = getWspField(entry, 'Checklist Submitted', 'checklist submitted', 'checklist');
+    let dataEntryBy = getWspField(entry, 'Data Entry By', 'data entry by', 'data entry');
+    
+    // Status assessment
+    const isPendingActive = (
+        (pendingWork !== '-' && pendingWork.toLowerCase() !== 'nil' && pendingWork.toLowerCase() !== 'no' && pendingWork !== '') ||
+        (anyPending.toLowerCase() === 'yes')
+    );
+    
+    const isDefectActive = (
+        (defectCat !== '-' && defectCat.toLowerCase() !== 'no defect' && defectCat.toLowerCase() !== 'nil') ||
+        (wspCode !== '-' && wspCode !== '99' && wspCode !== '') ||
+        (psStatus.toLowerCase().includes('not ok')) ||
+        (dumpValve.toLowerCase().includes('not ok'))
+    );
+    
+    // WSP Code pill
+    let wspCodeHtml = '';
+    if (wspCode === '99') {
+        wspCodeHtml = `<span class="wsp-badge-pill ok"><i class="fa-solid fa-circle-check"></i> 99 (Normal)</span>`;
+    } else if (wspCode !== '-' && wspCode !== '') {
+        wspCodeHtml = `<span class="wsp-badge-pill fault"><i class="fa-solid fa-triangle-exclamation"></i> Code ${wspCode}</span>`;
+    } else {
+        wspCodeHtml = `<span class="wsp-badge-pill neutral">-</span>`;
+    }
+    
+    // PS Status pill
+    let psStatusHtml = '';
+    if (psStatus.toLowerCase() === 'ok') {
+        psStatusHtml = `<span class="wsp-badge-pill ok"><i class="fa-solid fa-check"></i> OK</span>`;
+    } else if (psStatus.toLowerCase().includes('not ok')) {
+        psStatusHtml = `<span class="wsp-badge-pill fault"><i class="fa-solid fa-xmark"></i> Fault</span>`;
+    } else {
+        psStatusHtml = `<span class="wsp-badge-pill neutral">${psStatus}</span>`;
+    }
+    
+    // Dump Valve pill
+    let dumpValveHtml = '';
+    if (dumpValve.toLowerCase() === 'ok') {
+        dumpValveHtml = `<span class="wsp-badge-pill ok"><i class="fa-solid fa-check"></i> OK</span>`;
+    } else if (dumpValve.toLowerCase().includes('not ok')) {
+        dumpValveHtml = `<span class="wsp-badge-pill fault"><i class="fa-solid fa-xmark"></i> Fault</span>`;
+    } else {
+        dumpValveHtml = `<span class="wsp-badge-pill neutral">${dumpValve}</span>`;
+    }
+    
+    // Card header status badge
+    let statusBadgeHtml = '';
+    if (isPendingActive) {
+        statusBadgeHtml = `<span class="wsp-status-badge pending"><i class="fa-solid fa-clock-rotate-left"></i> Pending Work</span>`;
+    } else if (isDefectActive) {
+        statusBadgeHtml = `<span class="wsp-status-badge defect"><i class="fa-solid fa-triangle-exclamation"></i> ${defectCat !== '-' ? defectCat : 'Defect Reported'}</span>`;
+    } else {
+        statusBadgeHtml = `<span class="wsp-status-badge ok"><i class="fa-solid fa-circle-check"></i> Normal (99)</span>`;
+    }
+    
+    const cardClass = isPendingActive ? 'wsp-defect-card has-pending' : (isDefectActive ? 'wsp-defect-card has-defect' : 'wsp-defect-card');
+    
+    return `
+        <div class="${cardClass}">
+            <!-- Header Ribbon -->
+            <div class="wsp-card-header">
+                <div class="wsp-header-left">
+                    <span class="wsp-badge-coach"><i class="fa-solid fa-train"></i> ${rly !== '-' ? rly : 'IR'} ${coachNum}</span>
+                    ${downloadDate !== '-' ? `<span class="wsp-chip-date"><i class="fa-regular fa-calendar"></i> ${formatDateDMY(downloadDate)}</span>` : ''}
+                </div>
+                <div class="wsp-header-right">
+                    ${statusBadgeHtml}
+                </div>
+            </div>
+            
+            <!-- Wheel Condition Callout -->
+            ${wheelCondition !== '-' && wheelCondition.toLowerCase() !== 'nil' ? `
+            <div class="wsp-callout wsp-callout-wheel">
+                <i class="fa-solid fa-compact-disc wsp-callout-icon"></i>
+                <div class="wsp-callout-content">
+                    <span class="wsp-callout-label">Wheel Condition</span>
+                    <span class="wsp-callout-value">${wheelCondition}</span>
+                </div>
+            </div>` : ''}
+            
+            <!-- Section 1: Movement & Rake -->
+            <div class="wsp-card-section">
+                <div class="wsp-section-title"><i class="fa-solid fa-route"></i> Movement & Rake</div>
+                <div class="wsp-kv-grid">
+                    <div class="wsp-kv-item"><span class="wsp-kv-label">Coach Type</span><span class="wsp-kv-value">${type}</span></div>
+                    <div class="wsp-kv-item"><span class="wsp-kv-label">WSP Make</span><span class="wsp-kv-value">${wspMake}</span></div>
+                    <div class="wsp-kv-item"><span class="wsp-kv-label">Type of WSPD</span><span class="wsp-kv-value">${typeOfWspd}</span></div>
+                    <div class="wsp-kv-item"><span class="wsp-kv-label">Rake / Train</span><span class="wsp-kv-value">${rake} / ${trainNo}</span></div>
+                    <div class="wsp-kv-item"><span class="wsp-kv-label">CI / Pos</span><span class="wsp-kv-value">${ci}</span></div>
+                    <div class="wsp-kv-item"><span class="wsp-kv-label">Left Date</span><span class="wsp-kv-value">${formatDateDMY(leftDate)}</span></div>
+                    <div class="wsp-kv-item"><span class="wsp-kv-label">Arrival Date</span><span class="wsp-kv-value">${formatDateDMY(arrivalDate)}</span></div>
+                </div>
+            </div>
+            
+            <!-- Section 2: Diagnostics & Sensors -->
+            <div class="wsp-card-section">
+                <div class="wsp-section-title"><i class="fa-solid fa-bolt"></i> Diagnostics & Sensor Status</div>
+                <div class="wsp-diag-grid">
+                    <div class="wsp-diag-tile">
+                        <span class="wsp-kv-label">WSP Code</span>
+                        ${wspCodeHtml}
+                    </div>
+                    <div class="wsp-diag-tile">
+                        <span class="wsp-kv-label">PS Status</span>
+                        ${psStatusHtml}
+                    </div>
+                    <div class="wsp-diag-tile">
+                        <span class="wsp-kv-label">Dump Valve</span>
+                        ${dumpValveHtml}
+                    </div>
+                    <div class="wsp-diag-tile wsp-diag-wide">
+                        <span class="wsp-kv-label">Sensor Gap</span>
+                        <span class="wsp-diag-text"><i class="fa-solid fa-ruler-horizontal"></i> ${sensorGap}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 3: Observations & Defect -->
+            <div class="wsp-card-section">
+                <div class="wsp-section-title"><i class="fa-solid fa-magnifying-glass"></i> Defect & Observations</div>
+                <div class="wsp-obs-list">
+                    <div class="wsp-obs-item">
+                        <span class="wsp-kv-label">Defect Category</span>
+                        <span class="wsp-obs-badge ${isDefectActive ? 'defect' : 'normal'}">${defectCat}</span>
+                    </div>
+                    <div class="wsp-obs-item">
+                        <span class="wsp-kv-label">Downloading Observation</span>
+                        <span class="wsp-kv-value">${observation}</span>
+                    </div>
+                    <div class="wsp-obs-item">
+                        <span class="wsp-kv-label">Other Observation</span>
+                        <span class="wsp-kv-value">${otherObservation}</span>
+                    </div>
+                    ${defectDesc !== '-' && defectDesc.toLowerCase() !== 'nil' ? `
+                    <div class="wsp-obs-item">
+                        <span class="wsp-kv-label">Defect Description</span>
+                        <span class="wsp-kv-value highlight-desc">${defectDesc}</span>
+                    </div>` : ''}
+                </div>
+            </div>
+            
+            <!-- Section 4: Action & Pending Work -->
+            <div class="wsp-card-section">
+                <div class="wsp-section-title"><i class="fa-solid fa-wrench"></i> Action & Pending Work</div>
+                ${isPendingActive ? `
+                <div class="wsp-callout wsp-callout-pending">
+                    <i class="fa-solid fa-triangle-exclamation wsp-callout-icon"></i>
+                    <div class="wsp-callout-content">
+                        <span class="wsp-callout-label">Action Pending</span>
+                        <span class="wsp-callout-value">${pendingWork !== '-' ? pendingWork : 'Work pending flagged'}</span>
+                    </div>
+                </div>` : `
+                <div class="wsp-kv-item" style="margin-bottom:0.4rem;">
+                    <span class="wsp-kv-label">Pending Work</span>
+                    <span class="wsp-badge-pill ok"><i class="fa-solid fa-check"></i> None</span>
+                </div>`}
+                
+                <div class="wsp-kv-grid" style="margin-top:0.4rem;">
+                    <div class="wsp-kv-item"><span class="wsp-kv-label">Attention (If Any)</span><span class="wsp-kv-value">${attention}</span></div>
+                    <div class="wsp-kv-item"><span class="wsp-kv-label">Item Required / Used</span><span class="wsp-kv-value">${itemRequired}</span></div>
+                </div>
+            </div>
+            
+            <!-- Section 5: Verification & Staff -->
+            <div class="wsp-card-section wsp-section-compact">
+                <div class="wsp-kv-grid">
+                    <div class="wsp-kv-item">
+                        <span class="wsp-kv-label">Checklist Submitted</span>
+                        <span class="wsp-kv-value">${checklist.toLowerCase() === 'yes' ? '<i class="fa-solid fa-check-circle text-success"></i> Yes' : '<i class="fa-solid fa-circle-xmark text-muted"></i> No'}</span>
+                    </div>
+                    <div class="wsp-kv-item">
+                        <span class="wsp-kv-label">Data Entry By</span>
+                        <span class="wsp-kv-value"><i class="fa-solid fa-id-badge" style="opacity:0.7"></i> ID: ${dataEntryBy}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions Bar -->
+            ${options.showActions !== false ? `
+            <div class="wsp-card-actions">
+                ${entry._rowIndex ? `
+                <button type="button" class="btn wsp-action-btn edit" onclick="event.stopPropagation(); editWspEntry(${entry._rowIndex})">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit Defect
+                </button>` : ''}
+                ${coachNum && coachNum !== '-' ? `
+                <button type="button" class="btn wsp-action-btn history" onclick="event.stopPropagation(); fetchWspHistory('${coachNum}')">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Coach History
+                </button>` : ''}
+            </div>` : ''}
+        </div>
+    `;
+}
+
 async function fetchWspByDate() {
     const dateInput = document.getElementById('wspDateInput').value;
     if (!dateInput) {
@@ -1492,109 +2110,64 @@ async function fetchWspByDate() {
             const tbody = document.getElementById('wspDateTableBody');
             tbody.innerHTML = '';
             
+            window.wspHistoryMap = window.wspHistoryMap || {};
+            
             data.data.forEach(entry => {
+                if (entry._rowIndex) {
+                    window.wspHistoryMap[entry._rowIndex] = entry;
+                }
+                
                 const tr = document.createElement('tr');
                 tr.style.cursor = 'pointer';
                 
-                let coachNum = '';
-                const coachKey = Object.keys(entry).find(k => k.toLowerCase().includes('coach no') || k.toLowerCase().includes('coach num'));
-                if (coachKey) coachNum = entry[coachKey];
-                if (!coachNum && entry['_rawRow']) coachNum = entry['_rawRow'][0];
+                let coachNum = getWspField(entry, 'Coach No', 'COACH NO', 'coach num', 'Coach Number');
+                if (coachNum === '-' && entry['_rawRow']) coachNum = entry['_rawRow'][0] || '-';
                 
-                let rly = entry['RLY'] || '-';
-                if (rly === '-') {
-                    // Try to find RLY from currentTrainCoaches cache as fallback
-                    if (typeof currentTrainCoaches !== 'undefined' && currentTrainCoaches.length > 0) {
-                        const match = currentTrainCoaches.find(c => {
-                            const ck = Object.keys(c).find(k => String(k).toLowerCase().includes('coach no') || String(k).toLowerCase().includes('coach num'));
-                            return ck && c[ck] == coachNum;
-                        });
-                        if (match) rly = match['RLY'] || match['Rly'] || '-';
-                    }
+                let rly = getWspField(entry, 'RLY', 'Rly');
+                if (rly === '-' && typeof currentTrainCoaches !== 'undefined' && currentTrainCoaches.length > 0) {
+                    const match = currentTrainCoaches.find(c => {
+                        const ck = Object.keys(c).find(k => String(k).toLowerCase().includes('coach no') || String(k).toLowerCase().includes('coach num'));
+                        return ck && c[ck] == coachNum;
+                    });
+                    if (match) rly = match['RLY'] || match['Rly'] || '-';
                 }
                 
-                let wheelCondition = '-';
-                const wcKey = Object.keys(entry).find(k => String(k).toLowerCase().includes('wheel condition'));
-                if (wcKey) wheelCondition = String(entry[wcKey]).replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
+                let wheelCondition = getWspField(entry, 'Wheel condition', 'wheel condition');
+                if (wheelCondition !== '-') {
+                    wheelCondition = String(wheelCondition).replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
+                }
                 
-                // Extract other details for inline expansion
-                const getVal = (searchStr) => {
-                    // search by exact match first, then fallback to partial
-                    let key = Object.keys(entry).find(k => String(k).toLowerCase() === searchStr.toLowerCase());
-                    if (!key) {
-                        key = Object.keys(entry).find(k => String(k).toLowerCase().includes(searchStr.toLowerCase()));
-                    }
-                    return key && entry[key] ? entry[key] : '-';
-                };
+                let wspCode = getWspField(entry, 'WSP Code', 'wsp code');
+                let defectCat = getWspField(entry, 'Defect Category', 'defect category');
+                let pendingWork = getWspField(entry, 'Pending Work', 'pending work desc', 'pending work description', 'follo up', 'follow up');
+                let anyPending = getWspField(entry, 'Any work pending', 'any work pending');
                 
-                let type = getVal('coach type');
-                let rake = getVal('rake');
-                let trainNo = getVal('train no');
-                let ci = getVal('ci');
-                let leftDate = getVal('left date');
-                let arrivalDate = getVal('arrival date');
-                let arrivalTno = getVal('arrival t no');
-                let wspMake = entry['WSP Make'] || getVal('wsp make');
-                let typeOfWspd = entry['Type of WSPD'] || getVal('type of wspd');
-                let psStatus = getVal('ps status');
-                let wspCode = getVal('wsp code');
-                let dumpValve = getVal('dump valve');
-                let sensorGap = getVal('sensor gap');
-                let observation = getVal('downloading'); // downloading obseravtion
-                let otherObservation = getVal('other observation');
-                let defectCat = getVal('defect category');
-                let attentionIfAny = getVal('attention if any');
-                let followUp = getVal('follo up'); // follo up remarks
-                let defectDesc = getVal('defect desc');
-                let itemRequired = getVal('item required');
-                let checklist = getVal('checklist');
-                let dataEntryBy = getVal('data entry');
-
-                // Format dates to look cleaner
-                const fmtDt = (d) => {
-                    return formatDateDMY(d);
-                };
-
+                const isPendingActive = (
+                    (pendingWork !== '-' && pendingWork.toLowerCase() !== 'nil' && pendingWork.toLowerCase() !== 'no' && pendingWork !== '') ||
+                    (anyPending.toLowerCase() === 'yes')
+                );
+                const isDefectActive = (
+                    (defectCat !== '-' && defectCat.toLowerCase() !== 'no defect' && defectCat.toLowerCase() !== 'nil') ||
+                    (wspCode !== '-' && wspCode !== '99' && wspCode !== '')
+                );
+                
                 tr.innerHTML = `
-                    <td>${rly}</td>
+                    <td><span class="wsp-rly-pill">${rly !== '-' ? rly : 'IR'}</span></td>
                     <td><span class="highlight-badge">${coachNum || '-'}</span></td>
-                    <td>${wheelCondition}</td>
+                    <td>
+                        <div class="wsp-table-wheel">
+                            ${isPendingActive ? '<span class="wsp-dot-warn" title="Pending Work"></span>' : (isDefectActive ? '<span class="wsp-dot-defect" title="Defect Reported"></span>' : '<span class="wsp-dot-ok" title="Normal"></span>')}
+                            <span>${wheelCondition}</span>
+                        </div>
+                    </td>
                     <td style="text-align:center;"><i class="fa-solid fa-chevron-down text-primary" style="transition: transform 0.3s;"></i></td>
                 `;
                 
                 const detailsTr = document.createElement('tr');
                 detailsTr.style.display = 'none';
                 detailsTr.innerHTML = `
-                    <td colspan="4" style="padding: 0; border-bottom: none;">
-                        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; margin: 0.5rem; border: 1px solid rgba(255,255,255,0.05);">
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; margin-bottom: 0.8rem;">
-                                <div><small style="color: var(--text-muted); display: block;">Coach Type</small> <span style="font-weight: 500;">${type}</span></div>
-                                <div><small style="color: var(--text-muted); display: block;">WSP Make</small> <span style="font-weight: 500;">${wspMake}</span></div>
-                                
-                                <div><small style="color: var(--text-muted); display: block;">Type of WSPD</small> <span style="font-weight: 500;">${typeOfWspd}</span></div>
-                                <div><small style="color: var(--text-muted); display: block;">Rake / Train No.</small> <span style="font-weight: 500;">${rake} / ${trainNo}</span></div>
-                                <div><small style="color: var(--text-muted); display: block;">CI</small> <span style="font-weight: 500;">${ci}</span></div>
-                                
-                                <div><small style="color: var(--text-muted); display: block;">Left Date</small> <span style="font-weight: 500;">${fmtDt(leftDate)}</span></div>
-                                <div><small style="color: var(--text-muted); display: block;">Arrival Date</small> <span style="font-weight: 500;">${fmtDt(arrivalDate)}</span></div>
-                                
-                                <div><small style="color: var(--text-muted); display: block;">PS Status</small> <span style="font-weight: 500;">${psStatus}</span></div>
-                                <div><small style="color: var(--text-muted); display: block;">WSP Code</small> <span style="font-weight: 500;">${wspCode}</span></div>
-                                
-                                <div><small style="color: var(--text-muted); display: block;">Dump Valve</small> <span style="font-weight: 500;">${dumpValve}</span></div>
-                                <div><small style="color: var(--text-muted); display: block;">Sensor Gap</small> <span style="font-weight: 500;">${sensorGap}</span></div>
-                                
-                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Defect Category</small> <span style="font-weight: 500;">${defectCat}</span></div>
-                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Downloading Observation</small> <span style="font-weight: 500;">${observation}</span></div>
-                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Other Observation</small> <span style="font-weight: 500;">${otherObservation}</span></div>
-                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Defect Description</small> <span style="font-weight: 500;">${defectDesc}</span></div>
-                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Attention if Any</small> <span style="font-weight: 500;">${attentionIfAny}</span></div>
-                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Pending Work</small> <span style="font-weight: 500;">${followUp}</span></div>
-                                <div style="grid-column: 1 / -1;"><small style="color: var(--text-muted); display: block;">Item Required/Used</small> <span style="font-weight: 500;">${itemRequired}</span></div>
-                                <div><small style="color: var(--text-muted); display: block;">Checklist Submitted</small> <span style="font-weight: 500;">${checklist}</span></div>
-                                <div><small style="color: var(--text-muted); display: block;">Data Entry By</small> <span style="font-weight: 500;">${dataEntryBy}</span></div>
-                            </div>
-                        </div>
+                    <td colspan="4" style="padding: 0.4rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15);">
+                        ${buildWspDefectCardHTML(entry, { showActions: true })}
                     </td>
                 `;
                 
@@ -1943,45 +2516,7 @@ function renderWspResults(dataObj) {
 
     const detailsContainer = document.getElementById('wspCoachDetailsContainer');
     if (detailsContainer) {
-        // Format dates just in case they're long ISO strings
-        const fmtDate = (dStr) => {
-            return formatDateDMY(dStr);
-        };
-        
-        detailsContainer.innerHTML = `
-            <div>
-                <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Number</span>
-                <span style="font-weight:600; font-size:1.1rem; color: #10b981;">${coachNum}</span>
-            </div>
-            <div>
-                <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Owning Railway</span>
-                <span style="font-weight:500;">${rly}</span>
-            </div>
-            <div>
-                <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Type</span>
-                <span style="font-weight:500;">${type}</span>
-            </div>
-            <div>
-                <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Type of WSPD</span>
-                <span style="font-weight:500;">${typeOfWspd}</span>
-            </div>
-            <div>
-                <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Train Number</span>
-                <span style="font-weight:500;" id="wspDetailsTrainNo">${trainNo}</span>
-            </div>
-            <div>
-                <span style="font-size:0.75rem; color:var(--text-muted); display:block;">CI</span>
-                <span style="font-weight:500;">${ci}</span>
-            </div>
-            <div>
-                <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Left Date</span>
-                <span style="font-weight:500;">${fmtDate(leftDate)}</span>
-            </div>
-            <div>
-                <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Arrival Date</span>
-                <span style="font-weight:500;" id="wspDetailsArrivalDate">${fmtDate(arrivalDate)}</span>
-            </div>
-        `;
+        detailsContainer.innerHTML = renderWspCoachHero(coachNum, rly, type, typeOfWspd, trainNo, ci, leftDate, arrivalDate);
     }
     
     fetchWspHistory(coachNum);
@@ -2001,9 +2536,7 @@ async function fetchWspHistory(coachNumber) {
         submitBtn.querySelector('.spinner').classList.remove('hidden');
         submitBtn.querySelector('.btn-text').style.opacity = '0';
     }
-    
 
-    
     try {
         const data = await fetchFromDatabase('history', coachNumber);
         const historyContainer = document.getElementById('wspHistoryContainer');
@@ -2014,6 +2547,14 @@ async function fetchWspHistory(coachNumber) {
         if (defectForm) defectForm.reset();
         const editRowIdx = document.getElementById('wspEditRowIndex');
         if (editRowIdx) editRowIdx.value = '';
+        const formTitle = document.getElementById('wspFormTitle');
+        if (formTitle) formTitle.innerHTML = `<i class="fa-solid fa-plus"></i> Add New Defect`;
+        const defectSubmitBtn = document.getElementById('wspSubmitDefectBtn');
+        if (defectSubmitBtn) {
+            const textSpan = defectSubmitBtn.querySelector('.btn-text');
+            if (textSpan) textSpan.innerText = 'Submit Defect';
+        }
+        
         const wrapper = document.getElementById('wspDefectFormWrapper');
         if (wrapper && !wrapper.classList.contains('hidden')) {
             wrapper.classList.add('hidden');
@@ -2035,51 +2576,11 @@ async function fetchWspHistory(coachNumber) {
             data.data.forEach((entry, idx) => {
                 window.wspHistoryMap[entry._rowIndex] = entry;
                 const card = document.createElement('div');
-                card.className = 'glass-card slide-up';
-                card.style.background = 'rgba(255,255,255,0.02)';
+                card.className = 'slide-up';
                 card.style.animationDelay = `${idx * 0.05}s`;
-                card.style.padding = '1rem';
-                card.style.marginBottom = '0.5rem';
-                card.style.borderLeft = '3px solid #10b981';
+                card.style.marginBottom = '0.75rem';
                 
-                const dDate = entry['Download Date'] || entry['download date'] || '-';
-                const fmtDDate = formatDateDMY(dDate);
-                
-                let html = `
-                    <div class="accordion-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('fa-chevron-up'); this.querySelector('.chevron').classList.toggle('fa-chevron-down');">
-                        <div style="font-weight: 600; color: #10b981;">Download Date: <span style="color:var(--text);">${fmtDDate}</span></div>
-                        <div>
-                            <button type="button" class="icon-btn" onclick="event.stopPropagation(); editWspEntry(${entry._rowIndex})" style="margin-right: 0.5rem; color: #3b82f6;" title="Edit Entry"><i class="fa-solid fa-pencil"></i></button>
-                            <i class="fa-solid fa-chevron-down chevron"></i>
-                        </div>
-                    </div>
-                    <div class="accordion-content hidden" style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
-                `;
-                
-                const excludeKeys = ['coach no', 'rake', 'train no', 'coach type', 'ci', 'left date', 'arrival date', 'arrival t no', 'wsp make', 'month', 'download date', 'wheel condition'];
-                const fullWidthKeys = ['other observation', 'attention if any', 'downloading obseravtion', 'downloading observation', 'defect description', 'data entry by'];
-                
-                // Render Wheel Condition first if it exists
-                const wheelCondKey = Object.keys(entry).find(k => String(k).toLowerCase().trim() === 'wheel condition');
-                if (wheelCondKey) {
-                    const formattedCond = String(entry[wheelCondKey] || '-').replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
-                    html += `<div style="grid-column: 1 / -1;"><span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom: 0.2rem;">${wheelCondKey}</span>
-                             <span style="font-weight:500;">${formattedCond}</span></div>`;
-                }
-                
-                for (const [key, value] of Object.entries(entry)) {
-                    if (key.startsWith('_')) continue;
-                    const cleanKey = String(key).toLowerCase().trim();
-                    if (excludeKeys.includes(cleanKey)) continue;
-                    
-                    const isFullWidth = fullWidthKeys.includes(cleanKey);
-                    const gridStyle = isFullWidth ? 'grid-column: 1 / -1;' : '';
-                    
-                    html += `<div style="${gridStyle}"><span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom: 0.2rem;">${key}</span>
-                             <span style="font-weight:500;">${value || '-'}</span></div>`;
-                }
-                html += '</div>';
-                card.innerHTML = html;
+                card.innerHTML = buildWspDefectCardHTML(entry, { showActions: true });
                 historyContainer.appendChild(card);
             });
         } else {
@@ -2534,20 +3035,19 @@ function editWspEntry(rowIndex) {
     // Ensure we are on the correct screen
     const resultsScreen = document.getElementById('wspResultsScreen');
     if (resultsScreen && resultsScreen.classList.contains('hidden')) {
-        window.wspLastSearchScreen = 'wspPendingResultsScreen';
+        window.wspLastSearchScreen = window.wspLastSearchScreen || 'wspPendingResultsScreen';
         navigateTo('wspResultsScreen');
-        const coachNo = entry['COACH NO'] || entry['coach no'] || entry._rawRow[0] || 'Unknown';
+        const coachNo = entry['COACH NO'] || entry['coach no'] || (entry._rawRow ? entry._rawRow[0] : 'Unknown');
         document.getElementById('wspResultCoachId').innerText = coachNo;
         document.getElementById('wspDefectCoachNum').value = coachNo;
         
-        // Hide history since we navigated directly here from Pending Work
+        // Hide history since we navigated directly here from Pending Work or Date Results
         const historyContainer = document.getElementById('wspHistoryContainer');
         if (historyContainer) {
-            historyContainer.innerHTML = '<div class="empty-state" style="padding: 1rem 0;"><p>History hidden while editing from Pending Work.</p></div>';
+            historyContainer.innerHTML = '<div class="empty-state" style="padding: 1rem 0;"><p>History hidden while editing entry.</p></div>';
         }
         const detailsContainer = document.getElementById('wspCoachDetailsContainer');
         if (detailsContainer) {
-            const fmtDate = (dStr) => formatDateDMY(dStr);
             const rly = entry['RLY'] || entry['rly'] || '-';
             const type = entry['Coach Type'] || entry['coach type'] || '-';
             const typeOfWspd = entry['Type of WSPD'] || entry['type of wspd'] || '-';
@@ -2556,41 +3056,17 @@ function editWspEntry(rowIndex) {
             const leftDate = entry['Left Date'] || entry['left date'] || '-';
             const arrivalDate = entry['Arrival Date'] || entry['arrival date'] || '-';
             
-            detailsContainer.innerHTML = `
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Number</span>
-                    <span style="font-weight:600; font-size:1.1rem; color: #10b981;">${coachNo}</span>
-                </div>
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Owning Railway</span>
-                    <span style="font-weight:500;">${rly}</span>
-                </div>
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Coach Type</span>
-                    <span style="font-weight:500;">${type}</span>
-                </div>
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Type of WSPD</span>
-                    <span style="font-weight:500;">${typeOfWspd}</span>
-                </div>
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Train Number</span>
-                    <span style="font-weight:500;" id="wspDetailsTrainNo">${trainNo}</span>
-                </div>
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">CI</span>
-                    <span style="font-weight:500;">${ci}</span>
-                </div>
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Left Date</span>
-                    <span style="font-weight:500;">${fmtDate(leftDate)}</span>
-                </div>
-                <div>
-                    <span style="font-size:0.75rem; color:var(--text-muted); display:block;">Arrival Date</span>
-                    <span style="font-weight:500;">${fmtDate(arrivalDate)}</span>
-                </div>
-            `;
+            detailsContainer.innerHTML = renderWspCoachHero(coachNo, rly, type, typeOfWspd, trainNo, ci, leftDate, arrivalDate);
         }
+    }
+
+    // Set form title & button to Edit mode
+    const formTitle = document.getElementById('wspFormTitle');
+    if (formTitle) formTitle.innerHTML = `<i class="fa-solid fa-pen-to-square"></i> Edit Defect (Row #${rowIndex})`;
+    const defectSubmitBtn = document.getElementById('wspSubmitDefectBtn');
+    if (defectSubmitBtn) {
+        const textSpan = defectSubmitBtn.querySelector('.btn-text');
+        if (textSpan) textSpan.innerText = 'Update Defect';
     }
 
     // Open accordion if hidden
@@ -2622,9 +3098,7 @@ async function fetchWspPendingWork() {
         btn.querySelector('.spinner').classList.remove('hidden');
         btn.querySelector('.btn-text').style.opacity = '0';
     }
-    
 
-    
     try {
         const data = await fetchFromDatabase('pending');
         const container = document.getElementById('wspPendingWorkContainer');
@@ -2636,7 +3110,7 @@ async function fetchWspPendingWork() {
             // Group by Coach Number
             const grouped = {};
             data.data.forEach(entry => {
-                const coachNo = entry['COACH NO'] || entry['coach no'] || entry._rawRow[0] || 'Unknown';
+                const coachNo = entry['COACH NO'] || entry['coach no'] || (entry._rawRow ? entry._rawRow[0] : 'Unknown');
                 if (!grouped[coachNo]) grouped[coachNo] = [];
                 grouped[coachNo].push(entry);
                 window.wspHistoryMap[entry._rowIndex] = entry; // Save for editing
@@ -2689,45 +3163,15 @@ async function fetchWspPendingWork() {
                         </div>
                         <i class="fa-solid fa-chevron-down chevron"></i>
                     </div>
-                    <div class="accordion-content hidden" style="padding: 1.2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div class="accordion-content hidden" style="padding: 0.8rem; border-top: 1px solid rgba(255,255,255,0.08);">
                 `;
                 
-                entries.forEach((entry, idx) => {
-                    const dDate = entry['Download Date'] || entry['download date'] || '-';
-                    const fmtDDate = formatDateDMY(dDate);
-                    
+                entries.forEach((entry) => {
                     coachHtml += `
-                        <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-left: 3px solid #f59e0b; margin-bottom: 1rem; border-radius: 4px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;">
-                                <div style="font-weight: 600; color: #f59e0b;">Download Date: <span style="color:var(--text);">${fmtDDate}</span></div>
-                                <button type="button" class="icon-btn" onclick="event.stopPropagation(); editWspEntry(${entry._rowIndex})" style="color: #3b82f6;" title="Edit Entry"><i class="fa-solid fa-pencil"></i></button>
-                            </div>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                        <div style="margin-bottom: 0.75rem;">
+                            ${buildWspDefectCardHTML(entry, { showActions: true })}
+                        </div>
                     `;
-                    
-                    const excludeKeys = ['coach no', 'rake', 'train no', 'coach type', 'ci', 'left date', 'arrival date', 'arrival t no', 'wsp make', 'month', 'download date', 'wheel condition'];
-                    const fullWidthKeys = ['other observation', 'attention if any', 'downloading obseravtion', 'downloading observation', 'defect description', 'data entry by'];
-                    
-                    const wheelCondKey = Object.keys(entry).find(k => String(k).toLowerCase().trim() === 'wheel condition');
-                    if (wheelCondKey) {
-                        const formattedCond = String(entry[wheelCondKey] || '-').replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
-                        coachHtml += `<div style="grid-column: 1 / -1;"><span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom: 0.2rem;">${wheelCondKey}</span>
-                                 <span style="font-weight:500;">${formattedCond}</span></div>`;
-                    }
-                    
-                    for (const [key, value] of Object.entries(entry)) {
-                        if (key.startsWith('_')) continue;
-                        const cleanKey = String(key).toLowerCase().trim();
-                        if (excludeKeys.includes(cleanKey)) continue;
-                        
-                        const isFullWidth = fullWidthKeys.includes(cleanKey);
-                        const gridStyle = isFullWidth ? 'grid-column: 1 / -1;' : '';
-                        
-                        coachHtml += `<div style="${gridStyle}"><span style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom: 0.2rem;">${key}</span>
-                                 <span style="font-weight:500;">${value || '-'}</span></div>`;
-                    }
-                    
-                    coachHtml += `</div></div>`;
                 });
                 
                 coachHtml += `</div>`;
