@@ -671,6 +671,34 @@ async function fetchRakes() {
     }
 }
 
+function parseRakeAndPosition(colO, trainCode) {
+    if (!colO) return null;
+    const prefix = 'RK' + trainCode;
+    const str = String(colO).trim();
+    if (!str.startsWith(prefix)) return null;
+
+    if (trainCode === 'CLONE') {
+        const clean = str.substring(prefix.length).trim();
+        const m = clean.match(/^(\d+)/);
+        const pos = m ? parseInt(m[1], 10) : 0;
+        return { rakeNum: '1', position: pos };
+    }
+
+    const clean = str.substring(prefix.length).trim();
+    const m = clean.match(/^(\d+)/);
+    if (!m) return null;
+    
+    const digits = m[1];
+    if (digits.length >= 3) {
+        // Last 2 digits are the 2-digit position (01 to 24), preceding digits are the rake number
+        const rakeNum = digits.slice(0, -2);
+        const pos = parseInt(digits.slice(-2), 10);
+        return { rakeNum, position: pos };
+    } else {
+        return { rakeNum: digits, position: 0 };
+    }
+}
+
 function populateRakeDropdown(coachArray, trainCode) {
     const rakeSelect = document.getElementById('rakeSelect');
     rakeSelect.innerHTML = '<option value="" disabled selected>Select Rake</option>';
@@ -678,26 +706,9 @@ function populateRakeDropdown(coachArray, trainCode) {
     const rakeSet = new Set();
     
     coachArray.forEach(coach => {
-        const colO = coach['_colO'];
-        if (colO) {
-            // Remove the RK prefix and Train Code (e.g. RKCAPE)
-            const prefix = 'RK' + trainCode;
-            if (String(colO).startsWith(prefix)) {
-                if (trainCode === 'CLONE') {
-                    // CLONE format is RKCLONE01 (RK, CLONE, 01 is position). Only 1 rake.
-                    rakeSet.add('1');
-                } else {
-                    const remainder = String(colO).substring(prefix.length); // e.g. '319' or '1119'
-                    // Assuming last 2 digits are position, the rest is rake number
-                    if (remainder.length >= 3) {
-                        const rakeNum = remainder.slice(0, -2);
-                        rakeSet.add(rakeNum);
-                    } else {
-                        // Fallback if structure is unexpected
-                        rakeSet.add(remainder);
-                    }
-                }
-            }
+        const parsed = parseRakeAndPosition(coach['_colO'], trainCode);
+        if (parsed && parsed.rakeNum) {
+            rakeSet.add(parsed.rakeNum);
         }
     });
     
@@ -777,29 +788,10 @@ async function viewRakeCoaches() {
     // Filter coaches for the selected rake
     const rakeCoaches = [];
     currentTrainCoaches.forEach(coach => {
-        const colO = coach['_colO'];
-        if (colO) {
-            const trainPrefix = 'RK' + trainCode;
-            if (String(colO).startsWith(trainPrefix)) {
-                if (trainCode === 'CLONE') {
-                    if (selectedRake === '1') {
-                        const pos = String(colO).substring(trainPrefix.length); // e.g., '01'
-                        coach._position = parseInt(pos, 10);
-                        rakeCoaches.push(coach);
-                    }
-                } else {
-                    const remainder = String(colO).substring(trainPrefix.length);
-                    if (remainder.length >= 3) {
-                        const rNum = remainder.slice(0, -2);
-                        const pos = remainder.slice(-2);
-                        if (rNum === selectedRake) {
-                            // Inject position into coach object for easy sorting
-                            coach._position = parseInt(pos, 10);
-                            rakeCoaches.push(coach);
-                        }
-                    }
-                }
-            }
+        const parsed = parseRakeAndPosition(coach['_colO'], trainCode);
+        if (parsed && parsed.rakeNum === selectedRake) {
+            coach._position = parsed.position;
+            rakeCoaches.push(coach);
         }
     });
     
@@ -1663,27 +1655,9 @@ async function fetchWspRakes() {
         const rakeSet = new Set();
         
         currentWspTrainCoaches.forEach(coach => {
-            const rakeStr = coach['_colO'];
-            if (rakeStr) {
-                const prefix = 'RK' + trainSelect;
-                if (String(rakeStr).startsWith(prefix)) {
-                    if (trainSelect === 'CLONE') {
-                        rakeSet.add('1');
-                    } else {
-                        const remainder = String(rakeStr).substring(prefix.length);
-                        if (remainder.length >= 3) {
-                            const rakeNum = remainder.slice(0, -2);
-                            rakeSet.add(rakeNum);
-                        } else {
-                            rakeSet.add(remainder);
-                        }
-                    }
-                } else {
-                    // Fallback just in case
-                    let match = String(rakeStr).match(/\d+/);
-                    if(trainSelect === 'CLONE') match = ['1'];
-                    if (match) rakeSet.add(match[0]);
-                }
+            const parsed = parseRakeAndPosition(coach['_colO'], trainSelect);
+            if (parsed && parsed.rakeNum) {
+                rakeSet.add(parsed.rakeNum);
             }
         });
         
@@ -1754,43 +1728,10 @@ function viewWspRakeCoaches() {
     
     const rakeCoaches = [];
     currentWspTrainCoaches.forEach(coach => {
-        const rakeStr = coach['_colO'];
-        if (!rakeStr) return;
-        
-        const prefix = 'RK' + selectedTrain;
-        if (String(rakeStr).startsWith(prefix)) {
-            if (selectedTrain === 'CLONE') {
-                if (selectedRake === '1') {
-                    const pos = String(rakeStr).substring(prefix.length);
-                    coach._position = parseInt(pos, 10);
-                    rakeCoaches.push(coach);
-                }
-            } else {
-                const remainder = String(rakeStr).substring(prefix.length);
-                let rakeNum = remainder;
-                if (remainder.length >= 3) {
-                    rakeNum = remainder.slice(0, -2);
-                    coach._position = parseInt(remainder.slice(-2), 10);
-                } else {
-                    coach._position = parseInt(remainder, 10);
-                }
-                if (rakeNum === selectedRake) {
-                    rakeCoaches.push(coach);
-                }
-            }
-        } else {
-            let match = String(rakeStr).match(/\d+/);
-            if(selectedTrain === 'CLONE') match = ['1'];
-            if (match && match[0] === selectedRake) {
-                const posMatch = String(rakeStr).match(/\d+$/);
-                if (posMatch) {
-                    const numStr = posMatch[0];
-                    coach._position = numStr.length >= 3 ? parseInt(numStr.slice(-2), 10) : parseInt(numStr, 10);
-                } else {
-                    coach._position = 999;
-                }
-                rakeCoaches.push(coach);
-            }
+        const parsed = parseRakeAndPosition(coach['_colO'], selectedTrain);
+        if (parsed && parsed.rakeNum === selectedRake) {
+            coach._position = parsed.position;
+            rakeCoaches.push(coach);
         }
     });
     
