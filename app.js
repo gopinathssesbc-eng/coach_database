@@ -1839,7 +1839,6 @@ function viewWspRakeCoaches() {
             const type = typeKey ? coach[typeKey] : '-';
             let wheelCond = coach['Wheel Condition'] || '-';
             wheelCond = String(wheelCond).replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
-            const indication = coach['_colS'] || '-';
             
             const hasWheelCond = wheelCond !== '-';
             
