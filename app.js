@@ -3419,6 +3419,36 @@ async function fetchWspPendingWork() {
                 return parseDateString(dateA) - parseDateString(dateB);
             });
 
+            const totalCoaches = sortedEntries.length;
+            const totalIssues = data.data.length;
+
+            // 1. Update Subtitle at top
+            const subtitleEl = document.getElementById('wspPendingSubtitle');
+            if (subtitleEl) {
+                subtitleEl.innerHTML = totalCoaches > 0
+                    ? `Coaches with pending issues • <b style="color: #fca5a5;">${totalCoaches} Coaches Pending</b>`
+                    : `No pending issues found`;
+            }
+
+            // 2. Update Hero Banner at top of screen
+            const heroCard = document.getElementById('wspPendingHeroCard');
+            const heroCoachCount = document.getElementById('wspPendingCoachCount');
+            const heroTotalIssues = document.getElementById('wspPendingTotalIssues');
+            const heroTitle = document.getElementById('wspPendingHeroTitle');
+            const heroSubtitle = document.getElementById('wspPendingHeroSubtitle');
+
+            if (heroCoachCount) heroCoachCount.textContent = totalCoaches;
+            if (heroTotalIssues) heroTotalIssues.textContent = totalIssues;
+            if (heroTitle) {
+                heroTitle.textContent = totalCoaches === 1 ? '1 Pending Coach' : `${totalCoaches} Total Pending Coaches`;
+            }
+            if (heroSubtitle) {
+                heroSubtitle.textContent = `${totalIssues} pending defect issue${totalIssues > 1 ? 's' : ''} across all coaches`;
+            }
+            if (heroCard) {
+                heroCard.classList.remove('all-clear');
+            }
+
             // Render Accordion
             for (const [coachNo, entries] of sortedEntries) {
                 const firstEntry = entries[0];
@@ -3465,6 +3495,21 @@ async function fetchWspPendingWork() {
                 container.appendChild(coachCard);
             }
         } else {
+            const subtitleEl = document.getElementById('wspPendingSubtitle');
+            if (subtitleEl) subtitleEl.textContent = 'Awesome! No pending WSP work found.';
+            
+            const heroCard = document.getElementById('wspPendingHeroCard');
+            const heroCoachCount = document.getElementById('wspPendingCoachCount');
+            const heroTotalIssues = document.getElementById('wspPendingTotalIssues');
+            const heroTitle = document.getElementById('wspPendingHeroTitle');
+            const heroSubtitle = document.getElementById('wspPendingHeroSubtitle');
+
+            if (heroCoachCount) heroCoachCount.textContent = '0';
+            if (heroTotalIssues) heroTotalIssues.textContent = '0';
+            if (heroTitle) heroTitle.textContent = '0 Pending Coaches';
+            if (heroSubtitle) heroSubtitle.textContent = 'All clear - No pending defects found';
+            if (heroCard) heroCard.classList.add('all-clear');
+
             container.innerHTML = `
                 <div class="empty-state" style="padding: 1.5rem 0;">
                     <i class="fa-solid fa-check-circle" style="color: #10b981; font-size: 2rem; margin-bottom: 0.5rem;"></i>

@@ -803,12 +803,32 @@
             <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>Pending Work</h1>
-                <p class="subtitle">Coaches with pending issues</p>
+                <p class="subtitle" id="wspPendingSubtitle">Coaches with pending issues</p>
             </div>
         </header>
 
         <main class="slide-up">
             <div class="glass-card" style="margin-bottom: 1rem;">
+                <!-- Pending Coaches Hero Banner at the Top -->
+                <div class="pending-hero-card" id="wspPendingHeroCard">
+                    <div class="pending-hero-left">
+                        <div class="pending-hero-badge">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span id="wspPendingCoachCount">0</span>
+                        </div>
+                        <div class="pending-hero-text">
+                            <h3 id="wspPendingHeroTitle">Total Pending Coaches</h3>
+                            <p id="wspPendingHeroSubtitle">Coaches with pending WSP issues</p>
+                        </div>
+                    </div>
+                    <div class="pending-hero-right">
+                        <div class="pending-stat-chip">
+                            <span class="stat-label">Total Issues</span>
+                            <strong id="wspPendingTotalIssues">0</strong>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="wspPendingWorkContainer">
                     <!-- Grouped by coach injected here -->
                 </div>
