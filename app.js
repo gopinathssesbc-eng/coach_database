@@ -2057,7 +2057,7 @@ function buildWspDefectCardHTML(entry, options = {}) {
             <div class="wsp-card-header">
                 <div class="wsp-header-left">
                     <span class="wsp-badge-coach"><i class="fa-solid fa-train"></i> ${rly !== '-' ? rly : 'IR'} ${coachNum}</span>
-                    ${downloadDate !== '-' ? `<span class="wsp-chip-date"><i class="fa-regular fa-calendar"></i> ${formatDateDMY(downloadDate)}</span>` : ''}
+                    ${downloadDate !== '-' ? `<span class="wsp-chip-date"><i class="fa-regular fa-calendar"></i> Download date- ${formatDateDMY(downloadDate)}</span>` : ''}
                 </div>
                 <div class="wsp-header-right">
                     ${statusBadgeHtml}
