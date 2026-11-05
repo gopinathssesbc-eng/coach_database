@@ -3359,7 +3359,7 @@ async function fetchWspPendingWork() {
 
 function showChangelog() {
     Swal.fire({
-        title: 'Changelog v2.1.0',
+        title: 'Changelog v1',
         html: '<div style="text-align: left; font-size: 0.9rem; line-height: 1.5;">' +
               '<ul>' +
               '<li><b>Progressive Web App (PWA):</b> Full install support on Android, iOS, Windows & Mac with standalone app window and home screen icon.</li>' +
