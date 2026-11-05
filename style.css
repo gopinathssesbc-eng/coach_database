@@ -1787,3 +1787,395 @@ select option {
     }
 }
 
+
+
+/* ==========================================================================
+   Due Coaches Screen - Modern Responsive UI (Android & Desktop)
+   ========================================================================== */
+
+/* Pit Check Banner */
+.pit-check-banner {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(217, 119, 6, 0.04));
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-left: 4px solid #f59e0b;
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.pit-check-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.pit-check-icon {
+    font-size: 1.2rem;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.18);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pit-check-title {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #fbbf24;
+}
+
+.pit-check-title span {
+    color: var(--text-muted);
+    font-weight: normal;
+    font-size: 0.82rem;
+    margin-left: 4px;
+}
+
+.pit-check-sub {
+    margin: 2px 0 0 0;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.pit-check-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+
+.pit-slot-box {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 0.5rem 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.pit-slot-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pit-slot-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+/* View Switcher */
+.due-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.due-view-switcher {
+    display: inline-flex;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+}
+
+.due-view-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.due-view-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+}
+
+/* Due Coach Cards */
+.due-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.due-coach-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.due-coach-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+}
+
+.due-coach-card.has-due {
+    border-left: 4px solid #ef4444;
+}
+
+.due-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.due-card-badge-group {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.due-rly-tag {
+    background: rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+}
+
+.due-coach-number {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+.due-type-tag {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.due-train-tag {
+    background: rgba(0, 0, 0, 0.3);
+    color: #cbd5e1;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.due-train-tag i {
+    color: #3b82f6;
+    font-size: 0.75rem;
+}
+
+.due-card-schedules {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+}
+
+.due-sched-box {
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    border: 1px solid transparent;
+}
+
+.due-sched-box.is-due {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(185, 28, 28, 0.08));
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+.due-sched-box.is-ok {
+    background: rgba(0, 0, 0, 0.25);
+    border-color: rgba(255, 255, 255, 0.06);
+}
+
+.due-sched-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.due-sched-name {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.due-sched-box.is-due .due-sched-name {
+    color: #fca5a5;
+}
+
+.due-alert-chip {
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: #ef4444;
+    color: #ffffff;
+    padding: 1px 5px;
+    border-radius: 4px;
+    letter-spacing: 0.4px;
+}
+
+.due-ok-chip {
+    font-size: 0.65rem;
+    font-weight: 600;
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.due-sched-date {
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: monospace;
+    white-space: nowrap;
+}
+
+.due-sched-box.is-due .due-sched-date {
+    color: #f87171;
+}
+
+.due-sched-box.is-ok .due-sched-date {
+    color: #cbd5e1;
+}
+
+.due-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 0.5rem;
+    margin-top: -0.15rem;
+}
+
+.due-card-footer span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.due-card-footer .chevron {
+    color: var(--primary);
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+}
+
+.due-coach-card:hover .due-card-footer .chevron {
+    transform: translateX(3px);
+}
+
+/* Table Enhancements */
+.due-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.due-table-scroll-hint {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    padding: 0.4rem 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+#dueCoachesTable {
+    width: 100%;
+    min-width: 540px;
+    border-collapse: collapse;
+    white-space: nowrap;
+    text-align: left;
+}
+
+#dueCoachesTable th {
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--primary-light);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#dueCoachesTable td {
+    padding: 0.75rem 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    vertical-align: middle;
+    font-size: 0.88rem;
+}
+
+.due-date-pill {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.3rem 0.65rem;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.due-date-pill.is-due {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.due-date-pill.is-ok {
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}

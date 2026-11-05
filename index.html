@@ -250,16 +250,19 @@
         </header>
 
         <main class="slide-up">
-            <div class="glass-card form-card" style="margin-bottom: 20px;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label>Select Date</label>
-                    <div style="display: flex; gap: 15px; align-items: stretch;">
-                        <input type="date" id="dueDatePicker" class="app-input" onclick="this.showPicker()" required style="flex: 1; margin-bottom: 0; padding: 12px 16px;">
-                        <button onclick="fetchDueCoaches()" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 8px; padding: 0 24px; font-weight: 600; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.25); display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(37, 99, 235, 0.35)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(37, 99, 235, 0.25)'" onmousedown="this.style.transform='translateY(1px)'">
-                            <i class="fa-solid fa-search"></i> Find Coaches
-                        </button>
+            <div class="glass-card form-card" style="margin-bottom: 1.25rem;">
+                <form id="dueCoachesForm" onsubmit="event.preventDefault(); fetchDueCoaches();">
+                    <div class="form-group" style="margin-bottom: 0.75rem;">
+                        <label for="dueDatePicker">Select Pit Date</label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-calendar input-icon"></i>
+                            <input type="date" id="dueDatePicker" class="app-input" onclick="this.showPicker()" required>
+                        </div>
                     </div>
-                </div>
+                    <button type="submit" class="btn primary-btn btn-block" id="dueFetchBtn" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                        <i class="fa-solid fa-magnifying-glass"></i> Find Due Coaches
+                    </button>
+                </form>
                 <div id="dueCoachesLoading" class="hidden" style="text-align: center; margin-top: 15px; color: var(--text-muted);">
                     <i class="fa-solid fa-spinner fa-spin"></i> Fetching due coaches...
                 </div>
@@ -267,22 +270,53 @@
             </div>
 
             <div id="dueCoachesResultsContainer" class="hidden glass-card">
-                <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <h3 style="margin: 0 0 10px 0; font-size: 1.05rem; color: #f39c12;"><i class="fa-solid fa-clipboard-list" style="margin-right: 8px;"></i>Today's Pit Check Rakes <span id="pitCheckDayOfWeek" style="color: var(--text-muted); font-size: 0.9rem; font-weight: normal; margin-left: 8px;"></span></h3>
-                    <div style="display: flex; gap: 30px; font-size: 0.95rem;">
-                        <div><strong style="color: var(--text);">Day:</strong> <span id="pitCheckDayRakes" style="color: var(--text-muted);"></span></div>
-                        <div><strong style="color: var(--text);">Night:</strong> <span id="pitCheckNightRakes" style="color: var(--text-muted);"></span></div>
+                <!-- Pit Check Banner -->
+                <div class="pit-check-banner">
+                    <div class="pit-check-header">
+                        <div class="pit-check-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                        <div>
+                            <h4 class="pit-check-title">Pit Check Rakes <span id="pitCheckDayOfWeek"></span></h4>
+                            <p class="pit-check-sub">Rakes running through pit lines on selected date</p>
+                        </div>
+                    </div>
+                    <div class="pit-check-grid">
+                        <div class="pit-slot-box">
+                            <span class="pit-slot-label"><i class="fa-solid fa-sun"></i> Day Pit</span>
+                            <span class="pit-slot-value" id="pitCheckDayRakes">-</span>
+                        </div>
+                        <div class="pit-slot-box">
+                            <span class="pit-slot-label"><i class="fa-solid fa-moon"></i> Night Pit</span>
+                            <span class="pit-slot-value" id="pitCheckNightRakes">-</span>
+                        </div>
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <!-- List Header with View Switcher -->
+                <div class="due-list-header">
                     <div>
-                        <h3 style="margin: 0; font-size: 1.1rem;">Due Coaches List</h3>
-                        <p id="dueCoachesTotalText" style="margin: 5px 0 0 0; font-size: 0.9rem; color: var(--text-muted);"></p>
+                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 600;">Due Coaches List</h3>
+                        <p id="dueCoachesTotalText" style="margin: 3px 0 0 0; font-size: 0.82rem; color: var(--text-muted);"></p>
+                    </div>
+                    <div class="due-view-switcher">
+                        <button type="button" class="due-view-btn active" id="dueViewCardsBtn" onclick="switchDueView('cards')">
+                            <i class="fa-solid fa-grip-vertical"></i> Cards
+                        </button>
+                        <button type="button" class="due-view-btn" id="dueViewTableBtn" onclick="switchDueView('table')">
+                            <i class="fa-solid fa-table-list"></i> Table
+                        </button>
                     </div>
                 </div>
                 
-                <div class="table-responsive">
+                <!-- Cards View (Default on Mobile) -->
+                <div id="dueCoachesCardsContainer" class="due-cards-container">
+                    <!-- Cards populated by JS -->
+                </div>
+
+                <!-- Table View (with Scroll Container & Hint) -->
+                <div id="dueCoachesTableContainer" class="due-table-wrapper hidden">
+                    <div class="due-table-scroll-hint">
+                        <i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns
+                    </div>
                     <table class="data-table" id="dueCoachesTable">
                         <thead>
                             <tr>

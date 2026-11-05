@@ -391,6 +391,14 @@ function navigateTo(screenId) {
     if (targetScreen) {
         targetScreen.classList.remove('hidden');
         targetScreen.classList.add('active');
+        
+        if (screenId === 'dueCoachesScreen') {
+            const duePicker = document.getElementById('dueDatePicker');
+            if (duePicker && !duePicker.value) {
+                const today = new Date();
+                duePicker.value = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+            }
+        }
     }
 }
 
@@ -3033,12 +3041,46 @@ async function handleScheduleSubmit(e) {
 }
 
 // --- Due Coaches Logic ---
+let currentDueView = 'cards';
+
+function switchDueView(view) {
+    currentDueView = view;
+    const cardsBtn = document.getElementById('dueViewCardsBtn');
+    const tableBtn = document.getElementById('dueViewTableBtn');
+    const cardsContainer = document.getElementById('dueCoachesCardsContainer');
+    const tableContainer = document.getElementById('dueCoachesTableContainer');
+
+    if (view === 'cards') {
+        if (cardsBtn) cardsBtn.classList.add('active');
+        if (tableBtn) tableBtn.classList.remove('active');
+        if (cardsContainer) cardsContainer.classList.remove('hidden');
+        if (tableContainer) tableContainer.classList.add('hidden');
+    } else {
+        if (tableBtn) tableBtn.classList.add('active');
+        if (cardsBtn) cardsBtn.classList.remove('active');
+        if (tableContainer) tableContainer.classList.remove('hidden');
+        if (cardsContainer) cardsContainer.classList.add('hidden');
+    }
+}
+
+function selectDueCoach(coachNo) {
+    navigateTo('scheduleSearchScreen');
+    const searchInput = document.getElementById('scheduleCoachNumberInput');
+    if (searchInput) {
+        searchInput.value = coachNo;
+        const form = document.getElementById('scheduleSearchForm');
+        if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+}
+
 async function fetchDueCoaches() {
     const dateInput = document.getElementById('dueDatePicker').value;
     const errorEl = document.getElementById('dueCoachesError');
     const loadingEl = document.getElementById('dueCoachesLoading');
     const resultsContainer = document.getElementById('dueCoachesResultsContainer');
+    const cardsContainer = document.getElementById('dueCoachesCardsContainer');
     const tbody = document.getElementById('dueCoachesTableBody');
+    const fetchBtn = document.getElementById('dueFetchBtn');
     
     errorEl.classList.add('hidden');
     resultsContainer.classList.add('hidden');
@@ -3062,7 +3104,7 @@ async function fetchDueCoaches() {
     const selectedDateObj = new Date(dateInput);
     const dayOfWeek = selectedDateObj.getDay();
     const dayName = selectedDateObj.toLocaleDateString('en-US', { weekday: 'long' });
-    const todaysSchedule = pitSchedule[dayOfWeek];
+    const todaysSchedule = pitSchedule[dayOfWeek] || { day: '-', night: '-' };
     
     document.getElementById('pitCheckDayRakes').textContent = todaysSchedule.day;
     document.getElementById('pitCheckNightRakes').textContent = todaysSchedule.night;
@@ -3070,7 +3112,9 @@ async function fetchDueCoaches() {
     if (dayOfWeekEl) dayOfWeekEl.textContent = `(${dayName})`;
     
     loadingEl.classList.remove('hidden');
-    tbody.innerHTML = '';
+    if (fetchBtn) fetchBtn.disabled = true;
+    if (tbody) tbody.innerHTML = '';
+    if (cardsContainer) cardsContainer.innerHTML = '';
     
     try {
         const url = `${SCHEDULE_APP_SCRIPT_URL}?action=getDueCoaches&date=${encodeURIComponent(dateInput)}`;
@@ -3083,46 +3127,88 @@ async function fetchDueCoaches() {
             
             if (coaches.length > 0) {
                 coaches.forEach(coach => {
+                    // 1. Build Table Row
                     const tr = document.createElement('tr');
                     
                     const d2Display = coach.isD2Due 
-                        ? `<span style="background: rgba(231, 76, 60, 0.2); color: #ff6b6b; padding: 4px 8px; border-radius: 4px; font-weight: 500; display: inline-block;">${coach.d2Date}</span>` 
-                        : coach.d2Date;
+                        ? `<span class="due-date-pill is-due"><i class="fa-solid fa-triangle-exclamation"></i> ${coach.d2Date}</span>` 
+                        : `<span class="due-date-pill is-ok">${coach.d2Date}</span>`;
                         
                     const d3Display = coach.isD3Due 
-                        ? `<span style="background: rgba(231, 76, 60, 0.2); color: #ff6b6b; padding: 4px 8px; border-radius: 4px; font-weight: 500; display: inline-block;">${coach.d3Date}</span>` 
-                        : coach.d3Date;
+                        ? `<span class="due-date-pill is-due"><i class="fa-solid fa-triangle-exclamation"></i> ${coach.d3Date}</span>` 
+                        : `<span class="due-date-pill is-ok">${coach.d3Date}</span>`;
                     
                     tr.style.cursor = 'pointer';
-                    tr.style.transition = 'background-color 0.2s';
-                    tr.onmouseover = () => tr.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                    tr.onmouseout = () => tr.style.backgroundColor = 'transparent';
                     tr.title = "Click to update schedule";
-                    
-                    tr.onclick = () => {
-                        navigateTo('scheduleSearchScreen');
-                        const searchInput = document.getElementById('scheduleCoachNumberInput');
-                        if (searchInput) {
-                            searchInput.value = coach.coachNo;
-                            const form = document.getElementById('scheduleSearchForm');
-                            if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                        }
-                    };
+                    tr.onclick = () => selectDueCoach(coach.coachNo);
                     
                     tr.innerHTML = `
-                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${coach.rly}</td>
-                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${coach.type}</td>
-                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;"><span class="highlight-badge">${coach.coachNo}</span></td>
-                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${coach.trainNo}</td>
-                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${d2Display}</td>
-                        <td style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding: 14px 8px; vertical-align: middle;">${d3Display}</td>
+                        <td><span class="due-rly-tag">${coach.rly}</span></td>
+                        <td><span class="due-type-tag">${coach.type}</span></td>
+                        <td><span class="highlight-badge">${coach.coachNo}</span></td>
+                        <td><span class="due-train-tag"><i class="fa-solid fa-train"></i> ${coach.trainNo}</span></td>
+                        <td>${d2Display}</td>
+                        <td>${d3Display}</td>
                     `;
-                    tbody.appendChild(tr);
+                    if (tbody) tbody.appendChild(tr);
+
+                    // 2. Build Mobile Card
+                    if (cardsContainer) {
+                        const card = document.createElement('div');
+                        card.className = `due-coach-card ${coach.isD2Due || coach.isD3Due ? 'has-due' : ''}`;
+                        card.onclick = () => selectDueCoach(coach.coachNo);
+                        
+                        card.innerHTML = `
+                            <div class="due-card-header">
+                                <div class="due-card-badge-group">
+                                    <span class="due-rly-tag">${coach.rly}</span>
+                                    <span class="due-coach-number">${coach.coachNo}</span>
+                                    <span class="due-type-tag">${coach.type}</span>
+                                </div>
+                                <div class="due-train-tag">
+                                    <i class="fa-solid fa-train"></i> Train ${coach.trainNo}
+                                </div>
+                            </div>
+                            
+                            <div class="due-card-schedules">
+                                <div class="due-sched-box ${coach.isD2Due ? 'is-due' : 'is-ok'}">
+                                    <div class="due-sched-meta">
+                                        <span class="due-sched-name"><i class="fa-solid fa-calendar-check"></i> D2 Schedule</span>
+                                        ${coach.isD2Due ? '<span class="due-alert-chip">DUE</span>' : '<span class="due-ok-chip">OK</span>'}
+                                    </div>
+                                    <div class="due-sched-date">${coach.d2Date}</div>
+                                </div>
+
+                                <div class="due-sched-box ${coach.isD3Due ? 'is-due' : 'is-ok'}">
+                                    <div class="due-sched-meta">
+                                        <span class="due-sched-name"><i class="fa-solid fa-calendar-days"></i> D3 Schedule</span>
+                                        ${coach.isD3Due ? '<span class="due-alert-chip">DUE</span>' : '<span class="due-ok-chip">OK</span>'}
+                                    </div>
+                                    <div class="due-sched-date">${coach.d3Date}</div>
+                                </div>
+                            </div>
+
+                            <div class="due-card-footer">
+                                <span><i class="fa-solid fa-pen-to-square"></i> Tap to update schedule</span>
+                                <i class="fa-solid fa-chevron-right chevron"></i>
+                            </div>
+                        `;
+                        cardsContainer.appendChild(card);
+                    }
                 });
             } else {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">No coaches due on this date for available rakes.</td>`;
-                tbody.appendChild(tr);
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 25px;">No coaches due on this date for available rakes.</td></tr>`;
+                }
+                if (cardsContainer) {
+                    cardsContainer.innerHTML = `
+                        <div style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-circle-check" style="font-size: 2.5rem; color: #10b981; margin-bottom: 0.75rem; display: block;"></i>
+                            <h4 style="color: #fff; margin-bottom: 0.25rem;">All Clear!</h4>
+                            <p style="font-size: 0.85rem; margin: 0;">No coaches are due on this date for available rakes.</p>
+                        </div>
+                    `;
+                }
             }
             resultsContainer.classList.remove('hidden');
         } else {
@@ -3130,11 +3216,11 @@ async function fetchDueCoaches() {
             errorEl.classList.remove('hidden');
         }
     } catch (err) {
-        console.error('Error fetching due coaches:', err);
-        errorEl.textContent = 'Failed to load data. Ensure Apps Script is updated and deployed.';
+        errorEl.textContent = 'Error fetching due coaches: ' + err.message;
         errorEl.classList.remove('hidden');
     } finally {
         loadingEl.classList.add('hidden');
+        if (fetchBtn) fetchBtn.disabled = false;
     }
 }
 
