@@ -635,7 +635,7 @@
                 </form>
 
                 <!-- Date Search Form -->
-                <form id="wspSearchDateForm" class="hidden">
+                <form id="wspSearchDateForm" class="hidden" onsubmit="event.preventDefault(); fetchWspByDate();">
                     <div class="form-group">
                         <label for="wspDateInput">Download Date</label>
                         <div class="input-group">
@@ -644,10 +644,12 @@
                         </div>
                     </div>
                     
-                    <button type="button" class="btn primary-btn btn-block" id="wspFetchDateBtn" onclick="fetchWspByDate()" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <button type="submit" class="btn primary-btn btn-block" id="wspFetchDateBtn" style="background: linear-gradient(135deg, #10b981, #059669);">
                         <span class="btn-text">Search by Date</span>
                         <div class="spinner hidden"></div>
                     </button>
+
+                    <div id="wspRecentDatesContainer"></div>
                 </form>
 
                 <!-- Pending Work Search Form Removed: Now triggers directly on tab click -->
@@ -710,7 +712,7 @@
             <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1 id="wspDateResultTitle">Date Results</h1>
-                <p class="subtitle">Select a coach for details</p>
+                <p class="subtitle" id="wspDateResultSubtitle">Select a coach for details</p>
             </div>
         </header>
 

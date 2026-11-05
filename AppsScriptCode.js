@@ -1,3 +1,25 @@
+function parseToIsoDate(val) {
+  if (!val) return '';
+  if (val instanceof Date) {
+    if (isNaN(val.getTime())) return '';
+    return val.getFullYear() + '-' + String(val.getMonth() + 1).padStart(2, '0') + '-' + String(val.getDate()).padStart(2, '0');
+  }
+  const s = String(val).trim();
+  const isoMatch = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+  if (isoMatch) {
+    return isoMatch[1] + '-' + String(isoMatch[2]).padStart(2, '0') + '-' + String(isoMatch[3]).padStart(2, '0');
+  }
+  const dmyMatch = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+  if (dmyMatch) {
+    return dmyMatch[3] + '-' + String(dmyMatch[2]).padStart(2, '0') + '-' + String(dmyMatch[1]).padStart(2, '0');
+  }
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  return '';
+}
+
 /**
  * Instructions for deploying this to Google Sheets:
  * 1. Open your Coach Database Google Sheet.
@@ -119,7 +141,14 @@ function doGet(e) {
 
   try {
     const sheetName = e.parameter.sheetName;
-    const targetSheetName = sheetName ? sheetName : "Imported Database";
+    let targetSheetName = sheetName;
+    if (!targetSheetName) {
+      if (isDateSearch || isPendingWorkSearch) {
+        targetSheetName = "DOWNLOAD status modified";
+      } else {
+        targetSheetName = "Imported Database";
+      }
+    }
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(targetSheetName);
 
     if (!sheet) {
@@ -183,20 +212,10 @@ function doGet(e) {
         }
       } else if (isDateSearch && targetSheetName === "DOWNLOAD status modified") {
         const dateColIndex = 9; // Download Date is index 9
-        const rowDateStr = String(row[dateColIndex]).trim();
-        let formattedRowDate = rowDateStr;
+        const formattedRowDate = parseToIsoDate(row[dateColIndex]);
+        const searchDate = parseToIsoDate(e.parameter.date);
 
-        if (row[dateColIndex] instanceof Date) {
-          const d = row[dateColIndex];
-          formattedRowDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        } else if (rowDateStr) {
-          const d = new Date(rowDateStr);
-          if (!isNaN(d.getTime())) {
-            formattedRowDate = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-          }
-        }
-
-        if (formattedRowDate === String(e.parameter.date).trim()) {
+        if (formattedRowDate && searchDate && formattedRowDate === searchDate) {
           foundMatches.push({ data: row, rowIndex: i + 1 });
         }
       } else if (isPendingWorkSearch && targetSheetName === "DOWNLOAD status modified") {

@@ -6,6 +6,28 @@ const SCHEDULE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhXxdJ
 
 const FIREBASE_DB_URL = 'https://coachdatawebapp-default-rtdb.firebaseio.com/wsp';
 
+function parseToIsoDate(val) {
+    if (!val) return '';
+    if (val instanceof Date) {
+        if (isNaN(val.getTime())) return '';
+        return val.getFullYear() + '-' + String(val.getMonth() + 1).padStart(2, '0') + '-' + String(val.getDate()).padStart(2, '0');
+    }
+    const s = String(val).trim();
+    const isoMatch = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    if (isoMatch) {
+        return isoMatch[1] + '-' + String(isoMatch[2]).padStart(2, '0') + '-' + String(isoMatch[3]).padStart(2, '0');
+    }
+    const dmyMatch = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+    if (dmyMatch) {
+        return dmyMatch[3] + '-' + String(dmyMatch[2]).padStart(2, '0') + '-' + String(dmyMatch[1]).padStart(2, '0');
+    }
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    return '';
+}
+
 async function fetchFromDatabase(queryType, param) {
     try {
         let url = '';
@@ -18,15 +40,24 @@ async function fetchFromDatabase(queryType, param) {
         else if (queryType === 'trainList') url = `${FIREBASE_DB_URL}/trainList.json${cb}`;
         
         const response = await fetch(url);
-        if (!response.ok) return { status: 'error', message: 'Network error' };
+        if (!response.ok) {
+            if (queryType === 'date') return { status: 'success', data: [] };
+            return { status: 'error', message: 'Network error' };
+        }
         
         const data = await response.json();
         if (data) {
             return data;
         } else {
+            if (queryType === 'date') {
+                return { status: 'success', data: [] };
+            }
             return { status: 'error', message: 'Coach/Data not found in database' };
         }
     } catch (e) {
+        if (queryType === 'date') {
+            return { status: 'success', data: [] };
+        }
         return { status: 'error', message: e.toString() };
     }
 }
@@ -1799,6 +1830,76 @@ function switchWspTab(tab) {
     } else if (tab === 'date') {
         if(dateBtn) dateBtn.classList.add('active');
         if(dateForm) dateForm.classList.remove('hidden');
+        loadWspRecentDates();
+    }
+}
+
+
+let wspRecentDatesCache = null;
+
+async function loadWspRecentDates() {
+    const container = document.getElementById('wspRecentDatesContainer');
+    if (!container) return;
+    
+    if (wspRecentDatesCache && wspRecentDatesCache.length > 0) {
+        renderRecentDatePills(wspRecentDatesCache);
+        return;
+    }
+    
+    try {
+        const res = await fetch(`${FIREBASE_DB_URL}/searchDate.json?shallow=true&t=${new Date().getTime()}`);
+        if (!res.ok) return;
+        const keysObj = await res.json();
+        if (keysObj && typeof keysObj === 'object') {
+            const sortedDates = Object.keys(keysObj)
+                .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d))
+                .sort()
+                .reverse()
+                .slice(0, 6);
+            wspRecentDatesCache = sortedDates;
+            renderRecentDatePills(sortedDates);
+        }
+    } catch (e) {
+        console.warn('Could not load recent WSP dates:', e);
+    }
+}
+
+function renderRecentDatePills(dates) {
+    const container = document.getElementById('wspRecentDatesContainer');
+    if (!container || !dates || dates.length === 0) return;
+    
+    let html = `
+        <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-clock-rotate-left" style="color: #10b981;"></i>
+                <span>Recent dates with defects:</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.45rem;">
+    `;
+    
+    dates.forEach(isoDate => {
+        const parts = isoDate.split('-');
+        const displayStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
+        html += `
+            <button type="button" class="btn" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; cursor: pointer; transition: all 0.2s;" onclick="selectWspDate('${isoDate}')">
+                <i class="fa-solid fa-calendar-day" style="font-size: 0.75rem; margin-right: 4px;"></i>${displayStr}
+            </button>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function selectWspDate(isoDate) {
+    const input = document.getElementById('wspDateInput');
+    if (input) {
+        input.value = isoDate;
+        fetchWspByDate();
     }
 }
 
@@ -2087,119 +2188,167 @@ function buildWspDefectCardHTML(entry, options = {}) {
 }
 
 async function fetchWspByDate() {
-    const dateInput = document.getElementById('wspDateInput').value;
-    if (!dateInput) {
+    const rawDateInput = document.getElementById('wspDateInput').value;
+    if (!rawDateInput) {
         showWarningAlert("Please select a date.");
+        return;
+    }
+
+    const dateInput = parseToIsoDate(rawDateInput);
+    if (!dateInput) {
+        showWarningAlert("Please select a valid date.");
         return;
     }
     
     const fetchBtn = document.getElementById('wspFetchDateBtn');
-    const spinner = fetchBtn.querySelector('.spinner');
-    const btnText = fetchBtn.querySelector('.btn-text');
+    const spinner = fetchBtn ? fetchBtn.querySelector('.spinner') : null;
+    const btnText = fetchBtn ? fetchBtn.querySelector('.btn-text') : null;
     
-    spinner.classList.remove('hidden');
-    btnText.style.opacity = '0';
-    fetchBtn.disabled = true;
+    if (spinner) spinner.classList.remove('hidden');
+    if (btnText) btnText.style.opacity = '0';
+    if (fetchBtn) fetchBtn.disabled = true;
+
+    const parts = dateInput.split('-');
+    const formattedDisplayDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
 
     try {
-        const data = await fetchFromDatabase('date', dateInput);
-        if (data.status === 'success' && data.data && data.data.length > 0) {
-            const [yyyy, mm, dd] = dateInput.split('-');
-            document.getElementById('wspDateResultTitle').innerText = `Defects for ${dd}-${mm}-${yyyy}`;
-            
-            const tbody = document.getElementById('wspDateTableBody');
-            tbody.innerHTML = '';
-            
-            window.wspHistoryMap = window.wspHistoryMap || {};
-            
-            data.data.forEach(entry => {
-                if (entry._rowIndex) {
-                    window.wspHistoryMap[entry._rowIndex] = entry;
-                }
-                
-                const tr = document.createElement('tr');
-                tr.style.cursor = 'pointer';
-                
-                let coachNum = getWspField(entry, 'Coach No', 'COACH NO', 'coach num', 'Coach Number');
-                if (coachNum === '-' && entry['_rawRow']) coachNum = entry['_rawRow'][0] || '-';
-                
-                let rly = getWspField(entry, 'RLY', 'Rly');
-                if (rly === '-' && typeof currentTrainCoaches !== 'undefined' && currentTrainCoaches.length > 0) {
-                    const match = currentTrainCoaches.find(c => {
-                        const ck = Object.keys(c).find(k => String(k).toLowerCase().includes('coach no') || String(k).toLowerCase().includes('coach num'));
-                        return ck && c[ck] == coachNum;
-                    });
-                    if (match) rly = match['RLY'] || match['Rly'] || '-';
-                }
-                
-                let wheelCondition = getWspField(entry, 'Wheel condition', 'wheel condition');
-                if (wheelCondition !== '-') {
-                    wheelCondition = String(wheelCondition).replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
-                }
-                
-                let wspCode = getWspField(entry, 'WSP Code', 'wsp code');
-                let defectCat = getWspField(entry, 'Defect Category', 'defect category');
-                let pendingWork = getWspField(entry, 'Pending Work', 'pending work desc', 'pending work description', 'follo up', 'follow up');
-                let anyPending = getWspField(entry, 'Any work pending', 'any work pending');
-                
-                const isPendingActive = (
-                    (pendingWork !== '-' && pendingWork.toLowerCase() !== 'nil' && pendingWork.toLowerCase() !== 'no' && pendingWork !== '') ||
-                    (anyPending.toLowerCase() === 'yes')
-                );
-                const isDefectActive = (
-                    (defectCat !== '-' && defectCat.toLowerCase() !== 'no defect' && defectCat.toLowerCase() !== 'nil') ||
-                    (wspCode !== '-' && wspCode !== '99' && wspCode !== '')
-                );
-                
-                tr.innerHTML = `
-                    <td><span class="wsp-rly-pill">${rly !== '-' ? rly : 'IR'}</span></td>
-                    <td><span class="highlight-badge">${coachNum || '-'}</span></td>
-                    <td>
-                        <div class="wsp-table-wheel">
-                            ${isPendingActive ? '<span class="wsp-dot-warn" title="Pending Work"></span>' : (isDefectActive ? '<span class="wsp-dot-defect" title="Defect Reported"></span>' : '<span class="wsp-dot-ok" title="Normal"></span>')}
-                            <span>${wheelCondition}</span>
-                        </div>
-                    </td>
-                    <td style="text-align:center;"><i class="fa-solid fa-chevron-down text-primary" style="transition: transform 0.3s;"></i></td>
-                `;
-                
-                const detailsTr = document.createElement('tr');
-                detailsTr.style.display = 'none';
-                detailsTr.innerHTML = `
-                    <td colspan="4" style="padding: 0.4rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15);">
-                        ${buildWspDefectCardHTML(entry, { showActions: true })}
-                    </td>
-                `;
-                
-                tr.onclick = () => {
-                    window.wspLastSearchScreen = 'wspDateResultsScreen';
-                    const icon = tr.querySelector('.fa-chevron-down');
-                    if (detailsTr.style.display === 'none') {
-                        detailsTr.style.display = 'table-row';
-                        if(icon) icon.style.transform = 'rotate(180deg)';
-                    } else {
-                        detailsTr.style.display = 'none';
-                        if(icon) icon.style.transform = 'rotate(0deg)';
+        let data = await fetchFromDatabase('date', dateInput);
+        
+        // Fallback to Google Apps Script if Firebase has no records or returned empty
+        if (!data || data.status !== 'success' || !data.data || data.data.length === 0) {
+            try {
+                const gasUrl = `${GOOGLE_APP_SCRIPT_URL}?date=${encodeURIComponent(dateInput)}&sheetName=${encodeURIComponent('DOWNLOAD status modified')}`;
+                const gasRes = await fetch(gasUrl);
+                if (gasRes.ok) {
+                    const gasData = await gasRes.json();
+                    if (gasData && gasData.status === 'success' && gasData.data && gasData.data.length > 0) {
+                        data = gasData;
                     }
-                };
+                }
+            } catch (fallbackErr) {
+                console.warn('Apps Script fallback check failed:', fallbackErr);
+            }
+        }
+
+        const titleEl = document.getElementById('wspDateResultTitle');
+        const subtitleEl = document.getElementById('wspDateResultSubtitle');
+        const tbody = document.getElementById('wspDateTableBody');
+        
+        if (data && data.status === 'success' && data.data && data.data.length > 0) {
+            if (titleEl) titleEl.innerText = `Defects for ${formattedDisplayDate}`;
+            if (subtitleEl) subtitleEl.innerText = `${data.data.length} coach defect record(s) found`;
+            
+            if (tbody) {
+                tbody.innerHTML = '';
+                window.wspHistoryMap = window.wspHistoryMap || {};
                 
-                tbody.appendChild(tr);
-                tbody.appendChild(detailsTr);
-            });
+                data.data.forEach(entry => {
+                    if (entry._rowIndex) {
+                        window.wspHistoryMap[entry._rowIndex] = entry;
+                    }
+                    
+                    const tr = document.createElement('tr');
+                    tr.style.cursor = 'pointer';
+                    
+                    let coachNum = getWspField(entry, 'Coach No', 'COACH NO', 'coach num', 'Coach Number');
+                    if (coachNum === '-' && entry['_rawRow']) coachNum = entry['_rawRow'][0] || '-';
+                    
+                    let rly = getWspField(entry, 'RLY', 'Rly');
+                    if (rly === '-' && typeof currentTrainCoaches !== 'undefined' && currentTrainCoaches.length > 0) {
+                        const match = currentTrainCoaches.find(c => {
+                            const ck = Object.keys(c).find(k => String(k).toLowerCase().includes('coach no') || String(k).toLowerCase().includes('coach num'));
+                            return ck && c[ck] == coachNum;
+                        });
+                        if (match) rly = match['RLY'] || match['Rly'] || '-';
+                    }
+                    
+                    let wheelCondition = getWspField(entry, 'Wheel condition', 'wheel condition');
+                    if (wheelCondition !== '-') {
+                        wheelCondition = String(wheelCondition).replace(/\b(\d{4})-(\d{2})-(\d{2})\b/g, '$3-$2-$1');
+                    }
+                    
+                    let wspCode = getWspField(entry, 'WSP Code', 'wsp code');
+                    let defectCat = getWspField(entry, 'Defect Category', 'defect category');
+                    let pendingWork = getWspField(entry, 'Pending Work', 'pending work desc', 'pending work description', 'follo up', 'follow up');
+                    let anyPending = getWspField(entry, 'Any work pending', 'any work pending');
+                    
+                    const isPendingActive = (
+                        (pendingWork !== '-' && pendingWork.toLowerCase() !== 'nil' && pendingWork.toLowerCase() !== 'no' && pendingWork !== '') ||
+                        (anyPending.toLowerCase() === 'yes')
+                    );
+                    const isDefectActive = (
+                        (defectCat !== '-' && defectCat.toLowerCase() !== 'no defect' && defectCat.toLowerCase() !== 'nil') ||
+                        (wspCode !== '-' && wspCode !== '99' && wspCode !== '')
+                    );
+                    
+                    tr.innerHTML = `
+                        <td><span class="wsp-rly-pill">${rly !== '-' ? rly : 'IR'}</span></td>
+                        <td><span class="highlight-badge">${coachNum || '-'}</span></td>
+                        <td>
+                            <div class="wsp-table-wheel">
+                                ${isPendingActive ? '<span class="wsp-dot-warn" title="Pending Work"></span>' : (isDefectActive ? '<span class="wsp-dot-defect" title="Defect Reported"></span>' : '<span class="wsp-dot-ok" title="Normal"></span>')}
+                                <span>${wheelCondition}</span>
+                            </div>
+                        </td>
+                        <td style="text-align:center;"><i class="fa-solid fa-chevron-down text-primary" style="transition: transform 0.3s;"></i></td>
+                    `;
+                    
+                    const detailsTr = document.createElement('tr');
+                    detailsTr.style.display = 'none';
+                    detailsTr.innerHTML = `
+                        <td colspan="4" style="padding: 0.4rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.15);">
+                            ${buildWspDefectCardHTML(entry, { showActions: true })}
+                        </td>
+                    `;
+                    
+                    tr.onclick = () => {
+                        window.wspLastSearchScreen = 'wspDateResultsScreen';
+                        const icon = tr.querySelector('.fa-chevron-down');
+                        if (detailsTr.style.display === 'none') {
+                            detailsTr.style.display = 'table-row';
+                            if(icon) icon.style.transform = 'rotate(180deg)';
+                        } else {
+                            detailsTr.style.display = 'none';
+                            if(icon) icon.style.transform = 'rotate(0deg)';
+                        }
+                    };
+                    
+                    tbody.appendChild(tr);
+                    tbody.appendChild(detailsTr);
+                });
+            }
             
             navigateTo('wspDateResultsScreen');
-        } else if (data.status === 'error') {
-            throw new Error(data.message || `No defects found for ${dateInput}`);
         } else {
-            showWarningAlert(`No defects found for ${dateInput}`);
+            // No defects found for this date -> Show friendly empty state
+            if (titleEl) titleEl.innerText = `Defects for ${formattedDisplayDate}`;
+            if (subtitleEl) subtitleEl.innerText = '0 defect records';
+            
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 3rem 1.5rem;">
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                                <i class="fa-solid fa-circle-check" style="color: #10b981; font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <h3 style="font-size: 1.15rem; font-weight: 600; color: #fff; margin-bottom: 0.35rem;">No Defects Found</h3>
+                                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem; max-width: 320px;">No WSP wheel issues were logged on ${formattedDisplayDate}.</p>
+                                <button type="button" class="btn secondary-btn" onclick="navigateTo('wspSearchScreen')" style="padding: 0.6rem 1.25rem; font-size: 0.9rem; background: rgba(255,255,255,0.08);">
+                                    <i class="fa-solid fa-arrow-left" style="margin-right: 0.5rem;"></i> Select Another Date
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }
+            navigateTo('wspDateResultsScreen');
         }
     } catch (error) {
         console.error('Error fetching WSP by date:', error);
-        showErrorAlert(`Error: ${error.message}`);
+        showErrorAlert(`Error fetching data: ${error.message || 'Please check your connection'}`);
     } finally {
-        spinner.classList.add('hidden');
-        btnText.style.opacity = '1';
-        fetchBtn.disabled = false;
+        if (spinner) spinner.classList.add('hidden');
+        if (btnText) btnText.style.opacity = '1';
+        if (fetchBtn) fetchBtn.disabled = false;
     }
 }
 
