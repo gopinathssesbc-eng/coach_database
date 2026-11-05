@@ -3084,6 +3084,8 @@ async function fetchDueCoaches() {
     
     errorEl.classList.add('hidden');
     resultsContainer.classList.add('hidden');
+    const resetSubTitle = document.getElementById('dueCoachesScreenSubtitle');
+    if (resetSubTitle) resetSubTitle.textContent = 'Check which coaches are due';
     
     if (!dateInput) {
         errorEl.textContent = 'Please select a date.';
@@ -3123,7 +3125,56 @@ async function fetchDueCoaches() {
         
         if (result.status === 'success') {
             const coaches = result.data || [];
-            document.getElementById('dueCoachesTotalText').textContent = `Total schedule due coaches: ${coaches.length}`;
+            const totalDue = coaches.length;
+            const d2Count = coaches.filter(c => c.isD2Due).length;
+            const d3Count = coaches.filter(c => c.isD3Due).length;
+
+            // 1. Update Screen Subtitle at the very top
+            const subTitleEl = document.getElementById('dueCoachesScreenSubtitle');
+            if (subTitleEl) {
+                subTitleEl.innerHTML = totalDue > 0 
+                    ? `<span style="color: #fca5a5; font-weight: 600;"><i class="fa-solid fa-triangle-exclamation"></i> ${totalDue} Coaches Pending</span>`
+                    : `<span style="color: #6ee7b7;"><i class="fa-solid fa-circle-check"></i> All Clear - No Coaches Due</span>`;
+            }
+
+            // 2. Update Hero Banner at top of results
+            const heroCard = document.getElementById('dueCountHeroCard');
+            const heroNum = document.getElementById('dueHeroCountNumber');
+            const heroD2 = document.getElementById('dueHeroD2Count');
+            const heroD3 = document.getElementById('dueHeroD3Count');
+            const heroTitle = document.getElementById('dueHeroCountTitle');
+            const heroSubtitle = document.getElementById('dueHeroCountSubtitle');
+
+            if (heroNum) heroNum.textContent = totalDue;
+            if (heroD2) heroD2.textContent = d2Count;
+            if (heroD3) heroD3.textContent = d3Count;
+            if (heroTitle) {
+                heroTitle.textContent = totalDue === 1 ? '1 Coach Pending Schedule' : `${totalDue} Coaches Pending Schedule`;
+            }
+            if (heroSubtitle) {
+                heroSubtitle.textContent = totalDue > 0 ? 'Requires schedule maintenance on this pit date' : 'All rakes clear of pending schedules';
+            }
+            if (heroCard) {
+                if (totalDue === 0) {
+                    heroCard.classList.add('all-clear');
+                } else {
+                    heroCard.classList.remove('all-clear');
+                }
+            }
+
+            // 3. Update List Header Pill and Text
+            const countPill = document.getElementById('dueCoachesCountPill');
+            if (countPill) {
+                countPill.textContent = `${totalDue} Pending`;
+                countPill.className = totalDue > 0 ? 'due-header-count-pill has-pending' : 'due-header-count-pill all-clear';
+            }
+
+            const totalTextEl = document.getElementById('dueCoachesTotalText');
+            if (totalTextEl) {
+                totalTextEl.textContent = totalDue > 0 
+                    ? `Total: ${totalDue} pending coach${totalDue > 1 ? 'es' : ''} (${d2Count} D2, ${d3Count} D3)` 
+                    : 'No pending coaches found';
+            }
             
             if (coaches.length > 0) {
                 coaches.forEach(coach => {

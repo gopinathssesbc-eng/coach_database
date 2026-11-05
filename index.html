@@ -245,7 +245,7 @@
             <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>Due Coaches</h1>
-                <p class="subtitle">Check which coaches are due</p>
+                <p class="subtitle" id="dueCoachesScreenSubtitle">Check which coaches are due</p>
             </div>
         </header>
 
@@ -270,6 +270,29 @@
             </div>
 
             <div id="dueCoachesResultsContainer" class="hidden glass-card">
+                <!-- Pending Coaches Hero Banner at the Top -->
+                <div class="due-count-hero-card" id="dueCountHeroCard">
+                    <div class="due-count-hero-left">
+                        <div class="due-count-hero-badge">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span id="dueHeroCountNumber">0</span>
+                        </div>
+                        <div class="due-count-hero-text">
+                            <h3 id="dueHeroCountTitle">Coaches Pending Schedule</h3>
+                            <p id="dueHeroCountSubtitle">Attention required on selected pit date</p>
+                        </div>
+                    </div>
+                    <div class="due-count-breakdown">
+                        <div class="due-breakdown-chip d2">
+                            <span class="breakdown-label">D2 Due</span>
+                            <strong id="dueHeroD2Count">0</strong>
+                        </div>
+                        <div class="due-breakdown-chip d3">
+                            <span class="breakdown-label">D3 Due</span>
+                            <strong id="dueHeroD3Count">0</strong>
+                        </div>
+                    </div>
+                </div>
                 <!-- Pit Check Banner -->
                 <div class="pit-check-banner">
                     <div class="pit-check-header">
@@ -294,7 +317,10 @@
                 <!-- List Header with View Switcher -->
                 <div class="due-list-header">
                     <div>
-                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 600;">Due Coaches List</h3>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff;">Due Coaches List</h3>
+                            <span id="dueCoachesCountPill" class="due-header-count-pill has-pending">0 Pending</span>
+                        </div>
                         <p id="dueCoachesTotalText" style="margin: 3px 0 0 0; font-size: 0.82rem; color: var(--text-muted);"></p>
                     </div>
                     <div class="due-view-switcher">
