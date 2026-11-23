@@ -45,12 +45,59 @@ function doGet(e) {
   const isPendingWorkSearch = !!e.parameter.pendingWork;
   const isLogVisit = !!e.parameter.logVisit;
   const isGetAnalytics = !!e.parameter.getAnalytics;
+  const isGetManuals = !!e.parameter.getManuals || e.parameter.action === 'getManuals';
 
-  if (!isTrainSearch && !isCoachSearch && !isGetTrains && !isDateSearch && !isPendingWorkSearch && !isLogVisit && !isGetAnalytics) {
+  if (!isTrainSearch && !isCoachSearch && !isGetTrains && !isDateSearch && !isPendingWorkSearch && !isLogVisit && !isGetAnalytics && !isGetManuals) {
     return createJsonResponse({
       status: 'error',
       message: 'No Search Parameter provided.'
     });
+  }
+
+  // --- Handle Fetching Manuals from Google Drive Folder ---
+  if (isGetManuals) {
+    try {
+      const folderParam = e.parameter.folderId || e.parameter.url || "";
+      let folderId = folderParam;
+      const match = folderParam.match(/[-\w]{25,}/);
+      if (match) folderId = match[0];
+
+      if (!folderId) {
+        return createJsonResponse({ status: 'error', message: 'No Google Drive folder ID provided.' });
+      }
+
+      const folder = DriveApp.getFolderById(folderId);
+      const files = folder.getFiles();
+      const pdfs = [];
+
+      while (files.hasNext()) {
+        const file = files.next();
+        const name = file.getName();
+        const mime = file.getMimeType();
+        if (mime === MimeType.PDF || name.toLowerCase().endsWith('.pdf')) {
+          pdfs.push({
+            id: file.getId(),
+            name: name,
+            size: file.getSize(),
+            lastUpdated: file.getLastUpdated().toISOString(),
+            downloadUrl: "https://drive.google.com/uc?export=download&id=" + file.getId(),
+            viewUrl: "https://drive.google.com/file/d/" + file.getId() + "/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/" + file.getId() + "/preview"
+          });
+        }
+      }
+
+      pdfs.sort((a, b) => a.name.localeCompare(b.name));
+
+      return createJsonResponse({
+        status: 'success',
+        folderName: folder.getName(),
+        folderId: folderId,
+        data: pdfs
+      });
+    } catch (err) {
+      return createJsonResponse({ status: 'error', message: 'Error reading Drive folder: ' + err.toString() });
+    }
   }
 
   // --- Handle Analytics Logging ---

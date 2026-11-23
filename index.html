@@ -645,6 +645,7 @@
                     <button class="tab-btn" id="wspTabRake" onclick="switchWspTab('rake')">By Rake</button>
                     <button class="tab-btn" id="wspTabDate" onclick="switchWspTab('date')">By Date</button>
                     <button class="tab-btn" id="wspTabPending" onclick="fetchWspPendingWork()">Pending Work</button>
+                    <button class="tab-btn" id="wspTabManuals" onclick="switchWspTab('manuals')"><i class="fa-solid fa-book"></i> Manuals</button>
                 </div>
                 
                 <!-- Coach Number Search Form -->
@@ -711,6 +712,51 @@
 
                     <div id="wspRecentDatesContainer"></div>
                 </form>
+
+                <!-- Manuals Area -->
+                <div id="wspManualsArea" class="hidden">
+                    <!-- Google Drive Link & Controls Header -->
+                    <div class="manuals-header-card">
+                        <div class="manuals-header-top">
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-book-open" style="color: #38bdf8;"></i> WSP Manuals & Guides
+                                </h3>
+                                <p style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
+                                    Direct access to PDF manuals from Google Drive
+                                </p>
+                            </div>
+                            <div class="manuals-actions-group">
+                                <button type="button" class="btn-icon-pill" onclick="openDriveConfigModal()" title="Configure Drive Link">
+                                    <i class="fa-brands fa-google-drive"></i> Link Drive
+                                </button>
+                                <button type="button" class="btn-icon-pill" onclick="loadManualsFromDrive(true)" title="Refresh List">
+                                    <i class="fa-solid fa-rotate-right"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Search Filter -->
+                        <div class="input-group" style="margin-top: 0.85rem;">
+                            <i class="fa-solid fa-magnifying-glass input-icon"></i>
+                            <input type="text" id="manualsSearchInput" class="app-input" placeholder="Search manuals (e.g. RDSO, FT, GE, drawing)..." oninput="filterManualsList()">
+                        </div>
+                    </div>
+
+                    <!-- Loading / Error States -->
+                    <div id="manualsLoading" class="hidden" style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
+                        <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: #38bdf8; margin-bottom: 0.75rem;"></i>
+                        <p style="margin: 0; font-size: 0.9rem;">Fetching PDF manuals from Google Drive...</p>
+                    </div>
+
+                    <div id="manualsError" class="hidden" style="padding: 1rem; border-radius: 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; font-size: 0.85rem; margin-top: 1rem; text-align: center;">
+                    </div>
+
+                    <!-- PDF Cards Container -->
+                    <div id="manualsListContainer" class="manuals-grid" style="margin-top: 1rem;">
+                        <!-- Injected via JavaScript -->
+                    </div>
+                </div>
 
                 <!-- Pending Work Search Form Removed: Now triggers directly on tab click -->
             </div>
@@ -1015,6 +1061,53 @@
                 <i class="fa-solid fa-arrow-left"></i> Go Back
             </button>
         </main>
+    </div>
+
+    <!-- Fullscreen PDF Viewer Modal -->
+    <div id="pdfViewerModal" class="pdf-modal hidden">
+        <div class="pdf-modal-header">
+            <div class="pdf-modal-title-wrap">
+                <i class="fa-solid fa-file-pdf" style="color: #ef4444; font-size: 1.25rem;"></i>
+                <h3 class="pdf-modal-title" id="pdfViewerTitle">PDF Manual</h3>
+            </div>
+            <button type="button" class="pdf-close-btn" onclick="closePdfViewer()" title="Close Viewer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Viewer Toolbar: Zoom, Share, Download -->
+        <div class="pdf-modal-toolbar">
+            <div class="pdf-zoom-group">
+                <button type="button" class="pdf-toolbar-btn" onclick="zoomPdf(-0.25)" title="Zoom Out">
+                    <i class="fa-solid fa-minus"></i>
+                </button>
+                <span class="pdf-zoom-val" id="pdfZoomVal">100%</span>
+                <button type="button" class="pdf-toolbar-btn" onclick="zoomPdf(0.25)" title="Zoom In">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+                <button type="button" class="pdf-toolbar-btn" onclick="resetPdfZoom()" title="Reset Zoom">
+                    <i class="fa-solid fa-arrows-rotate"></i> Reset
+                </button>
+            </div>
+
+            <div class="pdf-action-group">
+                <button type="button" class="pdf-action-pill share" onclick="shareActivePdf()" title="Share PDF via WhatsApp, Email, etc.">
+                    <i class="fa-solid fa-share-nodes"></i> Share
+                </button>
+                <button type="button" class="pdf-action-pill download" onclick="downloadActivePdf()" title="Download PDF file">
+                    <i class="fa-solid fa-download"></i> Download
+                </button>
+                <button type="button" class="pdf-action-pill drive" onclick="openActivePdfInDrive()" title="Open in Google Drive">
+                    <i class="fa-brands fa-google-drive"></i> Open
+                </button>
+            </div>
+        </div>
+
+        <div class="pdf-modal-body" id="pdfModalBody">
+            <div class="pdf-zoom-viewport" id="pdfZoomViewport">
+                <iframe id="pdfViewerFrame" class="pdf-frame" src="" allow="autoplay" loading="lazy"></iframe>
+            </div>
+        </div>
     </div>
 
     <script src="pwa.js?v=20261101" defer></script>

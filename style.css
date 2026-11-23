@@ -2437,3 +2437,359 @@ select option {
     color: #94a3b8;
     border: 1px solid rgba(255, 255, 255, 0.06);
 }
+
+
+/* ==========================================================================
+   WSP Manuals & PDF Viewer Modal
+   ========================================================================== */
+
+/* Search tabs scroll improvement for 5 tabs */
+.search-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+.search-tabs::-webkit-scrollbar {
+    display: none;
+}
+.search-tabs .tab-btn {
+    white-space: nowrap;
+    padding: 0.75rem 0.65rem;
+    font-size: 0.85rem;
+}
+
+/* Manuals Header Card */
+.manuals-header-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.manuals-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.manuals-actions-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-icon-pill {
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-icon-pill:hover {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+/* Manuals Grid */
+.manuals-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+}
+
+@media (min-width: 640px) {
+    .manuals-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.manual-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 4px solid #38bdf8;
+    border-radius: 12px;
+    padding: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.manual-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(56, 189, 248, 0.4);
+    transform: translateY(-2px);
+}
+
+.manual-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.manual-pdf-icon {
+    font-size: 1.8rem;
+    color: #ef4444;
+    flex-shrink: 0;
+}
+
+.manual-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.manual-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin: 0 0 4px 0;
+    word-break: break-word;
+    line-height: 1.35;
+}
+
+.manual-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.manual-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 0.65rem;
+}
+
+.manual-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.manual-btn.view {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+}
+
+.manual-btn.share {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #34d399;
+}
+
+.manual-btn.download {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+}
+
+.manual-btn:hover {
+    filter: brightness(1.15);
+}
+
+/* Fullscreen PDF Viewer Modal */
+.pdf-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #0f172a;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.pdf-modal.hidden {
+    display: none !important;
+}
+
+.pdf-modal-header {
+    background: #1e293b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.6rem 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+}
+
+.pdf-modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+    flex: 1;
+}
+
+.pdf-modal-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pdf-close-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #e2e8f0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.pdf-close-btn:hover {
+    background: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+/* Viewer Toolbar (Zoom, Share, Download) */
+.pdf-modal-toolbar {
+    background: #0b1120;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0.45rem 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.pdf-zoom-group {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 2px;
+}
+
+.pdf-toolbar-btn {
+    background: transparent;
+    border: none;
+    color: #cbd5e1;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s ease;
+}
+
+.pdf-toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+.pdf-zoom-val {
+    font-family: monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #38bdf8;
+    padding: 0 0.4rem;
+    min-width: 44px;
+    text-align: center;
+}
+
+.pdf-action-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.pdf-action-pill {
+    border: none;
+    padding: 0.38rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.pdf-action-pill.share {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+}
+
+.pdf-action-pill.download {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #ffffff;
+}
+
+.pdf-action-pill.drive {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #e2e8f0;
+}
+
+/* Viewport Area */
+.pdf-modal-body {
+    flex: 1;
+    position: relative;
+    overflow: auto;
+    background: #090d16;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    -webkit-overflow-scrolling: touch;
+}
+
+.pdf-zoom-viewport {
+    width: 100%;
+    height: 100%;
+    transform-origin: top center;
+    transition: transform 0.2s ease;
+    display: flex;
+    justify-content: center;
+}
+
+.pdf-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #ffffff;
+}

@@ -1788,18 +1788,23 @@ function switchWspTab(tab) {
     const rakeBtn = document.getElementById('wspTabRake');
     const dateBtn = document.getElementById('wspTabDate');
     const pendingBtn = document.getElementById('wspTabPending');
+    const manualsBtn = document.getElementById('wspTabManuals');
+
     const coachForm = document.getElementById('wspSearchCoachForm');
     const rakeForm = document.getElementById('wspSearchRakeForm');
     const dateForm = document.getElementById('wspSearchDateForm');
+    const manualsArea = document.getElementById('wspManualsArea');
     
     if(coachBtn) coachBtn.classList.remove('active');
     if(rakeBtn) rakeBtn.classList.remove('active');
     if(dateBtn) dateBtn.classList.remove('active');
     if(pendingBtn) pendingBtn.classList.remove('active');
+    if(manualsBtn) manualsBtn.classList.remove('active');
     
     if(coachForm) coachForm.classList.add('hidden');
     if(rakeForm) rakeForm.classList.add('hidden');
     if(dateForm) dateForm.classList.add('hidden');
+    if(manualsArea) manualsArea.classList.add('hidden');
     
     const wspResultScreens = ['wspResultsScreen', 'wspRakeResultsScreen', 'wspDateResultsScreen', 'wspPendingResultsScreen'];
     wspResultScreens.forEach(id => {
@@ -1839,6 +1844,10 @@ function switchWspTab(tab) {
         if(dateBtn) dateBtn.classList.add('active');
         if(dateForm) dateForm.classList.remove('hidden');
         loadWspRecentDates();
+    } else if (tab === 'manuals') {
+        if(manualsBtn) manualsBtn.classList.add('active');
+        if(manualsArea) manualsArea.classList.remove('hidden');
+        loadManualsFromDrive();
     }
 }
 
@@ -3555,4 +3564,372 @@ function showChangelog() {
         color: 'var(--text)',
         confirmButtonColor: 'var(--primary)'
     });
+}
+
+
+// ==========================================================================
+// WSP Manuals & PDF Viewer Logic
+// ==========================================================================
+
+const DEFAULT_WSP_MANUALS_FOLDER_ID = '1ybQuCVbuRzHczorIBP-m-PapvXnrgVAi';
+const DEFAULT_WSP_MANUALS_DRIVE_URL = 'https://drive.google.com/drive/folders/1ybQuCVbuRzHczorIBP-m-PapvXnrgVAi?usp=sharing';
+
+const INITIAL_WSP_MANUALS = [
+    {
+        id: "1ktslZqQRyJbzSzPWpkdI4hs0rTLRL_I9",
+        name: "1. RDSO letter for checking wrong electrical connections in WSP System.pdf",
+        size: 1048576,
+        viewUrl: "https://drive.google.com/file/d/1ktslZqQRyJbzSzPWpkdI4hs0rTLRL_I9/view?usp=sharing",
+        previewUrl: "https://drive.google.com/file/d/1ktslZqQRyJbzSzPWpkdI4hs0rTLRL_I9/preview",
+        downloadUrl: "https://drive.google.com/uc?export=download&id=1ktslZqQRyJbzSzPWpkdI4hs0rTLRL_I9"
+    },
+    {
+        id: "1Vz3sGFxp0jMC90GyTULJTSCXVq2xaW7w",
+        name: "FT WSP D00 ELECTRIC SEHEME.pdf",
+        size: 2097152,
+        viewUrl: "https://drive.google.com/file/d/1Vz3sGFxp0jMC90GyTULJTSCXVq2xaW7w/view?usp=sharing",
+        previewUrl: "https://drive.google.com/file/d/1Vz3sGFxp0jMC90GyTULJTSCXVq2xaW7w/preview",
+        downloadUrl: "https://drive.google.com/uc?export=download&id=1Vz3sGFxp0jMC90GyTULJTSCXVq2xaW7w"
+    },
+    {
+        id: "1DXxAyjgc2rQDO_yUzOo3uqbZEAKYZxuQ",
+        name: "GE card connector drawing.pdf",
+        size: 1572864,
+        viewUrl: "https://drive.google.com/file/d/1DXxAyjgc2rQDO_yUzOo3uqbZEAKYZxuQ/view?usp=sharing",
+        previewUrl: "https://drive.google.com/file/d/1DXxAyjgc2rQDO_yUzOo3uqbZEAKYZxuQ/preview",
+        downloadUrl: "https://drive.google.com/uc?export=download&id=1DXxAyjgc2rQDO_yUzOo3uqbZEAKYZxuQ"
+    },
+    {
+        id: "1GElgeGqip4lYBO7--6Qx0k7zrAf5LgrH",
+        name: "n2 card connector drawing.pdf",
+        size: 1572864,
+        viewUrl: "https://drive.google.com/file/d/1GElgeGqip4lYBO7--6Qx0k7zrAf5LgrH/view?usp=sharing",
+        previewUrl: "https://drive.google.com/file/d/1GElgeGqip4lYBO7--6Qx0k7zrAf5LgrH/preview",
+        downloadUrl: "https://drive.google.com/uc?export=download&id=1GElgeGqip4lYBO7--6Qx0k7zrAf5LgrH"
+    }
+];
+
+let currentManualsList = [...INITIAL_WSP_MANUALS];
+let activePdfManual = null;
+let pdfZoomScale = 1.0;
+
+function formatFileSize(bytes) {
+    if (!bytes || isNaN(bytes)) return '';
+    if (bytes < 1024) return bytes + ' B';
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
+}
+
+function getActiveDriveFolderId() {
+    return localStorage.getItem('coachdb_manuals_folder_id') || DEFAULT_WSP_MANUALS_FOLDER_ID;
+}
+
+function getActiveDriveFolderUrl() {
+    return localStorage.getItem('coachdb_manuals_drive_url') || DEFAULT_WSP_MANUALS_DRIVE_URL;
+}
+
+async function loadManualsFromDrive(forceRefresh = false) {
+    const loadingEl = document.getElementById('manualsLoading');
+    const errorEl = document.getElementById('manualsError');
+    const container = document.getElementById('manualsListContainer');
+
+    if (loadingEl) loadingEl.classList.remove('hidden');
+    if (errorEl) errorEl.classList.add('hidden');
+
+    const folderId = getActiveDriveFolderId();
+
+    try {
+        if (!forceRefresh) {
+            const cached = localStorage.getItem('coachdb_cached_manuals_' + folderId);
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        currentManualsList = parsed;
+                        renderManuals(currentManualsList);
+                        if (loadingEl) loadingEl.classList.add('hidden');
+                        return;
+                    }
+                } catch (e) {}
+            }
+        }
+
+        const url = `${GOOGLE_APP_SCRIPT_URL}?action=getManuals&folderId=${encodeURIComponent(folderId)}`;
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.status === 'success' && Array.isArray(result.data) && result.data.length > 0) {
+            currentManualsList = result.data;
+            localStorage.setItem('coachdb_cached_manuals_' + folderId, JSON.stringify(result.data));
+            renderManuals(currentManualsList);
+        } else {
+            if (folderId === DEFAULT_WSP_MANUALS_FOLDER_ID) {
+                currentManualsList = [...INITIAL_WSP_MANUALS];
+                renderManuals(currentManualsList);
+            } else {
+                if (container) {
+                    container.innerHTML = `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-folder-open" style="font-size: 2.5rem; color: #f59e0b; margin-bottom: 0.75rem; display: block;"></i>
+                            <h4 style="color: #fff; margin-bottom: 0.25rem;">No PDFs Found</h4>
+                            <p style="font-size: 0.85rem; margin-bottom: 1rem;">No PDF files found in this Google Drive folder, or the Apps Script is still deploying.</p>
+                            <a href="${getActiveDriveFolderUrl()}" target="_blank" rel="noopener" class="btn primary-btn" style="display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="fa-brands fa-google-drive"></i> Open Folder in Drive
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+        }
+    } catch (err) {
+        console.warn('Could not query Apps Script for manuals, using preloaded catalog:', err);
+        if (folderId === DEFAULT_WSP_MANUALS_FOLDER_ID) {
+            currentManualsList = [...INITIAL_WSP_MANUALS];
+            renderManuals(currentManualsList);
+        } else {
+            if (errorEl) {
+                errorEl.textContent = 'Could not load manuals live: ' + err.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+    } finally {
+        if (loadingEl) loadingEl.classList.add('hidden');
+    }
+}
+
+function renderManuals(list) {
+    const container = document.getElementById('manualsListContainer');
+    if (!container) return;
+
+    if (!list || list.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
+                <i class="fa-solid fa-magnifying-glass" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem; display: block;"></i>
+                <p style="margin: 0; font-size: 0.9rem;">No manuals match your search query.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = '';
+    list.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'manual-card slide-up';
+
+        const sizeStr = formatFileSize(item.size);
+
+        card.innerHTML = `
+            <div class="manual-card-header">
+                <i class="fa-solid fa-file-pdf manual-pdf-icon"></i>
+                <div class="manual-info">
+                    <h4 class="manual-name">${escapeHtml(item.name)}</h4>
+                    <div class="manual-meta">
+                        <span><i class="fa-regular fa-file"></i> PDF Document</span>
+                        ${sizeStr ? `<span>&bull; ${sizeStr}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+            <div class="manual-card-actions">
+                <button type="button" class="manual-btn view" onclick="openPdfViewer('${item.id}')">
+                    <i class="fa-solid fa-eye"></i> View
+                </button>
+                <button type="button" class="manual-btn share" onclick="shareManualById('${item.id}')">
+                    <i class="fa-solid fa-share-nodes"></i> Share
+                </button>
+                <button type="button" class="manual-btn download" onclick="downloadManualById('${item.id}')">
+                    <i class="fa-solid fa-download"></i> Download
+                </button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function filterManualsList() {
+    const query = (document.getElementById('manualsSearchInput')?.value || '').toLowerCase().trim();
+    if (!query) {
+        renderManuals(currentManualsList);
+        return;
+    }
+    const filtered = currentManualsList.filter(m => (m.name || '').toLowerCase().includes(query));
+    renderManuals(filtered);
+}
+
+function openDriveConfigModal() {
+    const currentUrl = getActiveDriveFolderUrl();
+
+    Swal.fire({
+        title: 'Google Drive Folder Link',
+        html: `
+            <div style="text-align: left; font-size: 0.88rem; color: #cbd5e1;">
+                <p style="margin-bottom: 0.75rem;">Paste the public link to your Google Drive folder containing PDF manuals. Ensure folder sharing is set to <b>"Anyone with the link can view"</b>.</p>
+                <div class="input-group" style="margin-bottom: 0.5rem;">
+                    <i class="fa-brands fa-google-drive input-icon"></i>
+                    <input type="url" id="swalDriveUrlInput" class="app-input" value="${currentUrl}" placeholder="https://drive.google.com/drive/folders/..." style="width: 100%;">
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Save & Refresh',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: 'var(--primary)',
+        background: 'rgba(30, 41, 59, 0.98)',
+        color: 'var(--text)',
+        preConfirm: () => {
+            const inputVal = document.getElementById('swalDriveUrlInput')?.value.trim();
+            if (!inputVal) {
+                Swal.showValidationMessage('Please enter a Google Drive link or ID.');
+                return false;
+            }
+            const match = inputVal.match(/[-\w]{25,}/);
+            if (!match) {
+                Swal.showValidationMessage('Could not extract a valid Google Drive folder ID.');
+                return false;
+            }
+            return { url: inputVal, folderId: match[0] };
+        }
+    }).then(result => {
+        if (result.isConfirmed && result.value) {
+            localStorage.setItem('coachdb_manuals_drive_url', result.value.url);
+            localStorage.setItem('coachdb_manuals_folder_id', result.value.folderId);
+            Swal.fire({
+                icon: 'success',
+                title: 'Drive Linked!',
+                text: 'Loading PDF manuals from the new folder...',
+                timer: 1500,
+                showConfirmButton: false,
+                background: 'rgba(30, 41, 59, 0.98)',
+                color: 'var(--text)'
+            });
+            loadManualsFromDrive(true);
+        }
+    });
+}
+
+function findManualById(id) {
+    return currentManualsList.find(m => m.id === id) || INITIAL_WSP_MANUALS.find(m => m.id === id);
+}
+
+function openPdfViewer(id) {
+    const manual = findManualById(id);
+    if (!manual) return;
+
+    activePdfManual = manual;
+    const modal = document.getElementById('pdfViewerModal');
+    const titleEl = document.getElementById('pdfViewerTitle');
+    const frame = document.getElementById('pdfViewerFrame');
+
+    if (titleEl) titleEl.textContent = manual.name;
+    if (frame) frame.src = manual.previewUrl;
+
+    resetPdfZoom();
+
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closePdfViewer() {
+    const modal = document.getElementById('pdfViewerModal');
+    const frame = document.getElementById('pdfViewerFrame');
+
+    if (frame) frame.src = 'about:blank';
+    if (modal) modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    activePdfManual = null;
+}
+
+function zoomPdf(delta) {
+    pdfZoomScale = Math.min(3.0, Math.max(0.5, pdfZoomScale + delta));
+    const zoomValEl = document.getElementById('pdfZoomVal');
+    const viewport = document.getElementById('pdfZoomViewport');
+
+    if (zoomValEl) zoomValEl.textContent = Math.round(pdfZoomScale * 100) + '%';
+    if (viewport) {
+        viewport.style.transform = `scale(${pdfZoomScale})`;
+    }
+}
+
+function resetPdfZoom() {
+    pdfZoomScale = 1.0;
+    const zoomValEl = document.getElementById('pdfZoomVal');
+    const viewport = document.getElementById('pdfZoomViewport');
+
+    if (zoomValEl) zoomValEl.textContent = '100%';
+    if (viewport) {
+        viewport.style.transform = 'scale(1)';
+    }
+}
+
+function shareActivePdf() {
+    if (!activePdfManual) return;
+    shareManualObject(activePdfManual);
+}
+
+function shareManualById(id) {
+    const manual = findManualById(id);
+    if (manual) shareManualObject(manual);
+}
+
+function shareManualObject(manual) {
+    const shareUrl = manual.viewUrl || manual.previewUrl || `https://drive.google.com/file/d/${manual.id}/view?usp=sharing`;
+
+    if (navigator.share) {
+        navigator.share({
+            title: manual.name,
+            text: `Railway WSP Manual: ${manual.name}`,
+            url: shareUrl
+        }).catch(err => {
+            if (err.name !== 'AbortError') copyPdfLink(shareUrl);
+        });
+    } else {
+        copyPdfLink(shareUrl);
+    }
+}
+
+function copyPdfLink(url) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'PDF Link copied to clipboard!',
+                showConfirmButton: false,
+                timer: 2000,
+                background: 'var(--surface)',
+                color: 'var(--text)'
+            });
+        });
+    } else {
+        window.prompt('Copy PDF link:', url);
+    }
+}
+
+function downloadActivePdf() {
+    if (!activePdfManual) return;
+    downloadManualObject(activePdfManual);
+}
+
+function downloadManualById(id) {
+    const manual = findManualById(id);
+    if (manual) downloadManualObject(manual);
+}
+
+function downloadManualObject(manual) {
+    const dlUrl = manual.downloadUrl || `https://drive.google.com/uc?export=download&id=${manual.id}`;
+    const a = document.createElement('a');
+    a.href = dlUrl;
+    a.target = '_blank';
+    a.download = manual.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+function openActivePdfInDrive() {
+    if (!activePdfManual) return;
+    const driveUrl = activePdfManual.viewUrl || `https://drive.google.com/file/d/${activePdfManual.id}/view?usp=sharing`;
+    window.open(driveUrl, '_blank');
 }
