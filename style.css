@@ -235,6 +235,15 @@ input, select {
     width: 100%;
 }
 
+input[type="date"] {
+    color-scheme: dark;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.85);
+    cursor: pointer;
+}
+
 select option {
     background: var(--background);
     color: var(--text);

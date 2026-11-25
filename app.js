@@ -7217,9 +7217,19 @@ _Generated from Coach Database PWA_`;
 
                 setField('pohRailway', coach['RLY'] || coach['Rly'] || '');
                 setField('pohCoachType', coach['TYPE'] || coach['Coach Type'] || '');
-                setField('pohDomDoc', coach['POH/DOM'] || coach['DOM'] || '');
+                const rawDom = coach['POH/DOM'] || coach['DOM'] || coach['DOC'] || '';
+                if (rawDom) {
+                    const isoDom = parseToIsoDate(rawDom);
+                    if (isoDom) setField('pohDomDoc', isoDom);
+                    else setField('pohDomDoc', rawDom);
+                }
                 setField('pohShop', coach['SHOP/DOC'] || coach['DOC'] || '');
-                setField('pohRD', coach['R/DATE'] || coach['RD'] || '');
+                const rawRd = coach['R/DATE'] || coach['RD'] || '';
+                if (rawRd) {
+                    const isoRd = parseToIsoDate(rawRd);
+                    if (isoRd) setField('pohRD', isoRd);
+                    else setField('pohRD', rawRd);
+                }
 
                 const rawSs2 = coach['Next SS2 Due'] || coach['SS2'] || coach['SS2 Date'] || '';
                 if (rawSs2) {
@@ -7510,6 +7520,11 @@ _Generated from Coach Database PWA_`;
     function buildPohSurveyPdfHtml(data) {
         const esc = (v) => escapeHtml(v || '-');
 
+        const formatPdfDate = (v) => {
+            if (!v || v === '-') return '-';
+            return typeof formatDateDMY === 'function' ? formatDateDMY(v) : v;
+        };
+
         // Part 1: Base 63 General Survey Fields
         const baseRowsHtml = DEFAULT_POH_SURVEY_HEADERS.map((key, idx) => {
             const val = data[key] || '-';
@@ -7519,7 +7534,7 @@ _Generated from Coach Database PWA_`;
                 <tr>
                     <td style="width: 6%; text-align: center; color: #64748b; font-weight: 700;">${idx + 1}</td>
                     <td class="poh-pdf-td-label">${esc(key)}</td>
-                    <td class="poh-pdf-td-val" style="${valStyle}">${esc(val)}</td>
+                    <td class="poh-pdf-td-val" style="${valStyle}">${esc((['DOM/DOC', 'RD', 'SS2/SS3 Date'].includes(key) && val && val !== '-') ? formatPdfDate(val) : val)}</td>
                 </tr>
             `;
         }).join('');
@@ -7529,10 +7544,9 @@ _Generated from Coach Database PWA_`;
             const rawKey = key.replace(/^CAI - /, '');
             const val = data[key] || data[rawKey] || '-';
             let badgeStyle = 'color: #475569; font-weight: 600;';
-            if (val === 'Complied') badgeStyle = 'color: #059669; font-weight: 700;';
-            else if (val === 'Not Complied') badgeStyle = 'color: #dc2626; font-weight: 700;';
-            else if (val === 'Work in Progress') badgeStyle = 'color: #d97706; font-weight: 700;';
-            else if (val.includes('NA') || val.includes('Not Applicable')) badgeStyle = 'color: #64748b; font-weight: 500;';
+                        if (val === 'Modified') badgeStyle = 'color: #059669; font-weight: 700;';
+            else if (val === 'Not Modified') badgeStyle = 'color: #dc2626; font-weight: 700;';
+            else if (val === 'Not Applicable' || val.includes('NA') || val.includes('Not Applicable')) badgeStyle = 'color: #64748b; font-weight: 500;';
 
             return `
                 <tr>
@@ -7556,7 +7570,7 @@ _Generated from Coach Database PWA_`;
                 <div class="poh-pdf-meta-box">
                     <span>COACH: <strong>${esc(data['COACH NUMBER'])} (${esc(data['RAILWAY'])} ${esc(data['COACH TYPE'])})</strong></span>
                     <span>SHOP: <strong>${esc(data['SS2/SS3 SHOP'])}</strong></span>
-                    <span>DOM/DOC: <strong>${esc(data['DOM/DOC'])}</strong></span>
+                    <span>DOM/DOC: <strong>${esc(formatPdfDate(data['DOM/DOC']))}</strong></span>
                     <span>SURVEY DATE: <strong>${esc(data['Timestamp'])}</strong></span>
                 </div>
 

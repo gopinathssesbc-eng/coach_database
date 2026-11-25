@@ -647,7 +647,7 @@
                         </div>
                         <div class="form-group">
                             <label for="pohDomDoc">DOM/DOC</label>
-                            <input type="text" id="pohDomDoc" name="DOM/DOC" class="app-input" placeholder="e.g. 15-08-2019">
+                            <input type="date" id="pohDomDoc" name="DOM/DOC" class="app-input" onclick="this.showPicker()">
                         </div>
                         <div class="form-group">
                             <label for="pohShop">SS2/SS3 SHOP</label>
@@ -662,7 +662,7 @@
                         </div>
                         <div class="form-group">
                             <label for="pohRD">RD (Return Date)</label>
-                            <input type="text" id="pohRD" name="RD" class="app-input" placeholder="e.g. 15-08-2025">
+                            <input type="date" id="pohRD" name="RD" class="app-input" onclick="this.showPicker()">
                         </div>
                         <div class="form-group">
                             <label for="pohTare">TARE (Tonnes)</label>
@@ -1111,10 +1111,10 @@
                             </div>
                         </div>
                         <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                            <button type="button" class="btn btn-sm" onclick="setPohAllCai('Complied')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; cursor: pointer;">
-                                <i class="fa-solid fa-check-double"></i> All Complied
+                            <button type="button" class="btn btn-sm" onclick="setPohAllCai('Modified')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; cursor: pointer;">
+                                <i class="fa-solid fa-check-double"></i> All Modified
                             </button>
-                            <button type="button" class="btn btn-sm" onclick="setPohAllCai('Not Applicable (NA)')" style="background: rgba(100, 116, 139, 0.2); border: 1px solid rgba(100, 116, 139, 0.4); color: #cbd5e1; padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; cursor: pointer;">
+                            <button type="button" class="btn btn-sm" onclick="setPohAllCai('Not Applicable')" style="background: rgba(100, 116, 139, 0.2); border: 1px solid rgba(100, 116, 139, 0.4); color: #cbd5e1; padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; cursor: pointer;">
                                 <i class="fa-solid fa-ban"></i> All NA
                             </button>
                             <button type="button" class="btn btn-sm" onclick="setPohAllCai('')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; cursor: pointer;">
@@ -1140,10 +1140,9 @@
                             </div>
                             <select id="poh_cai_1" name="CAI - Retrofitment of additional water filling arrangement in LHB type coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="2">
@@ -1153,10 +1152,9 @@
                             </div>
                             <select id="poh_cai_2" name="CAI - Standardization of water filling assembly for LHB type AC and including power car and SCN EOG coaches to avoid the problem of spillage of water on platform" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="3">
@@ -1166,10 +1164,9 @@
                             </div>
                             <select id="poh_cai_3" name="CAI - Modification for shifting of EPPFS from underslung to onboard" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="4">
@@ -1179,10 +1176,9 @@
                             </div>
                             <select id="poh_cai_4" name="CAI - Modification of foot operated valve fitted inside and outside to pressmatic type in LWACCNE coaches and Amrit Bharat coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="5">
@@ -1192,10 +1188,9 @@
                             </div>
                             <select id="poh_cai_5" name="CAI - Retrofitment of NRV- 1/4&quot; in between the isolating cock and air filter regulator lubricator (AFRL) unit of EPPFS in LHB coach for preventing water ingress from EPPFS to air brake pipeline" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="6">
@@ -1205,10 +1200,9 @@
                             </div>
                             <select id="poh_cai_6" name="CAI - Retrofitment of metallic Y Strainer in SS water inlet line for the water pressurization system of EPPFS of MCF Specs MMDTS 19027 Rev-1 to Rev-3" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="7">
@@ -1218,10 +1212,9 @@
                             </div>
                             <select id="poh_cai_7" name="CAI - Provision of isolation cock in plumbing lines of FRP modular toilet" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="8">
@@ -1231,10 +1224,9 @@
                             </div>
                             <select id="poh_cai_8" name="CAI - Provision of locking strip with Hexogonal Head Screw to avoid loosening of Roof Ventilator in RCF made coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="9">
@@ -1244,10 +1236,9 @@
                             </div>
                             <select id="poh_cai_9" name="CAI - Provision of protection cover over Passenger Emergency Alarm Pull Box in LHB coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="10">
@@ -1257,10 +1248,9 @@
                             </div>
                             <select id="poh_cai_10" name="CAI - Tail Lamp Bracket on End wall of LHB SLR, Power Car &amp; LVPH" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="11">
@@ -1270,10 +1260,9 @@
                             </div>
                             <select id="poh_cai_11" name="CAI - Replacement of catch arrangement of backrest cum berth in LFAC coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="12">
@@ -1283,10 +1272,9 @@
                             </div>
                             <select id="poh_cai_12" name="CAI - Standardization of 2 Amp circuit breaker in FSDS system for IR AC Coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="13">
@@ -1296,10 +1284,9 @@
                             </div>
                             <select id="poh_cai_13" name="CAI - Segregation of positive and negative cables in separate conduits for FSDSsystems" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="14">
@@ -1309,10 +1296,9 @@
                             </div>
                             <select id="poh_cai_14" name="CAI - Power supply from SBC panel for FSDS System." class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="15">
@@ -1322,10 +1308,9 @@
                             </div>
                             <select id="poh_cai_15" name="CAI - Standardized location for fitment of automatic FSDS system in AC coaches. (Partition of Linen Cabinet for FSDS)" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="16">
@@ -1335,10 +1320,9 @@
                             </div>
                             <select id="poh_cai_16" name="CAI - Retrofitment/fitment of aspiration type Automatic Smoke/Fire Detection with Alarm System in IR AC Coaches." class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="17">
@@ -1348,10 +1332,9 @@
                             </div>
                             <select id="poh_cai_17" name="CAI - Locking arrangement of isolating cock of FDAS in LHB AC coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="18">
@@ -1361,10 +1344,9 @@
                             </div>
                             <select id="poh_cai_18" name="CAI - 100% conversion from manual to automatic FDSS/FSDS in pantry cars, power cars and AC Coaches." class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="19">
@@ -1374,10 +1356,9 @@
                             </div>
                             <select id="poh_cai_19" name="CAI - Integration of FSDS with Braking System in AC Coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="20">
@@ -1387,10 +1368,9 @@
                             </div>
                             <select id="poh_cai_20" name="CAI - Revised wiring scheme for WSP system of LHB Coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="21">
@@ -1400,10 +1380,9 @@
                             </div>
                             <select id="poh_cai_21" name="CAI - Standardized installation of WSP junction box &amp; Speed sensor cables in LHB coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="22">
@@ -1413,10 +1392,9 @@
                             </div>
                             <select id="poh_cai_22" name="CAI - Implementation of CAI regarding lavatory wash basin drain outlet pipe laying for waste water" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="23">
@@ -1426,10 +1404,9 @@
                             </div>
                             <select id="poh_cai_23" name="CAI - Provision of wire rope mechanism for QRV of DV in LHB coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="24">
@@ -1439,10 +1416,9 @@
                             </div>
                             <select id="poh_cai_24" name="CAI - Projection of BP and FP metal pipe from headstock as specified" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="25">
@@ -1452,10 +1428,9 @@
                             </div>
                             <select id="poh_cai_25" name="CAI - Modification of Wheelset Earthing Equipment - Provision of double threaded Stainless steel insert in front cover and brush holder assembly mounting arrangement" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="26">
@@ -1465,10 +1440,9 @@
                             </div>
                             <select id="poh_cai_26" name="CAI - Covering of gap above doorway partitiion frame for LHB GS coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="27">
@@ -1478,10 +1452,9 @@
                             </div>
                             <select id="poh_cai_27" name="CAI - Relocation of Chlorine filter in IR DRDO BioDigester in LHB type coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="28">
@@ -1491,10 +1464,9 @@
                             </div>
                             <select id="poh_cai_28" name="CAI - Provision of additional brake indicator inside the coaches fitted with hand brake arrangement" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="29">
@@ -1504,10 +1476,9 @@
                             </div>
                             <select id="poh_cai_29" name="CAI - Provision of additional dirt collector in BP line before FIBA" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="30">
@@ -1517,10 +1488,9 @@
                             </div>
                             <select id="poh_cai_30" name="CAI - Implementation of modified Pneumatic Piping arrangement to relocate ACP isolation cock / valve in order to make it accessible with in a hand-stretch distance" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="31">
@@ -1530,10 +1500,9 @@
                             </div>
                             <select id="poh_cai_31" name="CAI - Change of material of vestibule footplate to AISI304 in LHB Type Coaches (RCF Built)" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="32">
@@ -1543,10 +1512,9 @@
                             </div>
                             <select id="poh_cai_32" name="CAI - LHB coaches with provision of TPU rings in suspension arrangements." class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="33">
@@ -1556,10 +1524,9 @@
                             </div>
                             <select id="poh_cai_33" name="CAI - Material specification altered from MS to Stainless steel for Foot plates (ICF Built)" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="34">
@@ -1569,10 +1536,9 @@
                             </div>
                             <select id="poh_cai_34" name="CAI - Additional lifting pad blocks to be welded adjacent ot the existing lifting pad in underframe" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="35">
@@ -1582,10 +1548,9 @@
                             </div>
                             <select id="poh_cai_35" name="CAI - Modification of primary suspension of LWACCN coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="36">
@@ -1595,10 +1560,9 @@
                             </div>
                             <select id="poh_cai_36" name="CAI - Installation of lookout glass for DETC/US observation window" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="37">
@@ -1608,10 +1572,9 @@
                             </div>
                             <select id="poh_cai_37" name="CAI - Closing of louvre of cab door in DTC of Vande Bharat, to prevent entry of outside air" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="38">
@@ -1621,10 +1584,9 @@
                             </div>
                             <select id="poh_cai_38" name="CAI - Provision of space for parking of Serving Trolley Arrangement except DTC coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="39">
@@ -1634,10 +1596,9 @@
                             </div>
                             <select id="poh_cai_39" name="CAI - Replacement of valves in water pipeline (suction and supply line) USBRL Coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="40">
@@ -1647,10 +1608,9 @@
                             </div>
                             <select id="poh_cai_40" name="CAI - Provision of mesh cover on the reservoir of the brake panel in LHB coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="41">
@@ -1660,10 +1620,9 @@
                             </div>
                             <select id="poh_cai_41" name="CAI - Improvement in Reliability of Stiffener plate to prevent blanking" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="42">
@@ -1673,10 +1632,9 @@
                             </div>
                             <select id="poh_cai_42" name="CAI - Provision of locking arrangement in saloon sliding door of LHB 1st AC coach - swivel type lock" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="43">
@@ -1686,10 +1644,9 @@
                             </div>
                             <select id="poh_cai_43" name="CAI - Door handle set &amp; latch indicators arrangement replacement work in all lavatory doors" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="44">
@@ -1699,10 +1656,9 @@
                             </div>
                             <select id="poh_cai_44" name="CAI - Ensuring provision of tertiary locking pin arrangement in AAR H type tight lock CBC with BDG" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="45">
@@ -1712,10 +1668,9 @@
                             </div>
                             <select id="poh_cai_45" name="CAI - Closing of holes around plumbing pipeline in Underframe for modular toilet and pantry equipments" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="46">
@@ -1725,10 +1680,9 @@
                             </div>
                             <select id="poh_cai_46" name="CAI - Retro fitment /fitment of Aspiration type Automatic FDAS in IR AC coaches to RDSO spec no. RDSO-2008-CG-04 (Rev. 5)" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="47">
@@ -1738,10 +1692,9 @@
                             </div>
                             <select id="poh_cai_47" name="CAI - Provision of additional foldable berth in Non-LHB (ICF) AC coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="48">
@@ -1751,10 +1704,9 @@
                             </div>
                             <select id="poh_cai_48" name="CAI - SAE 100 R3 type hose pipes in place of SAE 100 R1 AT (less flexible) to be used" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="49">
@@ -1764,10 +1716,9 @@
                             </div>
                             <select id="poh_cai_49" name="CAI - Provision of Dog Box in guard room of LHB power car coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="50">
@@ -1777,10 +1728,9 @@
                             </div>
                             <select id="poh_cai_50" name="CAI - Provision of FRP cover sheet to avoid passing of waste material outside of dust bin area between attachment wall and modular wall near outside wash basin area" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                         <div class="poh-cai-item" data-cai-index="51">
@@ -1790,10 +1740,9 @@
                             </div>
                             <select id="poh_cai_51" name="CAI - Modification in AEFG2 WSP system of Ms FTRTIPL make of LHB coaches" class="app-input poh-cai-select">
                                 <option value="">Select Status</option>
-                                <option value="Complied">Complied</option>
-                                <option value="Not Complied">Not Complied</option>
-                                <option value="Not Applicable (NA)">Not Applicable (NA)</option>
-                                <option value="Work in Progress">Work in Progress</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="Not Applicable">Not Applicable</option>
                             </select>
                         </div>
                     </div>
