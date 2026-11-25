@@ -3,22 +3,33 @@
 
 let deferredPrompt = null;
 let newWorker = null;
+let updateRequestedByUser = false;
 
 // Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
+        // Track whether an active controller was already present on page load
+        const hadInitialController = !!navigator.serviceWorker.controller;
+
         navigator.serviceWorker.register('./sw.js', { scope: './' })
             .then((registration) => {
                 console.log('[PWA] Service Worker registered successfully with scope:', registration.scope);
+
+                // If an update is already waiting from previous session
+                if (registration.waiting && navigator.serviceWorker.controller) {
+                    console.log('[PWA] Service Worker update is waiting.');
+                    newWorker = registration.waiting;
+                    showUpdateNotification();
+                }
 
                 // Check for updates
                 registration.addEventListener('updatefound', () => {
                     const installingWorker = registration.installing;
                     if (installingWorker) {
                         installingWorker.addEventListener('statechange', () => {
+                            // Only prompt for update if an active controller already exists (an update, not initial install)
                             if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // New update ready
-                                console.log('[PWA] New version installed and ready.');
+                                console.log('[PWA] New version installed and waiting for user reload.');
                                 newWorker = installingWorker;
                                 showUpdateNotification();
                             }
@@ -30,10 +41,14 @@ if ('serviceWorker' in navigator) {
                 console.error('[PWA] Service Worker registration failed:', error);
             });
 
-        // Ensure refresh once new SW takes control
+        // Ensure refresh ONLY when an update is explicitly initiated by the user
         let refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
+            // Guard: Never auto-reload on initial service worker installation/activation
+            if (!hadInitialController) return;
+
+            // Guard: Only reload if the user triggered the update via the Reload/Update button
+            if (updateRequestedByUser && !refreshing) {
                 refreshing = true;
                 window.location.reload();
             }
@@ -51,6 +66,7 @@ function showUpdateNotification() {
 
 // Trigger Update Reload
 function applyPwaUpdate() {
+    updateRequestedByUser = true;
     if (newWorker) {
         newWorker.postMessage({ type: 'SKIP_WAITING' });
     } else {

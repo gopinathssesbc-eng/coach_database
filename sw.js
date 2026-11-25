@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coach-db-pwa-v75';
+const CACHE_NAME = 'coach-db-pwa-v76';
 
 // Core local shell assets to pre-cache on install
 const PRECACHE_ASSETS = [
@@ -6,6 +6,7 @@ const PRECACHE_ASSETS = [
     './index.html',
     './style.css',
     './app.js',
+    './pwa.js',
     './html2pdf.bundle.min.js',
     './manifest.json',
     './favicon.ico',
@@ -52,7 +53,7 @@ self.addEventListener('install', (event) => {
                     console.warn('[SW] Could not pre-cache CDN asset:', url, err);
                 }
             }
-        }).then(() => self.skipWaiting())
+        })
     );
 });
 
