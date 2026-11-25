@@ -692,10 +692,15 @@ function handleAppBack() {
         return true;
     }
 
-    // 2. WSP PDF Preview modal open?
+    // 2. WSP / POH PDF Preview modal open?
     const pdfPreview = document.getElementById('wspPdfPreviewModal');
     if (pdfPreview && !pdfPreview.classList.contains('hidden') && pdfPreview.style.display !== 'none') {
         closeWspPdfPreviewModal(true);
+        return true;
+    }
+    const pohPdfPreview = document.getElementById('pohPdfPreviewModal');
+    if (pohPdfPreview && !pohPdfPreview.classList.contains('hidden') && pohPdfPreview.style.display !== 'none') {
+        closePohPdfPreviewModal(true);
         return true;
     }
 
@@ -7087,6 +7092,34 @@ _Generated from Coach Database PWA_`;
     // SS2 / POH SURVEY MODULE LOGIC & PDF ENGINE
     // ==========================================
 
+    const DEFAULT_POH_SURVEY_HEADERS = [
+        "Email address", "Timestamp", "RAILWAY", "COACH TYPE", "COACH NUMBER", "PU",
+        "DOM/DOC", "SS2/SS3 SHOP", "RD", "TARE", "KMPH", "CCTV MAKE / number of CCTV",
+        "DUAL WATER FILLING", "TYPE OF TOILET", "PFS MAKE",
+        "PROVISION OF BYPASS ARRANGEMENT IN FLUSHING",
+        "EPPFS/PPFS WATER PRESSURIZER LOCATION", "NRV IN FO LINE",
+        "WASHBASIN DRAIN OUT PIPE MOD.", "RFID", "TYPE OF WATER REFILLING",
+        "PROVISION OF PAPIS & STATUS", "HASP/SMOKE SAMPLING POINTS  LAVOTORY",
+        "PROVISION OF VENTURI ARRAGEMENT", "FIRE DETECTION SYSTEM/FDSS MAKE",
+        "FIRE SUPPSSION SYSTEM TYPE", "BRAKE VALVE", "PROVISION OF BRAILLE SIGNAGE",
+        "TYPE OF WINDOW", "DOG BOX IN POWER CAR & SLRD",
+        "PROVISION OF ODOUR CONTROL SYSTEM", "PROVISION OF ANY SMART MIRROR",
+        "N2 CYLINDER OPERATION PROTECTION", "EMERGENCY WINDOW HANDLE", "ACP COVER",
+        "RUBBER WASHER BETWEEN S TRAP AND COMMODE CHUTE", "BRAKE SYSTEM MAKE & DV N0",
+        "TYPE OF SPRING SECONDARY SUSPENSION", "AIR SPRING MAKE & CAPACITY",
+        "LEVELING VALVE MAKE", "FIBA PIPE LINE MODIFICATION IN UF", "TPU IN PS",
+        "TPU IN SS", "PROVISION OF FIBA PIPE LINE R1 TO R3", "FIBA DC MODIFICATION",
+        "BOGIE FRAME IDENTIFICATION BASED ON PRIMARY VERTICAL BUMP STOP HEIGHT",
+        "FIBA MAKE", "WIRE ROPE MOD. FOR QRV", "AIRBRAKE HOSE MOD.", "CBC MAKE",
+        "PROVISION OF TRANSITION COUPLING FOR LWLRRM",
+        "PROVISION OF TERTIARY LOCKING PIN FOR CBC",
+        "PROJECTION OF BP(140MM),FP(200MM)METAL PIPES FROM HEADSTOCK",
+        "SPEED SENSOR J.B. ORIENTATION", "SPEED SENSOR J.B. ROUTING",
+        "SS JB PROTECTION COVER MODIFICATION", "PROVISION OF MIL GRADE CONNECTOR",
+        "MINI PANTRY", "FDS VESDA BEDROLL COMPARTMENT MOD.", "DEFICIENCY IF ANY",
+        "ANY NEW FEATURE", "REMARKS", "SS2/SS3 Date"
+    ];
+
     const DEFAULT_CAI_HEADERS = [
         "CAI - Retrofitment of additional water filling arrangement in LHB type coaches",
         "CAI - Standardization of water filling assembly for LHB type AC and including power car and SCN EOG coaches to avoid the problem of spillage of water on platform",
@@ -7139,36 +7172,9 @@ _Generated from Coach Database PWA_`;
         "CAI - Provision of Dog Box in guard room of LHB power car coaches",
         "CAI - Provision of FRP cover sheet to avoid passing of waste material outside of dust bin area between attachment wall and modular wall near outside wash basin area",
         "CAI - Modification in AEFG2 WSP system of Ms FTRTIPL make of LHB coaches"
-];
+    ];
 
     const ALL_POH_SURVEY_HEADERS = DEFAULT_POH_SURVEY_HEADERS.concat(DEFAULT_CAI_HEADERS);
-    const DEFAULT_POH_SURVEY_HEADERS = [
-        "Email address", "Timestamp", "RAILWAY", "COACH TYPE", "COACH NUMBER", "PU",
-        "DOM/DOC", "SS2/SS3 SHOP", "RD", "TARE", "KMPH", "CCTV MAKE / number of CCTV",
-        "DUAL WATER FILLING", "TYPE OF TOILET", "PFS MAKE",
-        "PROVISION OF BYPASS ARRANGEMENT IN FLUSHING",
-        "EPPFS/PPFS WATER PRESSURIZER LOCATION", "NRV IN FO LINE",
-        "WASHBASIN DRAIN OUT PIPE MOD.", "RFID", "TYPE OF WATER REFILLING",
-        "PROVISION OF PAPIS & STATUS", "HASP/SMOKE SAMPLING POINTS  LAVOTORY",
-        "PROVISION OF VENTURI ARRAGEMENT", "FIRE DETECTION SYSTEM/FDSS MAKE",
-        "FIRE SUPPSSION SYSTEM TYPE", "BRAKE VALVE", "PROVISION OF BRAILLE SIGNAGE",
-        "TYPE OF WINDOW", "DOG BOX IN POWER CAR & SLRD",
-        "PROVISION OF ODOUR CONTROL SYSTEM", "PROVISION OF ANY SMART MIRROR",
-        "N2 CYLINDER OPERATION PROTECTION", "EMERGENCY WINDOW HANDLE", "ACP COVER",
-        "RUBBER WASHER BETWEEN S TRAP AND COMMODE CHUTE", "BRAKE SYSTEM MAKE & DV N0",
-        "TYPE OF SPRING SECONDARY SUSPENSION", "AIR SPRING MAKE & CAPACITY",
-        "LEVELING VALVE MAKE", "FIBA PIPE LINE MODIFICATION IN UF", "TPU IN PS",
-        "TPU IN SS", "PROVISION OF FIBA PIPE LINE R1 TO R3", "FIBA DC MODIFICATION",
-        "BOGIE FRAME IDENTIFICATION BASED ON PRIMARY VERTICAL BUMP STOP HEIGHT",
-        "FIBA MAKE", "WIRE ROPE MOD. FOR QRV", "AIRBRAKE HOSE MOD.", "CBC MAKE",
-        "PROVISION OF TRANSITION COUPLING FOR LWLRRM",
-        "PROVISION OF TERTIARY LOCKING PIN FOR CBC",
-        "PROJECTION OF BP(140MM),FP(200MM)METAL PIPES FROM HEADSTOCK",
-        "SPEED SENSOR J.B. ORIENTATION", "SPEED SENSOR J.B. ROUTING",
-        "SS JB PROTECTION COVER MODIFICATION", "PROVISION OF MIL GRADE CONNECTOR",
-        "MINI PANTRY", "FDS VESDA BEDROLL COMPARTMENT MOD.", "DEFICIENCY IF ANY",
-        "ANY NEW FEATURE", "REMARKS", "SS2/SS3 Date"
-    ];
 
     function getPohAppsScriptUrl() {
         return localStorage.getItem('poh_survey_app_script_url') || '';
@@ -7264,6 +7270,13 @@ _Generated from Coach Database PWA_`;
         DEFAULT_POH_SURVEY_HEADERS.forEach((header) => {
             if (header === 'Timestamp') return;
             const el = form ? form.querySelector(`[name="${header}"]`) : null;
+            data[header] = el ? el.value.trim() : '';
+        });
+
+        // Map CAI inputs
+        DEFAULT_CAI_HEADERS.forEach((header) => {
+            const rawHeader = header.replace(/^CAI - /, '');
+            const el = form ? (form.querySelector(`[name="${header}"]`) || form.querySelector(`[name="${rawHeader}"]`)) : null;
             data[header] = el ? el.value.trim() : '';
         });
 
@@ -7467,6 +7480,7 @@ _Generated from Coach Database PWA_`;
         if (modal) {
             modal.classList.remove('hidden');
             modal.style.display = 'flex';
+            pushModalState('pohPdfPreviewModal');
         }
         document.body.style.overflow = 'hidden';
 
@@ -7474,13 +7488,16 @@ _Generated from Coach Database PWA_`;
     }
     window.openPohPdfPreviewModal = openPohPdfPreviewModal;
 
-    function closePohPdfPreviewModal() {
+    function closePohPdfPreviewModal(fromBack = false) {
         const modal = document.getElementById('pohPdfPreviewModal');
         if (modal) {
             modal.classList.add('hidden');
             modal.style.display = 'none';
         }
         document.body.style.overflow = '';
+        if (!fromBack && !isHandlingPopState && window.history.state && window.history.state.modal === 'pohPdfPreviewModal') {
+            window.history.back();
+        }
     }
     window.closePohPdfPreviewModal = closePohPdfPreviewModal;
 
