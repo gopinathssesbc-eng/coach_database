@@ -5918,25 +5918,17 @@ function letterToIndex(letter) {
             row.style.cursor = 'pointer';
             row.onclick = () => openPdfViewer(item.id);
 
-            const sizeStr = formatFileSize(item.size);
-
             row.innerHTML = `
             <div class="manual-item-left">
                 <div class="manual-item-icon">
                     <i class="fa-solid fa-file-pdf"></i>
                 </div>
                 <div class="manual-item-details">
-                    <h4 class="manual-item-title">${escapeHtml(item.name)}</h4>
-                    <div class="manual-item-meta">
-                        <span class="manual-meta-badge"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Google Drive PDF</span>
-                        ${sizeStr ? `<span class="manual-size-badge">${sizeStr}</span>` : ''}
-                        <span class="manual-cached-badge hidden" id="wsp-cached-badge-${item.id}"><i class="fa-solid fa-bolt"></i> Cached Offline</span>
-                    </div>
+                    <h4 class="manual-item-title">${escapeHtml(item.name)} <span class="manual-cached-badge hidden" id="wsp-cached-badge-${item.id}" title="Cached Offline"><i class="fa-solid fa-bolt"></i></span></h4>
                 </div>
             </div>
             <div class="manual-item-right">
-                <span class="manual-tap-hint">Tap to open</span>
-                <i class="fa-solid fa-chevron-right chevron" style="color: var(--text-muted); font-size: 0.85rem; transition: transform 0.2s ease;"></i>
+                <i class="fa-solid fa-chevron-right chevron" style="color: var(--text-muted); font-size: 0.8rem; opacity: 0.7; transition: transform 0.2s ease;"></i>
             </div>
         `;
             container.appendChild(row);
@@ -5978,25 +5970,17 @@ function letterToIndex(letter) {
             row.style.cursor = 'pointer';
             row.onclick = () => openPdfViewer(item.id);
 
-            const sizeStr = formatFileSize(item.size);
-
             row.innerHTML = `
             <div class="manual-item-left">
                 <div class="manual-item-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
                     <i class="fa-solid fa-file-pdf"></i>
                 </div>
                 <div class="manual-item-details">
-                    <h4 class="manual-item-title">${escapeHtml(item.name)}</h4>
-                    <div class="manual-item-meta">
-                        <span class="manual-meta-badge" style="background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25);"><i class="fa-solid fa-circle-check" style="color: #10b981;"></i> Google Drive PDF</span>
-                        ${sizeStr ? `<span class="manual-size-badge">${sizeStr}</span>` : ''}
-                        <span class="manual-cached-badge hidden" id="lhb-cached-badge-${item.id}"><i class="fa-solid fa-bolt"></i> Cached Offline</span>
-                    </div>
+                    <h4 class="manual-item-title">${escapeHtml(item.name)} <span class="manual-cached-badge hidden" id="lhb-cached-badge-${item.id}" title="Cached Offline"><i class="fa-solid fa-bolt"></i></span></h4>
                 </div>
             </div>
             <div class="manual-item-right">
-                <span class="manual-tap-hint" style="color: #10b981; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.25);">Tap to open</span>
-                <i class="fa-solid fa-chevron-right chevron" style="color: var(--text-muted); font-size: 0.85rem; transition: transform 0.2s ease;"></i>
+                <i class="fa-solid fa-chevron-right chevron" style="color: var(--text-muted); font-size: 0.8rem; opacity: 0.7; transition: transform 0.2s ease;"></i>
             </div>
         `;
             container.appendChild(row);
