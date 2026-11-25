@@ -194,6 +194,17 @@
                 </div>
                 <i class="fa-solid fa-chevron-right chevron"></i>
             </button>
+
+            <!-- SS2 / POH Survey Card -->
+            <button class="dashboard-card" onclick="navigateTo('pohSurveyScreen')"
+                style="border-left: 4px solid #ec4899;">
+                <div class="card-icon" style="color: #ec4899;"><i class="fa-solid fa-clipboard-check"></i></div>
+                <div class="card-content">
+                    <h3>SS2/ POH survey</h3>
+                    <p>Pre-maintenance inspection & survey</p>
+                </div>
+                <i class="fa-solid fa-chevron-right chevron"></i>
+            </button>
             <div style="text-align: center; margin-top: 2rem;">
                 <button class="icon-btn" onclick="navigateTo('adminLoginScreen')"
                     style="opacity: 0.5; transform: scale(0.9);" title="Admin Access">
@@ -545,6 +556,52 @@
             <!-- PDF List Container -->
             <div id="lhbManualsListContainer" class="manuals-list" style="margin-top: 1rem;">
                 <!-- Injected via JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <!-- SS2 / POH Survey Screen -->
+    <div id="pohSurveyScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>SS2/ POH survey</h1>
+                <p class="subtitle">Pre-maintenance inspection &amp; condition survey</p>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card form-card" style="margin-bottom: 1.25rem;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(236, 72, 153, 0.15); color: #ec4899; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff;">SS2 / POH Coach Survey</h3>
+                        <p style="margin: 2px 0 0; font-size: 0.8rem; color: var(--text-muted);">Inspect &amp; record pre-shop maintenance condition</p>
+                    </div>
+                </div>
+
+                <form id="pohSurveyCoachForm" onsubmit="event.preventDefault(); handlePohSurveySearch();">
+                    <div class="form-group" style="margin-bottom: 0.75rem;">
+                        <label for="pohSurveyCoachInput">Coach Number</label>
+                        <div class="input-group">
+                            <i class="fa-solid fa-train input-icon"></i>
+                            <input type="number" id="pohSurveyCoachInput" class="app-input"
+                                placeholder="Enter 6-digit coach number" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn primary-btn btn-block" id="pohSurveySubmitBtn"
+                        style="background: linear-gradient(135deg, #ec4899, #be185d);">
+                        <i class="fa-solid fa-magnifying-glass"></i> <span>Search Coach</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Survey Results Container -->
+            <div id="pohSurveyResultsContainer" class="hidden">
+                <!-- Dynamically loaded coach survey details -->
             </div>
         </main>
     </div>

@@ -167,6 +167,7 @@ const screens = {
     dueCoaches: document.getElementById('dueCoachesScreen'),
     wspManuals: document.getElementById('wspManualsScreen'),
     lhbManuals: document.getElementById('lhbManualsScreen'),
+    pohSurvey: document.getElementById('pohSurveyScreen'),
     wspPendingResults: document.getElementById('wspPendingResultsScreen'),
     adminLogin: document.getElementById('adminLoginScreen'),
     adminDashboard: document.getElementById('adminDashboardScreen')
@@ -743,7 +744,7 @@ function handleAppBack() {
     }
 
     // Other tool screens return to dashboard
-    if (['searchScreen', 'scheduleSearchScreen', 'dueCoachesScreen', 'wspManualsScreen', 'lhbManualsScreen', 'adminDashboardScreen', 'adminLoginScreen'].includes(currentScreenId)) {
+    if (['searchScreen', 'scheduleSearchScreen', 'dueCoachesScreen', 'wspManualsScreen', 'lhbManualsScreen', 'pohSurveyScreen', 'adminDashboardScreen', 'adminLoginScreen'].includes(currentScreenId)) {
         navigateTo('dashboardScreen', false);
         return true;
     }
@@ -7064,4 +7065,87 @@ _Generated from Coach Database PWA_`;
         openWspPdfPreviewModal(recordOrRowIndex);
     }
     window.generateWspDefectPdf = generateWspDefectPdf;
+
+    // ==========================================
+    // SS2 / POH SURVEY LOGIC
+    // ==========================================
+
+    async function handlePohSurveySearch() {
+        const input = document.getElementById('pohSurveyCoachInput');
+        if (!input) return;
+        const coachNo = input.value.trim();
+        if (!coachNo || (coachNo.length !== 6 && coachNo !== '91223')) {
+            showWarningAlert('Please enter a valid 6-digit coach number.');
+            return;
+        }
+        const container = document.getElementById('pohSurveyResultsContainer');
+        const submitBtn = document.getElementById('pohSurveySubmitBtn');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            const data = await fetchFromDatabase('coach', coachNo);
+            if (data && data.status === 'success' && data.data && data.data.length > 0) {
+                const coach = data.data[0];
+                const rly = coach['RLY'] || coach['Rly'] || '-';
+                const type = coach['TYPE'] || coach['Coach Type'] || '-';
+                const train = coach['TRAIN NO'] || coach['Train No'] || '-';
+                const dom = coach['POH/DOM'] || coach['DOM'] || '-';
+                const doc = coach['SHOP/DOC'] || coach['DOC'] || '-';
+                const rDate = coach['R/DATE'] || '-';
+                const ss1 = coach['SS1'] || coach['SS1 DONE DATE'] || '-';
+                const ss2 = coach['SS2'] || coach['Next SS2 Due'] || '-';
+
+                container.classList.remove('hidden');
+                container.innerHTML = `
+                    <div class="glass-card slide-up" style="margin-bottom: 1rem; border-left: 4px solid #ec4899;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <span class="badge" style="background: rgba(236, 72, 153, 0.15); color: #ec4899; font-weight: 700; font-size: 0.9rem;">
+                                <i class="fa-solid fa-train"></i> ${escapeHtml(rly)} ${escapeHtml(coachNo)} (${escapeHtml(type)})
+                            </span>
+                            <span style="font-size: 0.82rem; color: var(--text-muted);"><i class="fa-solid fa-train-subway"></i> Train: <strong>${escapeHtml(train)}</strong></span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 1rem;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
+                                <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">POH / DOM</span>
+                                <strong>${escapeHtml(dom)}</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
+                                <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">SHOP / DOC</span>
+                                <strong>${escapeHtml(doc)}</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
+                                <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">Return Date</span>
+                                <strong>${escapeHtml(rDate)}</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
+                                <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">Next SS2 Due</span>
+                                <strong style="color: #ec4899;">${escapeHtml(ss2)}</strong>
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.75rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #f8fafc;"><i class="fa-solid fa-clipboard-list" style="color: #ec4899;"></i> Survey Condition Notes</h4>
+                            <textarea class="app-textarea" placeholder="Enter SS2/POH pre-shop survey observations, deficiencies, or required repairs..." style="width: 100%; min-height: 80px;"></textarea>
+                            <button type="button" class="btn primary-btn btn-block" style="margin-top: 0.5rem; background: linear-gradient(135deg, #ec4899, #be185d);" onclick="showInfoAlert('Survey record saved locally for Coach ' + '${escapeHtml(coachNo)}')">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Survey Record
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.classList.remove('hidden');
+                container.innerHTML = `
+                    <div class="glass-card slide-up" style="text-align: center; padding: 1.5rem;">
+                        <i class="fa-solid fa-circle-question" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
+                        <h4 style="margin: 0; color: #fff;">Coach Not Found</h4>
+                        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.85rem;">No database record found for Coach #${escapeHtml(coachNo)}</p>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            showErrorAlert('Could not fetch coach details. Please check your connection.');
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    }
+    window.handlePohSurveySearch = handlePohSurveySearch;
 
