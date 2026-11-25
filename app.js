@@ -212,6 +212,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Login
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
 
+    // Auto-restore session if already authenticated
+    if (sessionStorage.getItem('coach_db_auth') === 'true') {
+        const hash = window.location.hash ? window.location.hash.replace(/^#/, '') : '';
+        const validScreens = [
+            'dashboardScreen', 'searchScreen', 'scheduleSearchScreen',
+            'dueCoachesScreen', 'wspManualsScreen', 'lhbManualsScreen',
+            'pohSurveyScreen', 'adminDashboardScreen'
+        ];
+        if (hash && validScreens.includes(hash)) {
+            navigateTo(hash, false);
+        } else {
+            navigateTo('dashboardScreen', false);
+        }
+    }
+
     // Admin Login
     const adminLoginForm = document.getElementById('adminLoginForm');
     if (adminLoginForm) {
@@ -867,6 +882,7 @@ function goBackFromResults() {
 }
 
 function logout() {
+    sessionStorage.removeItem('coach_db_auth');
     document.getElementById('passwordInput').value = '';
     navigateTo('loginScreen');
 }
@@ -1037,6 +1053,7 @@ function handleLogin(e) {
     const errorMsg = document.getElementById('loginError');
 
     if (password === '1234') {
+        sessionStorage.setItem('coach_db_auth', 'true');
         errorMsg.classList.add('hidden');
         document.getElementById('passwordInput').value = '';
         navigateTo('dashboardScreen');

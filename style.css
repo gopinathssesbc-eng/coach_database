@@ -107,13 +107,23 @@ body {
 
 /* Login Screen */
 #loginScreen {
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 1.5rem 1rem;
+    box-sizing: border-box;
+    position: relative;
+    overflow-y: auto;
 }
 
 .login-card {
     width: 100%;
+    max-width: 420px;
     text-align: center;
+    margin: auto 0 1.25rem;
 }
 
 .logo-container {
@@ -288,14 +298,14 @@ select option {
 }
 
 .footer-branding {
-    position: absolute;
-    bottom: 2rem;
+    position: relative;
     text-align: center;
     width: 100%;
-    left: 0;
     color: var(--text-muted);
     font-size: 0.8rem;
     letter-spacing: 1px;
+    margin-top: auto;
+    padding-bottom: 0.5rem;
 }
 
 /* Header */
