@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coach-db-pwa-v19';
+const CACHE_NAME = 'coach-db-pwa-v75';
 
 // Core local shell assets to pre-cache on install
 const PRECACHE_ASSETS = [
@@ -6,6 +6,7 @@ const PRECACHE_ASSETS = [
     './index.html',
     './style.css',
     './app.js',
+    './html2pdf.bundle.min.js',
     './manifest.json',
     './favicon.ico',
     './icons/icon.svg',
@@ -39,7 +40,7 @@ self.addEventListener('install', (event) => {
             console.log('[SW] Pre-caching local app shell');
             // Cache local assets first
             await cache.addAll(PRECACHE_ASSETS);
-            
+
             // Attempt to cache CDN assets gracefully (ignore failures so offline installs don't break)
             for (const url of CDN_ASSETS) {
                 try {

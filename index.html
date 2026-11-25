@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Coach Database</title>
     <!-- PWA Web App Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -15,7 +17,7 @@
     <meta name="application-name" content="Coach DB">
     <meta name="msapplication-TileColor" content="#0F172A">
     <meta name="msapplication-TileImage" content="icons/icon-144.png">
-    
+
     <!-- PWA Favicons & Touch Icons -->
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
@@ -30,10 +32,11 @@
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css?v=20261101">
+    <link rel="stylesheet" href="style.css?v=5.0">
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11" defer></script>
 </head>
+
 <body>
     <!-- Offline Indicator Banner -->
     <div id="offlineIndicator" class="offline-banner hidden">
@@ -51,15 +54,18 @@
             </div>
         </div>
         <div class="pwa-toast-actions">
-            <button id="pwaInstallConfirmBtn" class="btn primary-btn btn-sm"><i class="fa-solid fa-download"></i> Install</button>
-            <button id="pwaInstallDismissBtn" class="icon-btn" title="Dismiss" style="padding: 0.3rem;"><i class="fa-solid fa-xmark"></i></button>
+            <button id="pwaInstallConfirmBtn" class="btn primary-btn btn-sm"><i class="fa-solid fa-download"></i>
+                Install</button>
+            <button id="pwaInstallDismissBtn" class="icon-btn" title="Dismiss" style="padding: 0.3rem;"><i
+                    class="fa-solid fa-xmark"></i></button>
         </div>
     </div>
 
     <!-- PWA Update Available Toast -->
     <div id="pwaUpdateBanner" class="pwa-toast pwa-update-toast hidden">
         <div class="pwa-toast-body">
-            <i class="fa-solid fa-arrows-rotate fa-spin" style="font-size: 1.4rem; color: #38BDF8; margin-right: 4px;"></i>
+            <i class="fa-solid fa-arrows-rotate fa-spin"
+                style="font-size: 1.4rem; color: #38BDF8; margin-right: 4px;"></i>
             <div class="pwa-toast-info">
                 <strong>Update Ready</strong>
                 <p>A new version of Coach DB is available</p>
@@ -85,7 +91,8 @@
                 <div class="input-group">
                     <i class="fa-solid fa-lock input-icon"></i>
                     <input type="password" id="passwordInput" placeholder="Enter Password" required>
-                    <button type="button" id="togglePasswordBtn" class="icon-btn"><i class="fa-solid fa-eye"></i></button>
+                    <button type="button" id="togglePasswordBtn" class="icon-btn"><i
+                            class="fa-solid fa-eye"></i></button>
                 </div>
                 <button type="submit" class="btn primary-btn">
                     <span>Login</span>
@@ -94,15 +101,18 @@
             </form>
 
             <div id="loginInstallPrompt" class="hidden" style="margin-top: 1.25rem;">
-                <button onclick="triggerPwaInstall()" class="btn" style="background: rgba(79, 70, 229, 0.15); border: 1px solid rgba(129, 140, 248, 0.3); color: #c7d2fe; font-size: 0.88rem; padding: 0.65rem 1rem; border-radius: 10px; width: auto; margin: 0 auto; display: inline-flex; align-items: center; gap: 8px;">
+                <button onclick="triggerPwaInstall()" class="btn"
+                    style="background: rgba(79, 70, 229, 0.15); border: 1px solid rgba(129, 140, 248, 0.3); color: #c7d2fe; font-size: 0.88rem; padding: 0.65rem 1rem; border-radius: 10px; width: auto; margin: 0 auto; display: inline-flex; align-items: center; gap: 8px;">
                     <i class="fa-solid fa-download" style="color: #38BDF8;"></i> Install App on Device
                 </button>
             </div>
         </div>
         <div class="footer-branding" style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
             <div>SBC COACHING DEPOT</div>
-            <div style="font-size: 0.75rem; opacity: 0.7; font-family: monospace;">v3 Date- 05-11-2026</div>
-            <button onclick="showChangelog()" style="background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; margin-top: 5px;">View Changelog</button>
+            <div style="font-size: 0.75rem; opacity: 0.7; font-family: monospace;">V 5.0 Date- 25-11-2026</div>
+            <button onclick="showChangelog()"
+                style="background: none; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; cursor: pointer; margin-top: 5px;">View
+                Changelog</button>
         </div>
     </div>
 
@@ -114,11 +124,14 @@
                 <p class="subtitle">Select a module</p>
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <button id="pwaHeaderInstallBtn" class="pwa-header-btn hidden" onclick="triggerPwaInstall()" title="Install Coach DB as App">
+                <button id="pwaHeaderInstallBtn" class="pwa-header-btn hidden" onclick="triggerPwaInstall()"
+                    title="Install Coach DB as App">
                     <i class="fa-solid fa-download"></i> <span>Install</span>
                 </button>
-                <button class="icon-btn sync-btn" onclick="forceRefreshData()" title="Refresh Data"><i class="fa-solid fa-rotate-right"></i></button>
-                <button class="icon-btn logout-btn" onclick="logout()" title="Logout"><i class="fa-solid fa-right-from-bracket"></i></button>
+                <button class="icon-btn sync-btn" onclick="forceRefreshData()" title="Refresh Data"><i
+                        class="fa-solid fa-rotate-right"></i></button>
+                <button class="icon-btn logout-btn" onclick="logout()" title="Logout"><i
+                        class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </header>
 
@@ -131,8 +144,9 @@
                 </div>
                 <i class="fa-solid fa-chevron-right chevron"></i>
             </button>
-            
-            <button class="dashboard-card" onclick="navigateTo('wspSearchScreen')" style="border-left: 4px solid #8b5cf6;">
+
+            <button class="dashboard-card" onclick="navigateTo('wspSearchScreen')"
+                style="border-left: 4px solid #8b5cf6;">
                 <div class="card-icon" style="color: #8b5cf6;"><i class="fa-solid fa-clipboard-list"></i></div>
                 <div class="card-content">
                     <h3>WSP Entry</h3>
@@ -140,8 +154,9 @@
                 </div>
                 <i class="fa-solid fa-chevron-right chevron"></i>
             </button>
-            
-            <button class="dashboard-card" onclick="navigateTo('scheduleSearchScreen')" style="border-left: 4px solid #3b82f6;">
+
+            <button class="dashboard-card" onclick="navigateTo('scheduleSearchScreen')"
+                style="border-left: 4px solid #3b82f6;">
                 <div class="card-icon" style="color: #3b82f6;"><i class="fa-solid fa-calendar-check"></i></div>
                 <div class="card-content">
                     <h3>Schedule Entry</h3>
@@ -149,8 +164,9 @@
                 </div>
                 <i class="fa-solid fa-chevron-right chevron"></i>
             </button>
-            
-            <button class="dashboard-card" onclick="navigateTo('dueCoachesScreen')" style="border-left: 4px solid #f39c12;">
+
+            <button class="dashboard-card" onclick="navigateTo('dueCoachesScreen')"
+                style="border-left: 4px solid #f39c12;">
                 <div class="card-icon" style="color: #f39c12;"><i class="fa-solid fa-train"></i></div>
                 <div class="card-content">
                     <h3>Due Coaches</h3>
@@ -158,8 +174,29 @@
                 </div>
                 <i class="fa-solid fa-chevron-right chevron"></i>
             </button>
+
+            <button class="dashboard-card" onclick="navigateTo('wspManualsScreen')"
+                style="border-left: 4px solid #06b6d4;">
+                <div class="card-icon" style="color: #06b6d4;"><i class="fa-solid fa-book-open"></i></div>
+                <div class="card-content">
+                    <h3>WSP Manuals</h3>
+                    <p>Maintenance manuals & schematics</p>
+                </div>
+                <i class="fa-solid fa-chevron-right chevron"></i>
+            </button>
+
+            <button class="dashboard-card" onclick="navigateTo('lhbManualsScreen')"
+                style="border-left: 4px solid #10b981;">
+                <div class="card-icon" style="color: #10b981;"><i class="fa-solid fa-book-bookmark"></i></div>
+                <div class="card-content">
+                    <h3>LHB Manual</h3>
+                    <p>Maintenance & technical manuals</p>
+                </div>
+                <i class="fa-solid fa-chevron-right chevron"></i>
+            </button>
             <div style="text-align: center; margin-top: 2rem;">
-                <button class="icon-btn" onclick="navigateTo('adminLoginScreen')" style="opacity: 0.5; transform: scale(0.9);" title="Admin Access">
+                <button class="icon-btn" onclick="navigateTo('adminLoginScreen')"
+                    style="opacity: 0.5; transform: scale(0.9);" title="Admin Access">
                     <i class="fa-solid fa-lock"></i>
                 </button>
             </div>
@@ -169,20 +206,23 @@
     <!-- Admin Login Screen -->
     <div id="adminLoginScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>Admin Access</h1>
                 <p class="subtitle">Enter Admin PIN</p>
             </div>
         </header>
-        <main class="slide-up" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh;">
+        <main class="slide-up"
+            style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh;">
             <div class="glass-card login-card" style="width: 100%; max-width: 350px;">
                 <form id="adminLoginForm">
                     <div class="input-group">
                         <i class="fa-solid fa-key input-icon"></i>
                         <input type="password" id="adminPasswordInput" placeholder="Admin PIN" required>
                     </div>
-                    <button type="submit" class="btn primary-btn btn-block" style="background: linear-gradient(135deg, #e11d48, #be123c);">
+                    <button type="submit" class="btn primary-btn btn-block"
+                        style="background: linear-gradient(135deg, #e11d48, #be123c);">
                         <span>Access Dashboard</span>
                     </button>
                     <p id="adminLoginError" class="error-text hidden">Invalid PIN</p>
@@ -194,12 +234,14 @@
     <!-- Admin Dashboard Screen -->
     <div id="adminDashboardScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>Admin Dashboard</h1>
                 <p class="subtitle">Live User Analytics</p>
             </div>
-            <button class="icon-btn sync-btn" onclick="fetchAdminAnalytics()" title="Refresh Analytics"><i class="fa-solid fa-rotate-right"></i></button>
+            <button class="icon-btn sync-btn" onclick="fetchAdminAnalytics()" title="Refresh Analytics"><i
+                    class="fa-solid fa-rotate-right"></i></button>
         </header>
         <main class="slide-up">
             <div id="adminLoading" style="text-align: center; margin-top: 2rem; color: var(--text-muted);">
@@ -209,27 +251,32 @@
             <div id="adminDataContainer" class="hidden">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
                     <div class="glass-card" style="text-align: center; padding: 1.5rem;">
-                        <i class="fa-solid fa-users" style="font-size: 2rem; color: #3b82f6; margin-bottom: 0.5rem;"></i>
+                        <i class="fa-solid fa-users"
+                            style="font-size: 2rem; color: #3b82f6; margin-bottom: 0.5rem;"></i>
                         <h3 id="adminDailyVisitors" style="font-size: 2rem; margin: 0; color: #f8fafc;">0</h3>
                         <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Daily Visits</p>
                     </div>
                     <div class="glass-card" style="text-align: center; padding: 1.5rem;">
-                        <i class="fa-solid fa-user-clock" style="font-size: 2rem; color: #10b981; margin-bottom: 0.5rem;"></i>
+                        <i class="fa-solid fa-user-clock"
+                            style="font-size: 2rem; color: #10b981; margin-bottom: 0.5rem;"></i>
                         <h3 id="adminActiveUsers" style="font-size: 2rem; margin: 0; color: #f8fafc;">0</h3>
                         <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Active Now</p>
                     </div>
                 </div>
-                
+
                 <div class="glass-card" style="padding: 1.5rem;">
-                    <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #e2e8f0;"><i class="fa-solid fa-laptop-mobile" style="margin-right: 8px;"></i>Devices Today</h3>
+                    <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #e2e8f0;"><i
+                            class="fa-solid fa-laptop-mobile" style="margin-right: 8px;"></i>Devices Today</h3>
                     <div style="display: flex; justify-content: space-around; align-items: center;">
                         <div style="text-align: center;">
-                            <i class="fa-solid fa-mobile-screen" style="font-size: 2rem; color: #8b5cf6; margin-bottom: 0.5rem;"></i>
+                            <i class="fa-solid fa-mobile-screen"
+                                style="font-size: 2rem; color: #8b5cf6; margin-bottom: 0.5rem;"></i>
                             <h4 id="adminMobileCount" style="margin: 0; font-size: 1.2rem;">0</h4>
                             <small style="color: var(--text-muted);">Mobile</small>
                         </div>
                         <div style="text-align: center;">
-                            <i class="fa-solid fa-desktop" style="font-size: 2rem; color: #f59e0b; margin-bottom: 0.5rem;"></i>
+                            <i class="fa-solid fa-desktop"
+                                style="font-size: 2rem; color: #f59e0b; margin-bottom: 0.5rem;"></i>
                             <h4 id="adminDesktopCount" style="margin: 0; font-size: 1.2rem;">0</h4>
                             <small style="color: var(--text-muted);">Desktop</small>
                         </div>
@@ -242,7 +289,8 @@
     <!-- Due Coaches Screen -->
     <div id="dueCoachesScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>Due Coaches</h1>
                 <p class="subtitle" id="dueCoachesScreenSubtitle">Check which coaches are due</p>
@@ -256,17 +304,21 @@
                         <label for="dueDatePicker">Select Pit Date</label>
                         <div class="input-group">
                             <i class="fa-solid fa-calendar input-icon"></i>
-                            <input type="date" id="dueDatePicker" class="app-input" onclick="this.showPicker()" required>
+                            <input type="date" id="dueDatePicker" class="app-input" onclick="this.showPicker()"
+                                required>
                         </div>
                     </div>
-                    <button type="submit" class="btn primary-btn btn-block" id="dueFetchBtn" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                    <button type="submit" class="btn primary-btn btn-block" id="dueFetchBtn"
+                        style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
                         <i class="fa-solid fa-magnifying-glass"></i> Find Due Coaches
                     </button>
                 </form>
-                <div id="dueCoachesLoading" class="hidden" style="text-align: center; margin-top: 15px; color: var(--text-muted);">
+                <div id="dueCoachesLoading" class="hidden"
+                    style="text-align: center; margin-top: 15px; color: var(--text-muted);">
                     <i class="fa-solid fa-spinner fa-spin"></i> Fetching due coaches...
                 </div>
-                <div id="dueCoachesError" class="hidden" style="color: #e74c3c; margin-top: 15px; text-align: center; font-size: 0.9rem;"></div>
+                <div id="dueCoachesError" class="hidden"
+                    style="color: #e74c3c; margin-top: 15px; text-align: center; font-size: 0.9rem;"></div>
             </div>
 
             <div id="dueCoachesResultsContainer" class="hidden glass-card">
@@ -318,21 +370,25 @@
                 <div class="due-list-header">
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff;">Due Coaches List</h3>
+                            <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff;">Due Coaches List
+                            </h3>
                             <span id="dueCoachesCountPill" class="due-header-count-pill has-pending">0 Pending</span>
                         </div>
-                        <p id="dueCoachesTotalText" style="margin: 3px 0 0 0; font-size: 0.82rem; color: var(--text-muted);"></p>
+                        <p id="dueCoachesTotalText"
+                            style="margin: 3px 0 0 0; font-size: 0.82rem; color: var(--text-muted);"></p>
                     </div>
                     <div class="due-view-switcher">
-                        <button type="button" class="due-view-btn active" id="dueViewCardsBtn" onclick="switchDueView('cards')">
+                        <button type="button" class="due-view-btn active" id="dueViewCardsBtn"
+                            onclick="switchDueView('cards')">
                             <i class="fa-solid fa-grip-vertical"></i> Cards
                         </button>
-                        <button type="button" class="due-view-btn" id="dueViewTableBtn" onclick="switchDueView('table')">
+                        <button type="button" class="due-view-btn" id="dueViewTableBtn"
+                            onclick="switchDueView('table')">
                             <i class="fa-solid fa-table-list"></i> Table
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Cards View (Default on Mobile) -->
                 <div id="dueCoachesCardsContainer" class="due-cards-container">
                     <!-- Cards populated by JS -->
@@ -362,11 +418,129 @@
             </div>
         </main>
     </div>
-    
-    <!-- Search Screen -->
+
+    <!-- WSP Manuals Screen -->
+    <div id="wspManualsScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>WSP Manuals</h1>
+                <p class="subtitle">Maintenance manuals & schematics</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" class="btn-clear-cache" onclick="clearAllPdfCache()"
+                    title="Clear offline cached manuals"
+                    style="padding: 6px 12px; font-size: 0.78rem; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-trash-can"></i> <span>Clear Cache</span>
+                </button>
+                <button class="icon-btn sync-btn" onclick="loadManualsFromDrive(true)" title="Refresh Manuals"><i
+                        class="fa-solid fa-rotate-right"></i></button>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card" style="margin-bottom: 1rem; padding: 1rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h3
+                            style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-book-open" style="color: #38bdf8;"></i> WSP Manuals & Guides
+                        </h3>
+                        <p style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
+                            Direct access to maintenance manuals and schematics
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading / Error States -->
+            <div id="manualsLoading" class="hidden"
+                style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: #38bdf8; margin-bottom: 0.75rem;"></i>
+                <p style="margin: 0; font-size: 0.9rem;">Fetching PDF manuals from Google Drive...</p>
+            </div>
+
+            <div id="manualsError" class="hidden"
+                style="padding: 1rem; border-radius: 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; font-size: 0.85rem; margin-top: 1rem; text-align: center;">
+            </div>
+
+            <!-- PDF List Container -->
+            <div id="manualsListContainer" class="manuals-list" style="margin-top: 1rem;">
+                <!-- Injected via JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <!-- LHB Manuals Screen -->
+    <div id="lhbManualsScreen" class="screen hidden">
+        <header class="app-header fade-in">
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
+            <div>
+                <h1>LHB Manuals</h1>
+                <p class="subtitle">Maintenance & technical manuals</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <a href="https://drive.google.com/drive/folders/1aGdYlSIri5xoZYPF3KqGPaeue6QgeKCz?usp=sharing"
+                    target="_blank" rel="noopener" class="icon-btn"
+                    title="Open Google Drive Folder"
+                    style="display: flex; align-items: center; justify-content: center; color: #10b981; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); text-decoration: none;">
+                    <i class="fa-brands fa-google-drive"></i>
+                </a>
+                <button type="button" class="btn-clear-cache" onclick="clearAllPdfCache()"
+                    title="Clear offline cached manuals"
+                    style="padding: 6px 12px; font-size: 0.78rem; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-trash-can"></i> <span>Clear Cache</span>
+                </button>
+                <button class="icon-btn sync-btn" onclick="loadLhbManualsFromDrive(true)" title="Refresh Manuals"><i
+                        class="fa-solid fa-rotate-right"></i></button>
+            </div>
+        </header>
+
+        <main class="slide-up">
+            <div class="glass-card" style="margin-bottom: 1rem; padding: 1rem;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h3
+                            style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-book-bookmark" style="color: #10b981;"></i> LHB Coach Manuals &amp; Guidelines
+                        </h3>
+                        <p style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
+                            Maintenance schedules, torque values, RDSO modifications &amp; guidelines
+                        </p>
+                    </div>
+                    <a href="https://drive.google.com/drive/folders/1aGdYlSIri5xoZYPF3KqGPaeue6QgeKCz?usp=sharing"
+                        target="_blank" rel="noopener"
+                        style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 600; color: #10b981; background: rgba(16, 185, 129, 0.12); padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.3); text-decoration: none;">
+                        <i class="fa-brands fa-google-drive"></i> Open Drive Folder
+                    </a>
+                </div>
+            </div>
+
+            <!-- Loading / Error States -->
+            <div id="lhbManualsLoading" class="hidden"
+                style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: #10b981; margin-bottom: 0.75rem;"></i>
+                <p style="margin: 0; font-size: 0.9rem;">Fetching LHB manuals from Google Drive...</p>
+            </div>
+
+            <div id="lhbManualsError" class="hidden"
+                style="padding: 1rem; border-radius: 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; font-size: 0.85rem; margin-top: 1rem; text-align: center;">
+            </div>
+
+            <!-- PDF List Container -->
+            <div id="lhbManualsListContainer" class="manuals-list" style="margin-top: 1rem;">
+                <!-- Injected via JavaScript -->
+            </div>
+        </main>
+    </div>
     <div id="searchScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>Search Coach</h1>
                 <p class="subtitle">Enter coach identifiers</p>
@@ -376,7 +550,8 @@
         <main class="slide-up">
             <div class="glass-card form-card">
                 <div class="search-tabs">
-                    <button class="tab-btn active" id="tabCoach" onclick="switchSearchTab('coach')">Coach Number</button>
+                    <button class="tab-btn active" id="tabCoach" onclick="switchSearchTab('coach')">Coach
+                        Number</button>
                     <button class="tab-btn" id="tabRake" onclick="switchSearchTab('rake')">By Rake</button>
                 </div>
 
@@ -386,10 +561,11 @@
                         <label for="coachNumberInput">Coach Number</label>
                         <div class="input-group">
                             <i class="fa-solid fa-hashtag input-icon"></i>
-                            <input type="number" id="coachNumberInput" placeholder="6 digit number (e.g. 123456)" required>
+                            <input type="number" id="coachNumberInput"
+                                placeholder="6 digit number (e.g. 123456 or 91223)" required>
                         </div>
                     </div>
-                    
+
                     <button type="submit" class="btn primary-btn btn-block" id="searchSubmitBtn">
                         <span class="btn-text">Search</span>
                         <div class="spinner hidden"></div>
@@ -407,13 +583,14 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <button type="button" class="btn primary-btn btn-block" id="fetchRakesBtn" onclick="fetchRakes()">
                         <span class="btn-text">Find Rakes</span>
                         <div class="spinner hidden"></div>
                     </button>
 
-                    <div id="rakeSelectionArea" class="hidden" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div id="rakeSelectionArea" class="hidden"
+                        style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
                         <div class="form-group">
                             <label for="rakeSelect">Select Rake</label>
                             <div class="input-group">
@@ -423,7 +600,8 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="button" class="btn secondary-btn btn-block" id="viewRakeCoachesBtn" onclick="viewRakeCoaches()">
+                        <button type="button" class="btn secondary-btn btn-block" id="viewRakeCoachesBtn"
+                            onclick="viewRakeCoaches()">
                             <span class="btn-text">View Coaches</span>
                             <div class="spinner hidden"></div>
                         </button>
@@ -436,7 +614,8 @@
     <!-- Selection Screen -->
     <div id="selectionScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('searchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('searchScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>Multiple Matches</h1>
                 <p class="subtitle">Select the correct coach</p>
@@ -453,7 +632,8 @@
     <!-- Results Screen -->
     <div id="resultsScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="goBackFromResults()"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="goBackFromResults()"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1 id="resultCoachId">Coach Details</h1>
                 <p class="subtitle">Fetched from database</p>
@@ -473,7 +653,8 @@
     <!-- Rake Results Screen -->
     <div id="rakeResultsScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('searchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('searchScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1 id="rakeResultTitle">Rake Details</h1>
                 <p class="subtitle">Coach List</p>
@@ -482,13 +663,16 @@
 
         <main class="slide-up">
             <!-- General Details Card -->
-            <div class="glass-card" style="margin-bottom: 1rem; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div class="glass-card"
+                style="margin-bottom: 1rem; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Departure</span>
+                    <span
+                        style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Departure</span>
                     <div id="rakeDepartureDate" style="font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem;">-</div>
                 </div>
                 <div style="text-align: right;">
-                    <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Arrival</span>
+                    <span
+                        style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Arrival</span>
                     <div id="rakeArrivalDate" style="font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem;">-</div>
                 </div>
             </div>
@@ -515,7 +699,8 @@
                     </table>
                 </div>
             </div>
-            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="navigateTo('searchScreen')">
+            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;"
+                onclick="navigateTo('searchScreen')">
                 <i class="fa-solid fa-arrow-left"></i> Go Back
             </button>
         </main>
@@ -524,7 +709,8 @@
     <!-- Schedule Search Screen -->
     <div id="scheduleSearchScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>Schedule Data</h1>
                 <p class="subtitle">Search coach in schedule database</p>
@@ -538,10 +724,12 @@
                         <label for="scheduleCoachNumberInput">Coach Number</label>
                         <div class="input-group">
                             <i class="fa-solid fa-hashtag input-icon"></i>
-                            <input type="number" id="scheduleCoachNumberInput" placeholder="6 digit number" required>
+                            <input type="number" id="scheduleCoachNumberInput"
+                                placeholder="6 digit number (e.g. 123456 or 91223)" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn primary-btn btn-block" id="scheduleSearchSubmitBtn" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                    <button type="submit" class="btn primary-btn btn-block" id="scheduleSearchSubmitBtn"
+                        style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
                         <span class="btn-text">Search Schedule</span>
                         <div class="spinner hidden"></div>
                     </button>
@@ -553,7 +741,9 @@
     <!-- Schedule Results/Entry Screen -->
     <div id="scheduleResultsScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="document.getElementById('scheduleCoachNumberInput').value=''; navigateTo('scheduleSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn"
+                onclick="document.getElementById('scheduleCoachNumberInput').value=''; navigateTo('scheduleSearchScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1 id="scheduleResultCoachId">Schedule Entry</h1>
                 <p class="subtitle">Update details</p>
@@ -569,15 +759,17 @@
             </div>
 
             <div class="glass-card">
-                <h3 class="group-title" style="margin-bottom: 1rem; color: #3b82f6;"><i class="fa-solid fa-pen-to-square"></i> Update Data</h3>
-                
+                <h3 class="group-title" style="margin-bottom: 1rem; color: #3b82f6;"><i
+                        class="fa-solid fa-pen-to-square"></i> Update Data</h3>
+
                 <form id="scheduleUpdateForm">
                     <input type="hidden" id="scheduleRowIndex">
-                    
+
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
                             <label>D2 Done Date</label>
-                            <input type="date" id="scheduleD2" class="styled-input" onclick="this.showPicker()" required>
+                            <input type="date" id="scheduleD2" class="styled-input" onclick="this.showPicker()"
+                                required>
                         </div>
                         <div class="form-group">
                             <label>D3 Done Date</label>
@@ -587,42 +779,57 @@
 
                     <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text); font-size: 0.9rem;">Wheel Diameters</h4>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group"><label>L1</label><input type="text" id="scheduleL1" class="styled-input" required></div>
-                        <div class="form-group"><label>R8</label><input type="text" id="scheduleR8" class="styled-input" required></div>
-                        
-                        <div class="form-group"><label>L2</label><input type="text" id="scheduleL2" class="styled-input" required></div>
-                        <div class="form-group"><label>R7</label><input type="text" id="scheduleR7" class="styled-input" required></div>
-                        
-                        <div class="form-group"><label>L3</label><input type="text" id="scheduleL3" class="styled-input" required></div>
-                        <div class="form-group"><label>R6</label><input type="text" id="scheduleR6" class="styled-input" required></div>
-                        
-                        <div class="form-group"><label>L4</label><input type="text" id="scheduleL4" class="styled-input" required></div>
-                        <div class="form-group"><label>R5</label><input type="text" id="scheduleR5" class="styled-input" required></div>
+                        <div class="form-group"><label>L1</label><input type="text" id="scheduleL1" class="styled-input"
+                                required></div>
+                        <div class="form-group"><label>R8</label><input type="text" id="scheduleR8" class="styled-input"
+                                required></div>
+
+                        <div class="form-group"><label>L2</label><input type="text" id="scheduleL2" class="styled-input"
+                                required></div>
+                        <div class="form-group"><label>R7</label><input type="text" id="scheduleR7" class="styled-input"
+                                required></div>
+
+                        <div class="form-group"><label>L3</label><input type="text" id="scheduleL3" class="styled-input"
+                                required></div>
+                        <div class="form-group"><label>R6</label><input type="text" id="scheduleR6" class="styled-input"
+                                required></div>
+
+                        <div class="form-group"><label>L4</label><input type="text" id="scheduleL4" class="styled-input"
+                                required></div>
+                        <div class="form-group"><label>R5</label><input type="text" id="scheduleR5" class="styled-input"
+                                required></div>
                     </div>
-                    
+
                     <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text); font-size: 0.9rem;">Stiffener Plate</h4>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                        <div class="form-group"><label>PP End</label><input type="text" id="schedulePPEnd" class="styled-input" required></div>
-                        <div class="form-group"><label>NPP End</label><input type="text" id="scheduleNPPEnd" class="styled-input" required></div>
+                        <div class="form-group"><label>PP End</label><input type="text" id="schedulePPEnd"
+                                class="styled-input" required></div>
+                        <div class="form-group"><label>NPP End</label><input type="text" id="scheduleNPPEnd"
+                                class="styled-input" required></div>
                     </div>
 
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-                        <div class="form-group"><label>CBC Make</label><input type="text" id="scheduleCBCMake" class="styled-input" required></div>
-                        <div class="form-group"><label>Staff Token Number</label><input type="text" id="scheduleStaffToken" class="styled-input" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required></div>
+                        <div class="form-group"><label>CBC Make</label><input type="text" id="scheduleCBCMake"
+                                class="styled-input" required></div>
+                        <div class="form-group"><label>Staff Token Number</label><input type="text"
+                                id="scheduleStaffToken" class="styled-input"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')" required></div>
                     </div>
 
                     <div class="form-group" style="margin-top: 1rem;">
                         <label>Remarks</label>
                         <input type="text" id="scheduleRemarks" class="styled-input" required>
                     </div>
-                    
-                    <button type="submit" class="btn primary-btn btn-block" id="scheduleSubmitBtn" style="margin-top: 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb);">
+
+                    <button type="submit" class="btn primary-btn btn-block" id="scheduleSubmitBtn"
+                        style="margin-top: 1rem; background: linear-gradient(135deg, #3b82f6, #2563eb);">
                         <span class="btn-text">Update Schedule</span>
                         <div class="spinner hidden"></div>
                     </button>
                 </form>
             </div>
-            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="navigateTo('scheduleSearchScreen')">
+            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;"
+                onclick="navigateTo('scheduleSearchScreen')">
                 <i class="fa-solid fa-arrow-left"></i> Go Back
             </button>
         </main>
@@ -631,33 +838,45 @@
     <!-- WSP Search Screen -->
     <div id="wspSearchScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>WSP Defect Entry</h1>
                 <p class="subtitle">Search & update WSP issues</p>
             </div>
         </header>
-        
+
         <main class="slide-up">
             <div class="glass-card form-card">
-                <div class="search-tabs">
-                    <button class="tab-btn active" id="wspTabCoach" onclick="switchWspTab('coach')">Coach Number</button>
-                    <button class="tab-btn" id="wspTabRake" onclick="switchWspTab('rake')">By Rake</button>
-                    <button class="tab-btn" id="wspTabDate" onclick="switchWspTab('date')">By Date</button>
-                    <button class="tab-btn" id="wspTabPending" onclick="fetchWspPendingWork()">Pending Work</button>
-                    <button class="tab-btn" id="wspTabManuals" onclick="switchWspTab('manuals')"><i class="fa-solid fa-book"></i> Manuals</button>
+                <div class="search-tabs wsp-search-tabs">
+                    <button class="tab-btn active" id="wspTabCoach" onclick="switchWspTab('coach')"
+                        title="Search by Coach Number">
+                        <i class="fa-solid fa-hashtag"></i> <span>Coach</span>
+                    </button>
+                    <button class="tab-btn" id="wspTabRake" onclick="switchWspTab('rake')" title="Search by Rake">
+                        <i class="fa-solid fa-train"></i> <span>Rake</span>
+                    </button>
+                    <button class="tab-btn" id="wspTabDate" onclick="switchWspTab('date')" title="Search by Date">
+                        <i class="fa-solid fa-calendar-days"></i> <span>Date</span>
+                    </button>
+                    <button class="tab-btn" id="wspTabPending" onclick="fetchWspPendingWork()"
+                        title="View Pending Work">
+                        <i class="fa-solid fa-clock"></i> <span>Pending</span>
+                    </button>
                 </div>
-                
+
                 <!-- Coach Number Search Form -->
                 <form id="wspSearchCoachForm">
                     <div class="form-group">
                         <label for="wspCoachNumberInput">Coach Number</label>
                         <div class="input-group">
                             <i class="fa-solid fa-hashtag input-icon"></i>
-                            <input type="number" id="wspCoachNumberInput" placeholder="6 digit number" required>
+                            <input type="number" id="wspCoachNumberInput"
+                                placeholder="6 digit number (e.g. 123456 or 91223)" required>
                         </div>
                     </div>
-                    <button type="submit" class="btn primary-btn btn-block" id="wspSearchSubmitBtn" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <button type="submit" class="btn primary-btn btn-block" id="wspSearchSubmitBtn"
+                        style="background: linear-gradient(135deg, #10b981, #059669);">
                         <span class="btn-text">Search</span>
                         <div class="spinner hidden"></div>
                     </button>
@@ -674,13 +893,15 @@
                             </select>
                         </div>
                     </div>
-                    
-                    <button type="button" class="btn primary-btn btn-block" id="wspFetchRakesBtn" onclick="fetchWspRakes()" style="background: linear-gradient(135deg, #10b981, #059669);">
+
+                    <button type="button" class="btn primary-btn btn-block" id="wspFetchRakesBtn"
+                        onclick="fetchWspRakes()" style="background: linear-gradient(135deg, #10b981, #059669);">
                         <span class="btn-text">Find Rakes</span>
                         <div class="spinner hidden"></div>
                     </button>
 
-                    <div id="wspRakeSelectionArea" class="hidden" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div id="wspRakeSelectionArea" class="hidden"
+                        style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
                         <div class="form-group">
                             <label for="wspRakeSelect">Select Rake</label>
                             <div class="input-group">
@@ -689,7 +910,8 @@
                                 </select>
                             </div>
                         </div>
-                        <button type="button" class="btn secondary-btn btn-block" onclick="viewWspRakeCoaches()" style="background: linear-gradient(135deg, #10b981, #059669);">
+                        <button type="button" class="btn secondary-btn btn-block" onclick="viewWspRakeCoaches()"
+                            style="background: linear-gradient(135deg, #10b981, #059669);">
                             View Coaches
                         </button>
                     </div>
@@ -704,8 +926,9 @@
                             <input type="date" id="wspDateInput" required onclick="this.showPicker()">
                         </div>
                     </div>
-                    
-                    <button type="submit" class="btn primary-btn btn-block" id="wspFetchDateBtn" style="background: linear-gradient(135deg, #10b981, #059669);">
+
+                    <button type="submit" class="btn primary-btn btn-block" id="wspFetchDateBtn"
+                        style="background: linear-gradient(135deg, #10b981, #059669);">
                         <span class="btn-text">Search by Date</span>
                         <div class="spinner hidden"></div>
                     </button>
@@ -713,61 +936,17 @@
                     <div id="wspRecentDatesContainer"></div>
                 </form>
 
-                <!-- Manuals Area -->
-                <div id="wspManualsArea" class="hidden">
-                    <!-- Google Drive Link & Controls Header -->
-                    <div class="manuals-header-card">
-                        <div class="manuals-header-top">
-                            <div>
-                                <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fa-solid fa-book-open" style="color: #38bdf8;"></i> WSP Manuals & Guides
-                                </h3>
-                                <p style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
-                                    Direct access to PDF manuals from Google Drive
-                                </p>
-                            </div>
-                            <div class="manuals-actions-group">
-                                <button type="button" class="btn-icon-pill" onclick="openDriveConfigModal()" title="Configure Drive Link">
-                                    <i class="fa-brands fa-google-drive"></i> Link Drive
-                                </button>
-                                <button type="button" class="btn-icon-pill" onclick="loadManualsFromDrive(true)" title="Refresh List">
-                                    <i class="fa-solid fa-rotate-right"></i> Refresh
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Search Filter -->
-                        <div class="input-group" style="margin-top: 0.85rem;">
-                            <i class="fa-solid fa-magnifying-glass input-icon"></i>
-                            <input type="text" id="manualsSearchInput" class="app-input" placeholder="Search manuals (e.g. RDSO, FT, GE, drawing)..." oninput="filterManualsList()">
-                        </div>
-                    </div>
-
-                    <!-- Loading / Error States -->
-                    <div id="manualsLoading" class="hidden" style="text-align: center; padding: 2rem 1rem; color: var(--text-muted);">
-                        <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: #38bdf8; margin-bottom: 0.75rem;"></i>
-                        <p style="margin: 0; font-size: 0.9rem;">Fetching PDF manuals from Google Drive...</p>
-                    </div>
-
-                    <div id="manualsError" class="hidden" style="padding: 1rem; border-radius: 10px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; font-size: 0.85rem; margin-top: 1rem; text-align: center;">
-                    </div>
-
-                    <!-- PDF Cards Container -->
-                    <div id="manualsListContainer" class="manuals-grid" style="margin-top: 1rem;">
-                        <!-- Injected via JavaScript -->
-                    </div>
-                </div>
-
                 <!-- Pending Work Search Form Removed: Now triggers directly on tab click -->
             </div>
         </main>
     </div>
-    
-    
+
+
     <!-- WSP Rake Results Screen -->
     <div id="wspRakeResultsScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1 id="wspRakeResultTitle">Rake Details</h1>
                 <p class="subtitle">Select a coach for WSP entry</p>
@@ -776,14 +955,21 @@
 
         <main class="slide-up">
             <!-- General Details Card -->
-            <div class="glass-card" style="margin-bottom: 1rem; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
+            <div class="glass-card"
+                style="margin-bottom: 1rem; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Left Date</span>
-                    <div id="wspRakeDepartureDate" style="font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem;">-</div>
+                    <span
+                        style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Left
+                        Date</span>
+                    <div id="wspRakeDepartureDate" style="font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem;">-
+                    </div>
                 </div>
                 <div style="text-align: right;">
-                    <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Arrival Date</span>
-                    <div id="wspRakeArrivalDate" style="font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem;">-</div>
+                    <span
+                        style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Arrival
+                        Date</span>
+                    <div id="wspRakeArrivalDate" style="font-weight: 600; font-size: 1.1rem; margin-top: 0.2rem;">-
+                    </div>
                 </div>
             </div>
 
@@ -815,7 +1001,8 @@
     <!-- WSP Date Results Screen -->
     <div id="wspDateResultsScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1 id="wspDateResultTitle">Date Results</h1>
                 <p class="subtitle" id="wspDateResultSubtitle">Select a coach for details</p>
@@ -846,7 +1033,8 @@
     <!-- WSP Pending Work Results Screen -->
     <div id="wspPendingResultsScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="navigateTo('wspSearchScreen')"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1>Pending Work</h1>
                 <p class="subtitle" id="wspPendingSubtitle">Coaches with pending issues</p>
@@ -885,7 +1073,8 @@
     <!-- WSP Results Screen -->
     <div id="wspResultsScreen" class="screen hidden">
         <header class="app-header fade-in">
-            <button class="icon-btn back-btn" onclick="goBackFromWspResults()"><i class="fa-solid fa-arrow-left"></i></button>
+            <button class="icon-btn back-btn" onclick="goBackFromWspResults()"><i
+                    class="fa-solid fa-arrow-left"></i></button>
             <div>
                 <h1 id="wspResultCoachId">Coach WSP</h1>
                 <p class="subtitle">History & Entry</p>
@@ -898,37 +1087,48 @@
             </div>
 
             <div class="glass-card" style="margin-bottom: 1rem;">
-                <h3 class="group-title" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-clock-rotate-left"></i> Previous WSP Issues</h3>
+                <h3 class="group-title" style="margin-bottom: 0.75rem;"><i class="fa-solid fa-clock-rotate-left"></i>
+                    Previous WSP Issues</h3>
                 <div id="wspHistoryContainer">
                     <!-- History cards or 'no issues' message injected here -->
                 </div>
             </div>
 
-            <div class="glass-card">
-                <div class="accordion-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="document.getElementById('wspDefectFormWrapper').classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('fa-chevron-up'); this.querySelector('.chevron').classList.toggle('fa-chevron-down');">
-                    <h3 class="group-title" id="wspFormTitle" style="margin-bottom: 0; color: #10b981;"><i class="fa-solid fa-plus"></i> Add New Defect</h3>
-                    <i class="fa-solid fa-chevron-down chevron"></i>
+            <!-- Inline Add New Defect Accordion Card on Results Screen -->
+            <div class="glass-card" style="margin-top: 1rem;">
+                <div class="accordion-header"
+                    style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+                    onclick="toggleAddDefectAccordion()">
+                    <h3 class="group-title" id="wspFormTitle" style="margin-bottom: 0; color: #10b981;">
+                        <i class="fa-solid fa-plus"></i> Add New Defect
+                    </h3>
+                    <i class="fa-solid fa-chevron-down chevron" id="wspAddDefectChevron"
+                        style="color: var(--text-muted); transition: transform 0.3s ease;"></i>
                 </div>
-                <div id="wspDefectFormWrapper" class="hidden" style="margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div id="wspDefectFormWrapper" class="hidden"
+                    style="margin-top: 1.2rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08);">
                     <form id="wspDefectForm">
                         <input type="hidden" id="wspEditRowIndex" value="">
                         <input type="hidden" id="wspDefectCoachNum">
-                        
+
                         <!-- Section 1: Basic & Wheel Info -->
                         <div class="form-section">
-                            <div class="form-section-title"><i class="fa-solid fa-calendar-day"></i> Basic & Wheel Info</div>
+                            <div class="form-section-title"><i class="fa-solid fa-calendar-day"></i> Basic & Wheel Info
+                            </div>
                             <div class="form-grid-2">
                                 <div class="form-group">
-                                    <label for="wspDownloadDate">Download Date</label>
-                                    <input type="date" id="wspDownloadDate" class="styled-input" onclick="this.showPicker()" required>
+                                    <label for="wspDownloadDate">Download Date *</label>
+                                    <input type="date" id="wspDownloadDate" class="styled-input"
+                                        onclick="this.showPicker()" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="wspWheelCondition">Wheel Condition</label>
-                                    <input type="text" id="wspWheelCondition" class="styled-input" placeholder="e.g. 3rd axle old shining" required>
+                                    <label for="wspWheelCondition">Wheel Condition *</label>
+                                    <input type="text" id="wspWheelCondition" class="styled-input"
+                                        placeholder="e.g. 3rd axle old shining" required>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Section 2: Diagnostics & Sensors -->
                         <div class="form-section">
                             <div class="form-section-title"><i class="fa-solid fa-bolt"></i> Diagnostics & Sensors</div>
@@ -939,6 +1139,8 @@
                                         <option value="" disabled selected>Select Status</option>
                                         <option value="ok">ok</option>
                                         <option value="Not ok">Not ok</option>
+                                        <option value="LOOPED">LOOPED</option>
+                                        <option value="BYPASS">BYPASS</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -946,68 +1148,73 @@
                                     <select id="wspDumpValve" class="styled-input" required>
                                         <option value="" disabled selected>Select Status</option>
                                         <option value="ok">ok</option>
-                                        <option value="Not ok">Not ok</option>
+                                        <option value="not ok">not ok</option>
                                     </select>
                                 </div>
                                 <div class="form-group">
                                     <label for="wspCode">WSP Code</label>
-                                    <input type="text" id="wspCode" class="styled-input" placeholder="e.g. 99 (Normal), 72, 95" required>
+                                    <input type="text" id="wspCode" class="styled-input"
+                                        placeholder="e.g. 99 (Normal), 72, 95" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="wspSensorGap">Sensor Gap</label>
-                                    <input type="text" id="wspSensorGap" class="styled-input" placeholder="e.g. 3rd axle 1.0" required>
+                                    <input type="text" id="wspSensorGap" class="styled-input"
+                                        placeholder="e.g. 3rd axle 1.0" required>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Section 3: Observations & Category -->
                         <div class="form-section">
-                            <div class="form-section-title"><i class="fa-solid fa-magnifying-glass"></i> Observations & Category</div>
+                            <div class="form-section-title"><i class="fa-solid fa-magnifying-glass"></i> Observations &
+                                Category</div>
                             <div class="form-group">
                                 <label for="wspDefectCategory">Defect Category</label>
                                 <select id="wspDefectCategory" class="styled-input" required>
                                     <option value="" disabled selected>Select Category</option>
-                                    <option value="No defect">No defect</option>
-                                    <option value="Sensor defect">Sensor defect</option>
-                                    <option value="Sensor gap">Sensor gap</option>
-                                    <option value="Dump valve defect">Dump valve defect</option>
-                                    <option value="Pressure switch defect">Pressure switch defect</option>
-                                    <option value="Card defect">Card defect</option>
-                                    <option value="Dump valve connector loose">Dump valve connector loose</option>
-                                    <option value="Speed sensor connector loose">Speed sensor connector loose</option>
-                                    <option value="Fuse">Fuse</option>
-                                    <option value="K05 defective">K05 defective</option>
-                                    <option value="Loose wiring in wago">Loose wiring in wago</option>
-                                    <option value="Junction box defective">Junction box defective</option>
+                                    <option value="NO DEFECT">NO DEFECT</option>
+                                    <option value="SENSOR DEFECT">SENSOR DEFECT</option>
+                                    <option value="DUMP VALVE DEFECT">DUMP VALVE DEFECT</option>
+                                    <option value="PRESSURE SWITCH">PRESSURE SWITCH</option>
+                                    <option value="WIRING ISSUE">WIRING ISSUE</option>
+                                    <option value="POWER SUPPLY">POWER SUPPLY</option>
+                                    <option value="WSPD HARDWARE">WSPD HARDWARE</option>
+                                    <option value="OTHER">OTHER</option>
                                 </select>
                             </div>
                             <div class="form-grid-2">
                                 <div class="form-group">
                                     <label for="wspObservation">Downloading Observation</label>
-                                    <input type="text" id="wspObservation" class="styled-input" placeholder="e.g. No error found" required>
+                                    <textarea id="wspObservation" class="styled-input auto-expand" rows="2"
+                                        placeholder="e.g. No error found" required></textarea>
                                 </div>
                                 <div class="form-group">
                                     <label for="wspOtherObservation">Other Observation</label>
-                                    <input type="text" id="wspOtherObservation" class="styled-input" placeholder="e.g. ok" required>
+                                    <textarea id="wspOtherObservation" class="styled-input auto-expand" rows="2"
+                                        placeholder="e.g. ok" required></textarea>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="wspDescription">Defect Description</label>
-                                <textarea id="wspDescription" class="styled-input" rows="2" placeholder="Describe the issue or enter nil..." required></textarea>
+                                <textarea id="wspDescription" class="styled-input auto-expand" rows="2"
+                                    placeholder="Describe the issue or enter nil..." required></textarea>
                             </div>
                         </div>
-                        
+
                         <!-- Section 4: Action & Pending Work -->
                         <div class="form-section">
-                            <div class="form-section-title"><i class="fa-solid fa-wrench"></i> Action & Pending Work</div>
+                            <div class="form-section-title"><i class="fa-solid fa-wrench"></i> Action & Pending Work
+                            </div>
                             <div class="form-grid-2">
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="wspAttention">Attention (If Any)</label>
-                                    <input type="text" id="wspAttention" class="styled-input" placeholder="nil or specific attention" required>
+                                    <textarea id="wspAttention" class="styled-input auto-expand" rows="2"
+                                        placeholder="nil or specific attention" required></textarea>
                                 </div>
-                                <div class="form-group">
+                                <div class="form-group" style="grid-column: 1 / -1;">
                                     <label for="wspItemRequired">Item Required / Used</label>
-                                    <input type="text" id="wspItemRequired" class="styled-input" placeholder="no or item name" required>
+                                    <textarea id="wspItemRequired" class="styled-input auto-expand" rows="2"
+                                        placeholder="no or item name" required></textarea>
                                 </div>
                                 <div class="form-group">
                                     <label for="wspAnyWorkPending">Any Work Pending?</label>
@@ -1019,14 +1226,16 @@
                                 </div>
                                 <div class="form-group" id="wspPendingWorkDescGroup">
                                     <label for="wspPendingWorkDesc">Pending Work Description</label>
-                                    <input type="text" id="wspPendingWorkDesc" class="styled-input" placeholder="Detail the pending task or -">
+                                    <textarea id="wspPendingWorkDesc" class="styled-input auto-expand" rows="2"
+                                        placeholder="Detail the pending task or -"></textarea>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Section 5: Verification & Staff -->
                         <div class="form-section">
-                            <div class="form-section-title"><i class="fa-solid fa-user-check"></i> Verification & Staff</div>
+                            <div class="form-section-title"><i class="fa-solid fa-user-check"></i> Verification & Staff
+                            </div>
                             <div class="form-grid-2">
                                 <div class="form-group">
                                     <label for="wspChecklist">Checklist Submitted</label>
@@ -1049,18 +1258,552 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <button type="submit" class="btn primary-btn btn-block" id="wspSubmitDefectBtn" style="margin-top: 1rem; background: linear-gradient(135deg, #10b981, #059669);">
-                            <span class="btn-text">Submit Defect</span>
+
+                        <button type="submit" class="btn primary-btn btn-block" id="wspSubmitDefectBtn"
+                            style="margin-top: 1rem; background: linear-gradient(135deg, #10b981, #059669); font-weight: 700;">
+                            <span class="btn-text"><i class="fa-solid fa-paper-plane"></i> Submit Defect Record</span>
                             <div class="spinner hidden"></div>
                         </button>
                     </form>
                 </div>
             </div>
-            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;" onclick="navigateTo('wspSearchScreen')">
+            <button class="btn secondary-btn" style="margin-top: 1rem; width: 100%;"
+                onclick="navigateTo('wspSearchScreen')">
                 <i class="fa-solid fa-arrow-left"></i> Go Back
             </button>
         </main>
+    </div>
+
+    <!-- WSP Checklist Inspection Modal (ONLY opened for filling checklist) -->
+    <div id="wspChecklistModal" class="modal-overlay hidden"
+        onclick="if(event.target === this) closeWspChecklistModal()">
+        <div class="modal-dialog glass-card wsp-defect-modal-dialog">
+            <div class="modal-header"
+                style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div
+                        style="background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">
+                        <i class="fa-solid fa-clipboard-check" id="wspChecklistModalIcon"></i>
+                    </div>
+                    <div>
+                        <h3 id="wspChecklistTitle"
+                            style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff;">WSP Checklist
+                            Inspection Report</h3>
+                        <p id="wspChecklistSubtitle"
+                            style="margin: 2px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">Inspection &
+                            Diagnostic Checklist Details</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" class="btn" onclick="resetWspChecklistToBlank()"
+                        style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; font-size: 0.75rem; padding: 5px 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 5px;"
+                        title="Clear checklist fields">
+                        <i class="fa-solid fa-eraser"></i> Clear Checklist
+                    </button>
+                    <button type="button" class="icon-btn close-modal-btn" onclick="closeWspChecklistModal()"
+                        title="Close Checklist Form"
+                        style="background: rgba(255,255,255,0.08); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; color: #cbd5e1;">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body wsp-defect-modal-body">
+                <form id="wspChecklistForm">
+                    <input type="hidden" id="chkEditRowIndex" value="">
+                    <input type="hidden" id="chkEditCardId" value="">
+                    <input type="hidden" id="chkCoachNum">
+
+                    <!-- SECTION 1: HEADER & BASIC INFO -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fa-solid fa-circle-info"></i> Section 1: Header &
+                            Basic Info</div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="chkDownloadDate">Download Date (Download Date) *</label>
+                                <input type="date" id="chkDownloadDate" class="styled-input" onclick="this.showPicker()"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkWheelCondition">Wheel Condition (Wheel condition) *</label>
+                                <input type="text" id="chkWheelCondition" class="styled-input"
+                                    placeholder="e.g. 3rd axle old shining / ALL WHEEL SHELLING" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkFormCoachNum">Coach Number (COACH NO)</label>
+                                <input type="text" id="chkFormCoachNum" class="styled-input readonly-input" readonly
+                                    tabindex="-1" placeholder="Auto-filled">
+                            </div>
+                            <div class="form-group">
+                                <label for="chkFormCoachType">Coach Type (COACH TYPE)</label>
+                                <input type="text" id="chkFormCoachType" class="styled-input readonly-input" readonly
+                                    tabindex="-1" placeholder="Auto-filled">
+                            </div>
+                            <div class="form-group">
+                                <label for="chkFormTrainNo">Train Number (TRAIN NO)</label>
+                                <input type="text" id="chkFormTrainNo" class="styled-input readonly-input" readonly
+                                    tabindex="-1" placeholder="Auto-filled">
+                            </div>
+                            <div class="form-group">
+                                <label for="chkFormWspd">WSPD Make (WSP MAKE)</label>
+                                <input type="text" id="chkFormWspd" class="styled-input readonly-input" readonly
+                                    tabindex="-1" placeholder="Auto-filled">
+                            </div>
+                            <div class="form-group">
+                                <label for="chkCode">WSP Code (wsp code) *</label>
+                                <input type="text" id="chkCode" class="styled-input"
+                                    placeholder="e.g. 99 (Normal), 72, 95" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkPsStatus">Pressure Switch Status (PS status)</label>
+                                <select id="chkPsStatus" class="styled-input" required>
+                                    <option value="ok" selected>ok</option>
+                                    <option value="OK">OK</option>
+                                    <option value="LOOPED">LOOPED</option>
+                                    <option value="Not ok">Not ok</option>
+                                    <option value="BYPASS">BYPASS</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: DATA TO BE FILLED BY BATCH -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fa-solid fa-clipboard-check"></i> Section 2: Data to
+                            be Filled by Batch</div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="chkPhonicWheelCondition">Condition & Installation of Phonic Wheel</label>
+                                <select id="chkPhonicWheelCondition" class="styled-input">
+                                    <option value="ok" selected>ok</option>
+                                    <option value="not ok">not ok</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkVentingSound">Proper Venting Sound from Dump Valve</label>
+                                <select id="chkVentingSound" class="styled-input">
+                                    <option value="ok" selected>ok</option>
+                                    <option value="not ok">not ok</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkKmReadingDeficiency">Any Deficiency in KM Reading Recording</label>
+                                <select id="chkKmReadingDeficiency" class="styled-input">
+                                    <option value="ok" selected>ok</option>
+                                    <option value="not ok">not ok</option>
+                                    <option value="data not available">data not available</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkBcPressure">BC Pressure</label>
+                                <input type="text" id="chkBcPressure" class="styled-input"
+                                    placeholder="e.g. 3.0 kg/cm²">
+                            </div>
+                            <div class="form-group">
+                                <label for="chkDvReleaseTime">DV Release Time</label>
+                                <input type="text" id="chkDvReleaseTime" class="styled-input"
+                                    placeholder="e.g. 15-20 sec">
+                            </div>
+                            <div class="form-group">
+                                <label for="chkDumpValveChokeMod">Modification of Dump Valve Choke</label>
+                                <select id="chkDumpValveChokeMod" class="styled-input">
+                                    <option value="modified" selected>modified</option>
+                                    <option value="not modified">not modified</option>
+                                    <option value="not applicable">not applicable</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkDumpValve">Self-Test of Dump Valve (Self test dump valve)</label>
+                                <select id="chkDumpValve" class="styled-input" required>
+                                    <option value="ok" selected>ok</option>
+                                    <option value="not ok">not ok</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkChokeFilterCondition">Condition of Dump Valve Choke Filters</label>
+                                <select id="chkChokeFilterCondition" class="styled-input">
+                                    <option value="ok" selected>ok</option>
+                                    <option value="blocked">blocked</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkSensorGap">Air Gap between Phonic Wheel & Sensor (sensor gap)</label>
+                                <input type="text" id="chkSensorGap" class="styled-input"
+                                    placeholder="Auto-filled from Defect Form (e.g. 3rd axle 1.0)">
+                            </div>
+                            <div class="form-group">
+                                <label for="chkHosePipeMod">Hose Pipe Modification Status</label>
+                                <select id="chkHosePipeMod" class="styled-input">
+                                    <option value="modified" selected>modified</option>
+                                    <option value="not modified">not modified</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: DETAILS TO BE COLLECTED BY WSP BATCH -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fa-solid fa-screwdriver-wrench"></i> Section 3:
+                            Details to be Collected by WSP Batch</div>
+
+                        <!-- Sub-section: Modification Status -->
+                        <div class="form-subsection-card">
+                            <h4 class="form-subsection-title"><i class="fa-solid fa-sliders"></i> Modification Status
+                            </h4>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label for="chkMilConnector">Compliance of Revised Wiring MIL Grade
+                                        Connector</label>
+                                    <select id="chkMilConnector" class="styled-input">
+                                        <option value="modified" selected>modified</option>
+                                        <option value="not modified">not modified</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkJbMounting">Compliance of Standardization of Junction Box
+                                        Mounting</label>
+                                    <select id="chkJbMounting" class="styled-input">
+                                        <option value="modified" selected>modified</option>
+                                        <option value="not modified">not modified</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkReroutingSensorCable">Compliance of Rerouting of the Speed Sensor
+                                        Cable</label>
+                                    <select id="chkReroutingSensorCable" class="styled-input">
+                                        <option value="modified" selected>modified</option>
+                                        <option value="not modified">not modified</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkJbCover">Junction Box Protection Cover</label>
+                                    <select id="chkJbCover" class="styled-input">
+                                        <option value="available" selected>available</option>
+                                        <option value="not available">not available</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkJbOrientation">Compliance of Standardization of Junction Box
+                                        Orientation</label>
+                                    <select id="chkJbOrientation" class="styled-input">
+                                        <option value="modified" selected>modified</option>
+                                        <option value="not modified">not modified</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-section: Underframe Observation -->
+                        <div class="form-subsection-card" style="margin-top: 1rem;">
+                            <h4 class="form-subsection-title"><i class="fa-solid fa-magnifying-glass-arrow-right"></i>
+                                Underframe Observation</h4>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label for="chkWaterIngress">Any Water Ingress in Connectors</label>
+                                    <select id="chkWaterIngress" class="styled-input">
+                                        <option value="No" selected>No (Dry / Clean)</option>
+                                        <option value="Yes">Yes (Water Ingress Found)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkSensorProbeCondition">Condition of Speed Sensor Cable Probe</label>
+                                    <select id="chkSensorProbeCondition" class="styled-input">
+                                        <option value="ok" selected>ok</option>
+                                        <option value="rubbing">rubbing</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkCorrectSensorMake">Provision of Correct Make & Type of Speed
+                                        Sensor</label>
+                                    <select id="chkCorrectSensorMake" class="styled-input">
+                                        <option value="Yes" selected>Yes (Correct Make & Type)</option>
+                                        <option value="No">No (Mismatch / Incorrect)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkCorrectDvMake">Provision of Correct Make & Type of Dump Valve</label>
+                                    <select id="chkCorrectDvMake" class="styled-input">
+                                        <option value="Yes" selected>Yes (Correct Make & Type)</option>
+                                        <option value="No">No (Mismatch / Incorrect)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkCrossSensorWiring">Any Cross Connection in Speed Sensor
+                                        Wiring</label>
+                                    <select id="chkCrossSensorWiring" class="styled-input">
+                                        <option value="No" selected>No (Correct Wiring)</option>
+                                        <option value="Yes">Yes (Cross Connection Found)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkCrossDvWiring">Any Cross Connection in Wiring of Dump Valves</label>
+                                    <select id="chkCrossDvWiring" class="styled-input">
+                                        <option value="No" selected>No (Correct Wiring)</option>
+                                        <option value="Yes">Yes (Cross Connection Found)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="chkDvPinCondition">Condition of Dump Valve Connector Pins</label>
+                                    <select id="chkDvPinCondition" class="styled-input">
+                                        <option value="Good / Intact" selected>Good / Intact</option>
+                                        <option value="Bent Pins">Bent Pins</option>
+                                        <option value="Broken Pins">Broken Pins</option>
+                                        <option value="Corroded / Rusty">Corroded / Rusty</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4: WSP PANEL -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fa-solid fa-server"></i> Section 4: WSP Panel</div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="chkRbcStatus">Check Regulated Battery Charger (RBC) for Power Supply to WSP
+                                    System</label>
+                                <select id="chkRbcStatus" class="styled-input">
+                                    <option value="ok" selected>ok</option>
+                                    <option value="not ok">not ok</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkKsRelayTimer">KS Relay Timer Setting</label>
+                                <input type="text" id="chkKsRelayTimer" class="styled-input"
+                                    placeholder="e.g. Satisfactory / 20 sec">
+                            </div>
+                            <div class="form-group">
+                                <label for="chkMcbTripping">Any Tripping of MCB</label>
+                                <select id="chkMcbTripping" class="styled-input">
+                                    <option value="No" selected>No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkMcbFuseRating">Correct Rating of MCB / FUSE</label>
+                                <select id="chkMcbFuseRating" class="styled-input">
+                                    <option value="Correct Rating" selected>Correct Rating</option>
+                                    <option value="Wrong Rating / Replaced">Wrong Rating / Replaced</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkLedGlow">Any Fault LED Glow on the Panel</label>
+                                <select id="chkLedGlow" class="styled-input">
+                                    <option value="no" selected>no</option>
+                                    <option value="yes">yes</option>
+                                    <option value="not applicable">not applicable</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkPsBypass">Any Bypass of Pressure Switch</label>
+                                <select id="chkPsBypass" class="styled-input">
+                                    <option value="No" selected>No (Not Bypassed)</option>
+                                    <option value="Yes">Yes (Bypassed)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkSleepMode">Sleep Mode of WSPD</label>
+                                <select id="chkSleepMode" class="styled-input">
+                                    <option value="yes" selected>yes</option>
+                                    <option value="no">no</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 5: DOWNLOAD OBSERVATION -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fa-solid fa-download"></i> Section 5: Download
+                            Observation</div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="chkDvExcessiveActivation">Any Dump Valve Activated More No. of Times as per
+                                    Downloaded Data</label>
+                                <select id="chkDvExcessiveActivation" class="styled-input">
+                                    <option value="No" selected>No</option>
+                                    <option value="Yes - Axle 1">Yes - Axle 1</option>
+                                    <option value="Yes - Axle 2">Yes - Axle 2</option>
+                                    <option value="Yes - Axle 3">Yes - Axle 3</option>
+                                    <option value="Yes - Axle 4">Yes - Axle 4</option>
+                                    <option value="Yes - Multiple Axles">Yes - Multiple Axles</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkContinuousFaultAxle">Any Particular Axle Continuous Fault
+                                    Reported</label>
+                                <select id="chkContinuousFaultAxle" class="styled-input">
+                                    <option value="None" selected>None</option>
+                                    <option value="Axle 1">Axle 1</option>
+                                    <option value="Axle 2">Axle 2</option>
+                                    <option value="Axle 3">Axle 3</option>
+                                    <option value="Axle 4">Axle 4</option>
+                                    <option value="Multiple Axles">Multiple Axles</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkDateTimeSync">Synchronising of Date/Time of WSPD System with Current
+                                    Date/Time</label>
+                                <select id="chkDateTimeSync" class="styled-input">
+                                    <option value="ok" selected>ok</option>
+                                    <option value="wrong date time( attended)">wrong date time( attended)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkPowerOnIssues">Any Power On Issues Noticed</label>
+                                <select id="chkPowerOnIssues" class="styled-input">
+                                    <option value="No" selected>No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkSpeedVariation">Any Speed Variation in the Axle</label>
+                                <select id="chkSpeedVariation" class="styled-input">
+                                    <option value="No" selected>No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkObservation">Downloading Observation (downloading obseravtion) *</label>
+                                <textarea id="chkObservation" class="styled-input auto-expand" rows="2"
+                                    placeholder="e.g. DOWNLOADING NOT DONE / No error found" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 6: CONCLUSION -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fa-solid fa-clipboard-check"></i> Section 6:
+                            Conclusion</div>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label for="chkDefectCategory">Defect Category (defect category) *</label>
+                                <select id="chkDefectCategory" class="styled-input" required>
+                                    <option value="" disabled selected>Select Category</option>
+                                    <option value="No defect">No defect</option>
+                                    <option value="NO ISSUE IN WSP DATA">NO ISSUE IN WSP DATA</option>
+                                    <option value="PRESSURE SWITCH">PRESSURE SWITCH</option>
+                                    <option value="Pressure switch defect">Pressure switch defect</option>
+                                    <option value="Wiring issue">Wiring issue</option>
+                                    <option value="Loose wiring in wago">Loose wiring in wago</option>
+                                    <option value="Sensor defective">Sensor defective</option>
+                                    <option value="Sensor defect">Sensor defect</option>
+                                    <option value="Sensor gap">Sensor gap</option>
+                                    <option value="Dump valve defective">Dump valve defective</option>
+                                    <option value="Dump valve defect">Dump valve defect</option>
+                                    <option value="INSUFFICIENT DATA">INSUFFICIENT DATA</option>
+                                    <option value="Card defect">Card defect</option>
+                                    <option value="Dump valve connector loose">Dump valve connector loose</option>
+                                    <option value="Speed sensor connector loose">Speed sensor connector loose</option>
+                                    <option value="Fuse">Fuse</option>
+                                    <option value="K05 defective">K05 defective</option>
+                                    <option value="Junction box defective">Junction box defective</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkDefectCorrelated">Whether Defect Correlated with Any Defect in the
+                                    WSPD</label>
+                                <select id="chkDefectCorrelated" class="styled-input">
+                                    <option value="No" selected>No (Not Correlated)</option>
+                                    <option value="Yes">Yes (Correlated)</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="chkAttention">Attention Given (ATTENTION IF ANY) *</label>
+                                <textarea id="chkAttention" class="styled-input auto-expand" rows="2"
+                                    style="resize: vertical; overflow-y: auto; min-height: 52px; line-height: 1.4;"
+                                    placeholder="nil or details of attention given" required></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="chkOtherObservation">Other Observation (OTHER OBSERVATION)</label>
+                                <textarea id="chkOtherObservation" class="styled-input auto-expand" rows="2"
+                                    style="resize: vertical; overflow-y: auto; min-height: 52px; line-height: 1.4;"
+                                    placeholder="e.g. CB12 CARD NOT AVAILABLE / ok"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkAnyWorkPending">Any Work Pending? (Pending Work) *</label>
+                                <select id="chkAnyWorkPending" class="styled-input" required>
+                                    <option value="No" selected>No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="chkDataEntryBy">Data Entry By (Data Entry By) *</label>
+                                <select id="chkDataEntryBy" class="styled-input" required>
+                                    <option value="" disabled selected>Select ID</option>
+                                    <option value="295">295</option>
+                                    <option value="294">294</option>
+                                    <option value="274">274</option>
+                                    <option value="755">755</option>
+                                    <option value="639">639</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top: 0.75rem;">
+                            <label for="chkDescription">Defect Description (DEFECT DESCRIPTION) *</label>
+                            <textarea id="chkDescription" class="styled-input auto-expand" rows="2"
+                                placeholder="Describe the issue or enter nil..." required></textarea>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem;">
+                        <button type="submit" class="btn primary-btn" id="wspSubmitChecklistBtn"
+                            style="flex: 2; background: linear-gradient(135deg, #10b981, #059669); margin: 0; font-weight: 700; border-radius: 10px;">
+                            <span class="btn-text"><i class="fa-solid fa-floppy-disk"></i> Save Checklist Report</span>
+                            <div class="spinner hidden"></div>
+                        </button>
+                        <button type="button" class="btn" id="wspChecklistPdfBtn"
+                            onclick="generateWspPdfFromChecklistForm()"
+                            style="flex: 1.2; background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(220, 38, 38, 0.15)); border: 1px solid rgba(239, 68, 68, 0.5); color: #fca5a5; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; padding: 10px 14px; font-size: 0.9rem;"
+                            title="Generate & Preview Official PDF Report">
+                            <i class="fa-solid fa-file-pdf" style="font-size: 1.1rem; color: #ef4444;"></i> Generate PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- WSP Report PDF Preview & Share Modal Window -->
+    <div id="wspPdfPreviewModal" class="modal-overlay hidden" style="z-index: 1100;">
+        <div class="wsp-pdf-preview-dialog">
+            <!-- Modal Header -->
+            <div class="wsp-pdf-header">
+                <div class="wsp-pdf-title-box">
+                    <div class="wsp-pdf-icon-badge">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <div>
+                        <h3 class="wsp-pdf-title" id="wspPdfPreviewTitle">WSP Inspection Report</h3>
+                        <p class="wsp-pdf-subtitle" id="wspPdfPreviewSubtitle">Official South Western Railway Report</p>
+                    </div>
+                </div>
+                <button type="button" class="wsp-pdf-close" onclick="closeWspPdfPreviewModal()" title="Close Preview">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Toolbar: Download PDF, Share, Print -->
+            <div class="wsp-pdf-actions-bar">
+                <button type="button" class="pdf-btn pdf-btn-download" id="wspPdfDownloadBtn"
+                    onclick="downloadGeneratedWspPdf()" title="Download PDF file to device">
+                    <i class="fa-solid fa-download"></i> <span>Download PDF</span>
+                </button>
+                <button type="button" class="pdf-btn pdf-btn-share" id="wspPdfShareBtn" onclick="shareWspNative()"
+                    title="Share PDF report to any app">
+                    <i class="fa-solid fa-share-nodes"></i> <span>Share</span>
+                </button>
+                <button type="button" class="pdf-btn pdf-btn-print" onclick="printWspPdfReport()"
+                    title="Print report or save as vector PDF">
+                    <i class="fa-solid fa-print"></i> <span>Print</span>
+                </button>
+            </div>
+
+            <!-- Scrollable Report Preview Body -->
+            <div class="wsp-pdf-scroll-body" id="wspPdfPreviewScroll">
+                <div id="wspPdfReportContent" class="wsp-pdf-content-wrapper">
+                    <!-- Injected Report Sheets -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Fullscreen PDF Viewer Modal -->
@@ -1075,30 +1818,53 @@
             </button>
         </div>
 
-        <!-- Viewer Toolbar: Zoom, Share, Download -->
+        <!-- Viewer Toolbar: Zoom, Rotate Left/Right, Cache, Share, Download -->
         <div class="pdf-modal-toolbar">
-            <div class="pdf-zoom-group">
-                <button type="button" class="pdf-toolbar-btn" onclick="zoomPdf(-0.25)" title="Zoom Out">
-                    <i class="fa-solid fa-minus"></i>
-                </button>
-                <span class="pdf-zoom-val" id="pdfZoomVal">100%</span>
-                <button type="button" class="pdf-toolbar-btn" onclick="zoomPdf(0.25)" title="Zoom In">
-                    <i class="fa-solid fa-plus"></i>
-                </button>
-                <button type="button" class="pdf-toolbar-btn" onclick="resetPdfZoom()" title="Reset Zoom">
-                    <i class="fa-solid fa-arrows-rotate"></i> Reset
-                </button>
+            <div class="pdf-controls-left" style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <!-- Zoom Group -->
+                <div class="pdf-zoom-group">
+                    <button type="button" class="pdf-toolbar-btn" onclick="zoomPdf(-0.25)" title="Zoom Out">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <span class="pdf-zoom-val" id="pdfZoomVal">100%</span>
+                    <button type="button" class="pdf-toolbar-btn" onclick="zoomPdf(0.25)" title="Zoom In">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button type="button" class="pdf-toolbar-btn" onclick="resetPdfZoom()"
+                        title="Reset Zoom & Rotation">
+                        <i class="fa-solid fa-arrows-rotate"></i> Reset
+                    </button>
+                </div>
+
+                <!-- Rotate Group: Left & Right -->
+                <div class="pdf-zoom-group">
+                    <button type="button" class="pdf-toolbar-btn" onclick="rotatePdf(-90)"
+                        title="Rotate Left 90° (Counter-clockwise)">
+                        <i class="fa-solid fa-rotate-left"></i> Left
+                    </button>
+                    <span class="pdf-zoom-val" id="pdfRotateVal" style="min-width: 38px;">0°</span>
+                    <button type="button" class="pdf-toolbar-btn" onclick="rotatePdf(90)"
+                        title="Rotate Right 90° (Clockwise)">
+                        <i class="fa-solid fa-rotate-right"></i> Right
+                    </button>
+                </div>
             </div>
 
             <div class="pdf-action-group">
-                <button type="button" class="pdf-action-pill share" onclick="shareActivePdf()" title="Share PDF via WhatsApp, Email, etc.">
-                    <i class="fa-solid fa-share-nodes"></i> Share
-                </button>
-                <button type="button" class="pdf-action-pill download" onclick="downloadActivePdf()" title="Download PDF file">
+                <span class="pdf-cache-status-pill hidden" id="pdfCacheStatusPill" title="Offline storage status">
+                    <i class="fa-solid fa-bolt"></i> <span id="pdfCacheStatusText">Cached Offline</span>
+                </span>
+                <button type="button" class="pdf-action-pill download" onclick="downloadActivePdf()"
+                    title="Download PDF file">
                     <i class="fa-solid fa-download"></i> Download
                 </button>
-                <button type="button" class="pdf-action-pill drive" onclick="openActivePdfInDrive()" title="Open in Google Drive">
-                    <i class="fa-brands fa-google-drive"></i> Open
+                <button type="button" class="pdf-action-pill share" onclick="shareActivePdf()"
+                    title="Share PDF via WhatsApp, Email, etc.">
+                    <i class="fa-solid fa-share-nodes"></i> Share
+                </button>
+                <button type="button" class="pdf-action-pill clear-cache" onclick="clearAllPdfCache()"
+                    title="Clear all locally cached manuals">
+                    <i class="fa-solid fa-trash-can"></i> Clear Cache
                 </button>
             </div>
         </div>
@@ -1110,7 +1876,9 @@
         </div>
     </div>
 
-    <script src="pwa.js?v=20261101" defer></script>
-    <script src="app.js?v=202611011015" defer></script>
+    <script src="html2pdf.bundle.min.js" defer></script>
+    <script src="pwa.js?v=5.0" defer></script>
+    <script src="app.js?v=5.0" defer></script>
 </body>
+
 </html>

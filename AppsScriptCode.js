@@ -509,9 +509,9 @@ function doPost(e) {
           'ARRIVAL DATE', 'ARRIVAL T NO', 'WSP MAKE', 'Download Date', 'Month',
           'PS status', 'wsp code', 'Self test dump valve', 'Sensor gap',
           'downloading obseravtion', 'OTHER OBSERVATION', 'Wheel condition',
-          'defect category', 'ATTENTION IF ANY', 'PENDING WORK',
+          'defect category', 'ATTENTION IF ANY', 'FOLLOU UP REMARKS',
           'DEFECT DESCRIPTION', 'ITEM REQUIRED / USED', 'CHECKLIST SUBMITTED',
-          'Data Entry By', 'ANY WORK PENDING'
+          'data entry by', 'Pending work', 'pending work description'
         ]);
       }
 
@@ -528,7 +528,13 @@ function doPost(e) {
 
       sheet.getRange(targetRow, 1).setValue(body.coachNumber || '');
 
-      var col10to27 = [
+      // Auto-populate coach type, train no, wsp make in columns 3, 4, 9 if provided
+      if (body.trainNumber) sheet.getRange(targetRow, 3).setValue(body.trainNumber);
+      if (body.coachType) sheet.getRange(targetRow, 4).setValue(body.coachType);
+      if (body.wspMake) sheet.getRange(targetRow, 9).setValue(body.wspMake);
+
+      var allColsFrom10 = [
+        // Cols 10-27 (Existing)
         body.downloadDate || '',
         body.month || '',
         body.psStatus || '',
@@ -540,16 +546,82 @@ function doPost(e) {
         body.wheelCondition || '',
         body.defectCategory || '',
         body.attention || '',
-        '', // 21. PENDING WORK (Removed)
+        body.followUpRemarks || '', // 21. FOLLOU UP REMARKS
         body.description || '',
         body.itemRequired || '',
         body.checklistSubmitted || '',
         body.dataEntryBy || '',
         body.anyWorkPending || '',
-        body.pendingWorkDesc || ''
+        body.pendingWorkDesc || '',
+
+        // Section 2: Batch Data (Cols 28-35)
+        body.phonicWheelCondition || '',
+        body.ventingSound || '',
+        body.kmReadingDeficiency || '',
+        body.bcPressure || '',
+        body.dvReleaseTime || '',
+        body.dumpValveChokeMod || '',
+        body.chokeFilterCondition || '',
+        body.hosePipeMod || '',
+
+        // Section 3A: Modification Status (Cols 36-40)
+        body.milConnector || '',
+        body.jbMounting || '',
+        body.reroutingSensorCable || '',
+        body.jbCover || '',
+        body.jbOrientation || '',
+
+        // Section 3B: Underframe Observation (Cols 41-47)
+        body.waterIngress || '',
+        body.sensorProbeCondition || '',
+        body.correctSensorMake || '',
+        body.correctDvMake || '',
+        body.crossSensorWiring || '',
+        body.crossDvWiring || '',
+        body.dvPinCondition || '',
+
+        // Section 4: WSP Panel Observations (Cols 48-59)
+        body.rbcStatus || '',
+        body.ksRelayTimer || '',
+        body.mcbTripping || '',
+        body.mcbFuseRating || '',
+        body.ledGlow || '',
+        body.dvExcessiveActivation || '',
+        body.continuousFaultAxle || '',
+        body.psBypass || '',
+        body.sleepMode || '',
+        body.dateTimeSync || '',
+        body.powerOnIssues || '',
+        body.speedVariation || '',
+
+        // Section 5: Attention & Conclusion (Col 60)
+        body.defectCorrelated || ''
       ];
 
-      sheet.getRange(targetRow, 10, 1, col10to27.length).setValues([col10to27]);
+      // Ensure headers in row 1 if sheet has fewer columns
+      var currentLastCol = sheet.getLastColumn();
+      var requiredHeaders = [
+        'Condition of Phonic Wheel', 'Venting Sound', 'KM Reading Deficiency',
+        'BC Pressure', 'DV Release Time', 'Dump Valve Choke Mod', 'Choke Filter Condition',
+        'Hose Pipe Mod', 'MIL Connector Compliance', 'JB Mounting Compliance',
+        'Sensor Cable Rerouting', 'JB Protection Cover', 'JB Orientation Compliance',
+        'Water Ingress in Connectors', 'Sensor Probe Condition', 'Correct Sensor Make & Type',
+        'Correct DV Make & Type', 'Cross Sensor Wiring', 'Cross DV Wiring', 'DV Pin Condition',
+        'RBC Power Supply Status', 'KS Relay Timer', 'MCB Tripping', 'MCB/Fuse Rating',
+        'LED Glow Status', 'DV Excessive Activation', 'Continuous Fault Axle',
+        'PS Bypass Status', 'Sleep Mode Status', 'DateTime Sync Status', 'Power On Issues',
+        'Speed Variation Status', 'Defect Correlated with WSPD'
+      ];
+
+      if (currentLastCol < 27 + requiredHeaders.length) {
+        var startCol = Math.max(28, currentLastCol + 1);
+        var headersToAdd = requiredHeaders.slice(startCol - 28);
+        if (headersToAdd.length > 0) {
+          sheet.getRange(1, startCol, 1, headersToAdd.length).setValues([headersToAdd]);
+        }
+      }
+
+      sheet.getRange(targetRow, 10, 1, allColsFrom10.length).setValues([allColsFrom10]);
 
       // Trigger Firebase Sync Immediately
       try {
