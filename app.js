@@ -5385,44 +5385,147 @@ function letterToIndex(letter) {
     // WSP Manuals & PDF Viewer Logic
     // ==========================================================================
 
-    const DEFAULT_WSP_MANUALS_FOLDER_ID = '1ybQuCVbuRzHczorIBP-m-PapvXnrgVAi';
-    const DEFAULT_WSP_MANUALS_DRIVE_URL = 'https://drive.google.com/drive/folders/1ybQuCVbuRzHczorIBP-m-PapvXnrgVAi?usp=sharing';
+    const DEFAULT_WSP_MANUALS_FOLDER_ID = '1puysobNlAtUwjdJ1hy1E6ieJpk24QQcx';
+    const DEFAULT_WSP_MANUALS_DRIVE_URL = 'https://drive.google.com/drive/folders/1puysobNlAtUwjdJ1hy1E6ieJpk24QQcx?usp=sharing';
 
     const DEFAULT_LHB_MANUALS_FOLDER_ID = '1aGdYlSIri5xoZYPF3KqGPaeue6QgeKCz';
     const DEFAULT_LHB_MANUALS_DRIVE_URL = 'https://drive.google.com/drive/folders/1aGdYlSIri5xoZYPF3KqGPaeue6QgeKCz?usp=sharing';
 
     const INITIAL_WSP_MANUALS = [
         {
-            id: "1ktslZqQRyJbzSzPWpkdI4hs0rTLRL_I9",
-            name: "1. RDSO letter for checking wrong electrical connections in WSP System.pdf",
-            size: 1048576,
-            viewUrl: "https://drive.google.com/file/d/1ktslZqQRyJbzSzPWpkdI4hs0rTLRL_I9/view?usp=sharing",
-            previewUrl: "https://drive.google.com/file/d/1ktslZqQRyJbzSzPWpkdI4hs0rTLRL_I9/preview",
-            downloadUrl: "https://drive.google.com/uc?export=download&id=1ktslZqQRyJbzSzPWpkdI4hs0rTLRL_I9"
+            id: "1027BnFJHQfAC_rgme7CWg5HL4qv1iOWf",
+            name: "1.1 KB manual.pdf",
+            size: 1323318,
+            lastUpdated: "2026-11-25T09:15:02.702Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1027BnFJHQfAC_rgme7CWg5HL4qv1iOWf",
+            viewUrl: "https://drive.google.com/file/d/1027BnFJHQfAC_rgme7CWg5HL4qv1iOWf/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1027BnFJHQfAC_rgme7CWg5HL4qv1iOWf/preview"
         },
         {
-            id: "1Vz3sGFxp0jMC90GyTULJTSCXVq2xaW7w",
-            name: "FT WSP D00 ELECTRIC SEHEME.pdf",
-            size: 2097152,
-            viewUrl: "https://drive.google.com/file/d/1Vz3sGFxp0jMC90GyTULJTSCXVq2xaW7w/view?usp=sharing",
-            previewUrl: "https://drive.google.com/file/d/1Vz3sGFxp0jMC90GyTULJTSCXVq2xaW7w/preview",
-            downloadUrl: "https://drive.google.com/uc?export=download&id=1Vz3sGFxp0jMC90GyTULJTSCXVq2xaW7w"
+            id: "1WidenNOGh1hTLvAmrriXpwiAW4Nxpsgv",
+            name: "1.2 KB fault code.pdf",
+            size: 366008,
+            lastUpdated: "2026-11-25T09:11:56.522Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1WidenNOGh1hTLvAmrriXpwiAW4Nxpsgv",
+            viewUrl: "https://drive.google.com/file/d/1WidenNOGh1hTLvAmrriXpwiAW4Nxpsgv/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1WidenNOGh1hTLvAmrriXpwiAW4Nxpsgv/preview"
         },
         {
-            id: "1DXxAyjgc2rQDO_yUzOo3uqbZEAKYZxuQ",
-            name: "GE card connector drawing.pdf",
-            size: 1572864,
-            viewUrl: "https://drive.google.com/file/d/1DXxAyjgc2rQDO_yUzOo3uqbZEAKYZxuQ/view?usp=sharing",
-            previewUrl: "https://drive.google.com/file/d/1DXxAyjgc2rQDO_yUzOo3uqbZEAKYZxuQ/preview",
-            downloadUrl: "https://drive.google.com/uc?export=download&id=1DXxAyjgc2rQDO_yUzOo3uqbZEAKYZxuQ"
+            id: "1YOwXBbwhOeUIII_erdZDWYWNYiXvfvr9",
+            name: "1.3 KB download procedure.pdf",
+            size: 1178545,
+            lastUpdated: "2026-11-25T08:58:22.992Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1YOwXBbwhOeUIII_erdZDWYWNYiXvfvr9",
+            viewUrl: "https://drive.google.com/file/d/1YOwXBbwhOeUIII_erdZDWYWNYiXvfvr9/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1YOwXBbwhOeUIII_erdZDWYWNYiXvfvr9/preview"
         },
         {
-            id: "1GElgeGqip4lYBO7--6Qx0k7zrAf5LgrH",
-            name: "n2 card connector drawing.pdf",
-            size: 1572864,
-            viewUrl: "https://drive.google.com/file/d/1GElgeGqip4lYBO7--6Qx0k7zrAf5LgrH/view?usp=sharing",
-            previewUrl: "https://drive.google.com/file/d/1GElgeGqip4lYBO7--6Qx0k7zrAf5LgrH/preview",
-            downloadUrl: "https://drive.google.com/uc?export=download&id=1GElgeGqip4lYBO7--6Qx0k7zrAf5LgrH"
+            id: "1cWaprx5BPnize16JJGDkLHH9H3QsxnCn",
+            name: "2.1 FT KES manual.pdf",
+            size: 3766142,
+            lastUpdated: "2026-11-25T09:14:27.968Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1cWaprx5BPnize16JJGDkLHH9H3QsxnCn",
+            viewUrl: "https://drive.google.com/file/d/1cWaprx5BPnize16JJGDkLHH9H3QsxnCn/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1cWaprx5BPnize16JJGDkLHH9H3QsxnCn/preview"
+        },
+        {
+            id: "1MGkcT1fyxyohoUvU4zhTYqaCxcHoyBxq",
+            name: "2.2 FT KES - fault code.pdf",
+            size: 1118019,
+            lastUpdated: "2026-11-25T09:11:11.379Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1MGkcT1fyxyohoUvU4zhTYqaCxcHoyBxq",
+            viewUrl: "https://drive.google.com/file/d/1MGkcT1fyxyohoUvU4zhTYqaCxcHoyBxq/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1MGkcT1fyxyohoUvU4zhTYqaCxcHoyBxq/preview"
+        },
+        {
+            id: "1xHIqz11tpQjlwx3p_rrjLoRkRqPH_IWt",
+            name: "2.3 FT KES - selft test procedure.pdf",
+            size: 74427,
+            lastUpdated: "2026-11-25T08:46:41.129Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1xHIqz11tpQjlwx3p_rrjLoRkRqPH_IWt",
+            viewUrl: "https://drive.google.com/file/d/1xHIqz11tpQjlwx3p_rrjLoRkRqPH_IWt/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1xHIqz11tpQjlwx3p_rrjLoRkRqPH_IWt/preview"
+        },
+        {
+            id: "1A6spn2wQ1t2EbPXgU2SJbIVbqdAyotsT",
+            name: "3.1 FT KES, NEW manual.pdf",
+            size: 7000644,
+            lastUpdated: "2026-11-25T08:42:53.091Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1A6spn2wQ1t2EbPXgU2SJbIVbqdAyotsT",
+            viewUrl: "https://drive.google.com/file/d/1A6spn2wQ1t2EbPXgU2SJbIVbqdAyotsT/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1A6spn2wQ1t2EbPXgU2SJbIVbqdAyotsT/preview"
+        },
+        {
+            id: "1qA2o3psuBQrQWGAeyaw-Jll4cjOyXmwc",
+            name: "3.2 FT new downloading procedure.pdf",
+            size: 2219650,
+            lastUpdated: "2026-11-25T08:45:14.939Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1qA2o3psuBQrQWGAeyaw-Jll4cjOyXmwc",
+            viewUrl: "https://drive.google.com/file/d/1qA2o3psuBQrQWGAeyaw-Jll4cjOyXmwc/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1qA2o3psuBQrQWGAeyaw-Jll4cjOyXmwc/preview"
+        },
+        {
+            id: "1WiwSvm3qQfzi78WTiGlWIDmhoNhgfBIt",
+            name: "3.3 FT NEW fault code.pdf",
+            size: 81113,
+            lastUpdated: "2026-11-25T08:49:10.652Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1WiwSvm3qQfzi78WTiGlWIDmhoNhgfBIt",
+            viewUrl: "https://drive.google.com/file/d/1WiwSvm3qQfzi78WTiGlWIDmhoNhgfBIt/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1WiwSvm3qQfzi78WTiGlWIDmhoNhgfBIt/preview"
+        },
+        {
+            id: "1GUwC82uC30Y5O3SIHS2TnBnLAPORDW8B",
+            name: "3.3 FT new- self test procedure.pdf",
+            size: 174329,
+            lastUpdated: "2026-11-25T08:44:00.531Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1GUwC82uC30Y5O3SIHS2TnBnLAPORDW8B",
+            viewUrl: "https://drive.google.com/file/d/1GUwC82uC30Y5O3SIHS2TnBnLAPORDW8B/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1GUwC82uC30Y5O3SIHS2TnBnLAPORDW8B/preview"
+        },
+        {
+            id: "1Ey3reh3zu54ck2W5uRHLVi6I8ybrPx6q",
+            name: "4.1 ESCORTS manual.pdf",
+            size: 1888491,
+            lastUpdated: "2026-11-25T08:01:56.078Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1Ey3reh3zu54ck2W5uRHLVi6I8ybrPx6q",
+            viewUrl: "https://drive.google.com/file/d/1Ey3reh3zu54ck2W5uRHLVi6I8ybrPx6q/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1Ey3reh3zu54ck2W5uRHLVi6I8ybrPx6q/preview"
+        },
+        {
+            id: "1V1wcO3DTyIJxL24uoWtmJ50C7_EZXiHv",
+            name: "4.2 Escorts- Faultcode.pdf",
+            size: 1479612,
+            lastUpdated: "2026-11-25T08:35:28.138Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1V1wcO3DTyIJxL24uoWtmJ50C7_EZXiHv",
+            viewUrl: "https://drive.google.com/file/d/1V1wcO3DTyIJxL24uoWtmJ50C7_EZXiHv/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1V1wcO3DTyIJxL24uoWtmJ50C7_EZXiHv/preview"
+        },
+        {
+            id: "1xDeu7zvqGkGaibYQ3WwJQiAB8kq-Wwxf",
+            name: "4.3 Escorts- downloading procedure.pdf",
+            size: 1107170,
+            lastUpdated: "2026-11-25T08:37:50.202Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1xDeu7zvqGkGaibYQ3WwJQiAB8kq-Wwxf",
+            viewUrl: "https://drive.google.com/file/d/1xDeu7zvqGkGaibYQ3WwJQiAB8kq-Wwxf/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1xDeu7zvqGkGaibYQ3WwJQiAB8kq-Wwxf/preview"
+        },
+        {
+            id: "1qwcKrQptdBVmaNGWUu-8U6wxomQZ_vk6",
+            name: "5.1 Escorts KES Manual.pdf",
+            size: 3978134,
+            lastUpdated: "2026-11-25T09:07:54.101Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1qwcKrQptdBVmaNGWUu-8U6wxomQZ_vk6",
+            viewUrl: "https://drive.google.com/file/d/1qwcKrQptdBVmaNGWUu-8U6wxomQZ_vk6/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1qwcKrQptdBVmaNGWUu-8U6wxomQZ_vk6/preview"
+        },
+        {
+            id: "1KRedod6ADQXaIXuHCNfl9f46oJe6wyPd",
+            name: "5.2 Escorts KES - Fault code.pdf",
+            size: 1595869,
+            lastUpdated: "2026-11-25T09:09:34.599Z",
+            downloadUrl: "https://drive.google.com/uc?export=download&id=1KRedod6ADQXaIXuHCNfl9f46oJe6wyPd",
+            viewUrl: "https://drive.google.com/file/d/1KRedod6ADQXaIXuHCNfl9f46oJe6wyPd/view?usp=sharing",
+            previewUrl: "https://drive.google.com/file/d/1KRedod6ADQXaIXuHCNfl9f46oJe6wyPd/preview"
         }
     ];
 
@@ -5496,11 +5599,15 @@ function letterToIndex(letter) {
     }
 
     function getActiveDriveFolderId() {
-        return localStorage.getItem('coachdb_manuals_folder_id') || DEFAULT_WSP_MANUALS_FOLDER_ID;
+        const stored = localStorage.getItem('coachdb_manuals_folder_id');
+        if (stored && stored !== '1ybQuCVbuRzHczorIBP-m-PapvXnrgVAi') return stored;
+        return DEFAULT_WSP_MANUALS_FOLDER_ID;
     }
 
     function getActiveDriveFolderUrl() {
-        return localStorage.getItem('coachdb_manuals_drive_url') || DEFAULT_WSP_MANUALS_DRIVE_URL;
+        const stored = localStorage.getItem('coachdb_manuals_drive_url');
+        if (stored && !stored.includes('1ybQuCVbuRzHczorIBP-m-PapvXnrgVAi')) return stored;
+        return DEFAULT_WSP_MANUALS_DRIVE_URL;
     }
 
     async function loadManualsFromDrive(forceRefresh = false) {
