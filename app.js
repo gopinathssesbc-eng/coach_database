@@ -7070,6 +7070,61 @@ _Generated from Coach Database PWA_`;
     // SS2 / POH SURVEY MODULE LOGIC & PDF ENGINE
     // ==========================================
 
+    const DEFAULT_CAI_HEADERS = [
+        "CAI - Retrofitment of additional water filling arrangement in LHB type coaches",
+        "CAI - Standardization of water filling assembly for LHB type AC and including power car and SCN EOG coaches to avoid the problem of spillage of water on platform",
+        "CAI - Modification for shifting of EPPFS from underslung to onboard",
+        "CAI - Modification of foot operated valve fitted inside and outside to pressmatic type in LWACCNE coaches and Amrit Bharat coaches",
+        "CAI - Retrofitment of NRV- 1/4\" in between the isolating cock and air filter regulator lubricator (AFRL) unit of EPPFS in LHB coach for preventing water ingress from EPPFS to air brake pipeline",
+        "CAI - Retrofitment of metallic Y Strainer in SS water inlet line for the water pressurization system of EPPFS of MCF Specs MMDTS 19027 Rev-1 to Rev-3",
+        "CAI - Provision of isolation cock in plumbing lines of FRP modular toilet",
+        "CAI - Provision of locking strip with Hexogonal Head Screw to avoid loosening of Roof Ventilator in RCF made coaches",
+        "CAI - Provision of protection cover over Passenger Emergency Alarm Pull Box in LHB coaches",
+        "CAI - Tail Lamp Bracket on End wall of LHB SLR, Power Car & LVPH",
+        "CAI - Replacement of catch arrangement of backrest cum berth in LFAC coaches",
+        "CAI - Standardization of 2 Amp circuit breaker in FSDS system for IR AC Coaches",
+        "CAI - Segregation of positive and negative cables in separate conduits for FSDSsystems",
+        "CAI - Power supply from SBC panel for FSDS System.",
+        "CAI - Standardized location for fitment of automatic FSDS system in AC coaches. (Partition of Linen Cabinet for FSDS)",
+        "CAI - Retrofitment/fitment of aspiration type Automatic Smoke/Fire Detection with Alarm System in IR AC Coaches.",
+        "CAI - Locking arrangement of isolating cock of FDAS in LHB AC coaches",
+        "CAI - 100% conversion from manual to automatic FDSS/FSDS in pantry cars, power cars and AC Coaches.",
+        "CAI - Integration of FSDS with Braking System in AC Coaches",
+        "CAI - Revised wiring scheme for WSP system of LHB Coaches",
+        "CAI - Standardized installation of WSP junction box & Speed sensor cables in LHB coaches",
+        "CAI - Implementation of CAI regarding lavatory wash basin drain outlet pipe laying for waste water",
+        "CAI - Provision of wire rope mechanism for QRV of DV in LHB coaches",
+        "CAI - Projection of BP and FP metal pipe from headstock as specified",
+        "CAI - Modification of Wheelset Earthing Equipment - Provision of double threaded Stainless steel insert in front cover and brush holder assembly mounting arrangement",
+        "CAI - Covering of gap above doorway partitiion frame for LHB GS coaches",
+        "CAI - Relocation of Chlorine filter in IR DRDO BioDigester in LHB type coaches",
+        "CAI - Provision of additional brake indicator inside the coaches fitted with hand brake arrangement",
+        "CAI - Provision of additional dirt collector in BP line before FIBA",
+        "CAI - Implementation of modified Pneumatic Piping arrangement to relocate ACP isolation cock / valve in order to make it accessible with in a hand-stretch distance",
+        "CAI - Change of material of vestibule footplate to AISI304 in LHB Type Coaches (RCF Built)",
+        "CAI - LHB coaches with provision of TPU rings in suspension arrangements.",
+        "CAI - Material specification altered from MS to Stainless steel for Foot plates (ICF Built)",
+        "CAI - Additional lifting pad blocks to be welded adjacent ot the existing lifting pad in underframe",
+        "CAI - Modification of primary suspension of LWACCN coaches",
+        "CAI - Installation of lookout glass for DETC/US observation window",
+        "CAI - Closing of louvre of cab door in DTC of Vande Bharat, to prevent entry of outside air",
+        "CAI - Provision of space for parking of Serving Trolley Arrangement except DTC coaches",
+        "CAI - Replacement of valves in water pipeline (suction and supply line) USBRL Coaches",
+        "CAI - Provision of mesh cover on the reservoir of the brake panel in LHB coaches",
+        "CAI - Improvement in Reliability of Stiffener plate to prevent blanking",
+        "CAI - Provision of locking arrangement in saloon sliding door of LHB 1st AC coach - swivel type lock",
+        "CAI - Door handle set & latch indicators arrangement replacement work in all lavatory doors",
+        "CAI - Ensuring provision of tertiary locking pin arrangement in AAR H type tight lock CBC with BDG",
+        "CAI - Closing of holes around plumbing pipeline in Underframe for modular toilet and pantry equipments",
+        "CAI - Retro fitment /fitment of Aspiration type Automatic FDAS in IR AC coaches to RDSO spec no. RDSO-2008-CG-04 (Rev. 5)",
+        "CAI - Provision of additional foldable berth in Non-LHB (ICF) AC coaches",
+        "CAI - SAE 100 R3 type hose pipes in place of SAE 100 R1 AT (less flexible) to be used",
+        "CAI - Provision of Dog Box in guard room of LHB power car coaches",
+        "CAI - Provision of FRP cover sheet to avoid passing of waste material outside of dust bin area between attachment wall and modular wall near outside wash basin area",
+        "CAI - Modification in AEFG2 WSP system of Ms FTRTIPL make of LHB coaches"
+];
+
+    const ALL_POH_SURVEY_HEADERS = DEFAULT_POH_SURVEY_HEADERS.concat(DEFAULT_CAI_HEADERS);
     const DEFAULT_POH_SURVEY_HEADERS = [
         "Email address", "Timestamp", "RAILWAY", "COACH TYPE", "COACH NUMBER", "PU",
         "DOM/DOC", "SS2/SS3 SHOP", "RD", "TARE", "KMPH", "CCTV MAKE / number of CCTV",
@@ -7203,6 +7258,41 @@ _Generated from Coach Database PWA_`;
         return data;
     }
     window.collectPohSurveyFormData = collectPohSurveyFormData;
+
+    function setPohAllCai(status) {
+        const selects = document.querySelectorAll('.poh-cai-select');
+        selects.forEach(sel => {
+            sel.value = status;
+        });
+        if (typeof Swal !== 'undefined' && Swal.fire) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'info',
+                title: status ? `All 51 CAI items set to "${status}"` : 'CAI items reset',
+                showConfirmButton: false,
+                timer: 1500,
+                background: 'rgba(30, 41, 59, 0.95)',
+                color: 'var(--text)'
+            });
+        }
+    }
+    window.setPohAllCai = setPohAllCai;
+
+    function filterPohCaiList(query) {
+        const q = (query || '').toLowerCase().trim();
+        const items = document.querySelectorAll('.poh-cai-item');
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (!q || text.includes(q)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    window.filterPohCaiList = filterPohCaiList;
+
 
     async function submitPohSurveyForm() {
         const data = collectPohSurveyFormData();
@@ -7386,7 +7476,8 @@ _Generated from Coach Database PWA_`;
     function buildPohSurveyPdfHtml(data) {
         const esc = (v) => escapeHtml(v || '-');
 
-        const rowsHtml = DEFAULT_POH_SURVEY_HEADERS.map((key, idx) => {
+        // Part 1: Base 63 General Survey Fields
+        const baseRowsHtml = DEFAULT_POH_SURVEY_HEADERS.map((key, idx) => {
             const val = data[key] || '-';
             const isHighlight = ['COACH NUMBER', 'RAILWAY', 'COACH TYPE', 'DEFICIENCY IF ANY', 'REMARKS'].includes(key);
             const valStyle = isHighlight ? 'font-weight: 700; color: #831843;' : 'font-weight: 500;';
@@ -7395,6 +7486,25 @@ _Generated from Coach Database PWA_`;
                     <td style="width: 6%; text-align: center; color: #64748b; font-weight: 700;">${idx + 1}</td>
                     <td class="poh-pdf-td-label">${esc(key)}</td>
                     <td class="poh-pdf-td-val" style="${valStyle}">${esc(val)}</td>
+                </tr>
+            `;
+        }).join('');
+
+        // Part 2: 51 Carriage Alteration Instructions (CAI)
+        const caiRowsHtml = DEFAULT_CAI_HEADERS.map((key, idx) => {
+            const rawKey = key.replace(/^CAI - /, '');
+            const val = data[key] || data[rawKey] || '-';
+            let badgeStyle = 'color: #475569; font-weight: 600;';
+            if (val === 'Complied') badgeStyle = 'color: #059669; font-weight: 700;';
+            else if (val === 'Not Complied') badgeStyle = 'color: #dc2626; font-weight: 700;';
+            else if (val === 'Work in Progress') badgeStyle = 'color: #d97706; font-weight: 700;';
+            else if (val.includes('NA') || val.includes('Not Applicable')) badgeStyle = 'color: #64748b; font-weight: 500;';
+
+            return `
+                <tr>
+                    <td style="width: 6%; text-align: center; color: #0284c7; font-weight: 700;">${idx + 1}</td>
+                    <td style="font-weight: 600; color: #1e293b; padding: 4px 8px;">${esc(rawKey)}</td>
+                    <td style="${badgeStyle}; text-align: center; width: 24%; padding: 4px 8px;">${esc(val)}</td>
                 </tr>
             `;
         }).join('');
@@ -7416,17 +7526,39 @@ _Generated from Coach Database PWA_`;
                     <span>SURVEY DATE: <strong>${esc(data['Timestamp'])}</strong></span>
                 </div>
 
-                <!-- Survey Checklist Table -->
-                <table class="poh-pdf-table">
+                <!-- Part 1: General Parameters -->
+                <div style="background: #be185d; color: #fff; padding: 6px 12px; font-weight: 700; font-size: 9pt; border-radius: 4px 4px 0 0; margin-top: 10px; display: flex; justify-content: space-between;">
+                    <span>PART 1: GENERAL COACH CONDITION &amp; TECHNICAL PARAMETERS</span>
+                    <span>63 ITEMS</span>
+                </div>
+                <table class="poh-pdf-table" style="margin-bottom: 16px;">
                     <thead>
                         <tr>
                             <th style="width: 6%; text-align: center;">S.N.</th>
-                            <th style="width: 44%;">Survey Parameter / Modification Item</th>
-                            <th style="width: 50%;">Recorded Observation / Status / Make</th>
+                            <th style="width: 44%;">Survey Parameter</th>
+                            <th style="width: 50%;">Recorded Observation / Value</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${rowsHtml}
+                        ${baseRowsHtml}
+                    </tbody>
+                </table>
+
+                <!-- Part 2: Carriage Alteration Instructions (CAI) -->
+                <div style="background: #0284c7; color: #fff; padding: 6px 12px; font-weight: 700; font-size: 9pt; border-radius: 4px 4px 0 0; margin-top: 16px; display: flex; justify-content: space-between;">
+                    <span>PART 2: CARRIAGE ALTERATION INSTRUCTIONS (CAI) COMPLIANCE</span>
+                    <span>51 ITEMS</span>
+                </div>
+                <table class="poh-pdf-table" style="margin-bottom: 14px;">
+                    <thead>
+                        <tr style="background: #0284c7;">
+                            <th style="width: 6%; text-align: center; background: #0284c7;">CAI #</th>
+                            <th style="width: 70%; background: #0284c7;">Carriage Alteration Instruction / Technical Modification</th>
+                            <th style="width: 24%; text-align: center; background: #0284c7;">Compliance Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${caiRowsHtml}
                     </tbody>
                 </table>
 
