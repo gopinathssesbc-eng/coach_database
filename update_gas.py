@@ -1,6 +1,6 @@
 import re
 
-with open('AppsScriptCode.js', 'r', encoding='utf-8') as f:
+with open('Appscript_WSP_Data.js', 'r', encoding='utf-8') as f:
     content = f.read()
 
 # 1. Update doGet to support sheetName
@@ -91,6 +91,6 @@ function doPost(e) {
 if "function doPost" not in content:
     content += "\n\n" + dopost_logic
 
-with open('AppsScriptCode.js', 'w', encoding='utf-8') as f:
+with open('Appscript_WSP_Data.js', 'w', encoding='utf-8') as f:
     f.write(content)
 print('Done!')
