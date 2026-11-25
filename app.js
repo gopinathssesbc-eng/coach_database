@@ -7067,85 +7067,544 @@ _Generated from Coach Database PWA_`;
     window.generateWspDefectPdf = generateWspDefectPdf;
 
     // ==========================================
-    // SS2 / POH SURVEY LOGIC
+    // SS2 / POH SURVEY MODULE LOGIC & PDF ENGINE
     // ==========================================
 
-    async function handlePohSurveySearch() {
-        const input = document.getElementById('pohSurveyCoachInput');
-        if (!input) return;
-        const coachNo = input.value.trim();
+    const DEFAULT_POH_SURVEY_HEADERS = [
+        "Email address", "Timestamp", "RAILWAY", "COACH TYPE", "COACH NUMBER", "PU",
+        "DOM/DOC", "SS2/SS3 SHOP", "RD", "TARE", "KMPH", "CCTV MAKE / number of CCTV",
+        "DUAL WATER FILLING", "TYPE OF TOILET", "PFS MAKE",
+        "PROVISION OF BYPASS ARRANGEMENT IN FLUSHING",
+        "EPPFS/PPFS WATER PRESSURIZER LOCATION", "NRV IN FO LINE",
+        "WASHBASIN DRAIN OUT PIPE MOD.", "RFID", "TYPE OF WATER REFILLING",
+        "PROVISION OF PAPIS & STATUS", "HASP/SMOKE SAMPLING POINTS  LAVOTORY",
+        "PROVISION OF VENTURI ARRAGEMENT", "FIRE DETECTION SYSTEM/FDSS MAKE",
+        "FIRE SUPPSSION SYSTEM TYPE", "BRAKE VALVE", "PROVISION OF BRAILLE SIGNAGE",
+        "TYPE OF WINDOW", "DOG BOX IN POWER CAR & SLRD",
+        "PROVISION OF ODOUR CONTROL SYSTEM", "PROVISION OF ANY SMART MIRROR",
+        "N2 CYLINDER OPERATION PROTECTION", "EMERGENCY WINDOW HANDLE", "ACP COVER",
+        "RUBBER WASHER BETWEEN S TRAP AND COMMODE CHUTE", "BRAKE SYSTEM MAKE & DV N0",
+        "TYPE OF SPRING SECONDARY SUSPENSION", "AIR SPRING MAKE & CAPACITY",
+        "LEVELING VALVE MAKE", "FIBA PIPE LINE MODIFICATION IN UF", "TPU IN PS",
+        "TPU IN SS", "PROVISION OF FIBA PIPE LINE R1 TO R3", "FIBA DC MODIFICATION",
+        "BOGIE FRAME IDENTIFICATION BASED ON PRIMARY VERTICAL BUMP STOP HEIGHT",
+        "FIBA MAKE", "WIRE ROPE MOD. FOR QRV", "AIRBRAKE HOSE MOD.", "CBC MAKE",
+        "PROVISION OF TRANSITION COUPLING FOR LWLRRM",
+        "PROVISION OF TERTIARY LOCKING PIN FOR CBC",
+        "PROJECTION OF BP(140MM),FP(200MM)METAL PIPES FROM HEADSTOCK",
+        "SPEED SENSOR J.B. ORIENTATION", "SPEED SENSOR J.B. ROUTING",
+        "SS JB PROTECTION COVER MODIFICATION", "PROVISION OF MIL GRADE CONNECTOR",
+        "MINI PANTRY", "FDS VESDA BEDROLL COMPARTMENT MOD.", "DEFICIENCY IF ANY",
+        "ANY NEW FEATURE", "REMARKS", "SS2/SS3 Date"
+    ];
+
+    function getPohAppsScriptUrl() {
+        return localStorage.getItem('poh_survey_app_script_url') || '';
+    }
+
+    function getPohSpreadsheetId() {
+        return localStorage.getItem('poh_survey_spreadsheet_id') || '';
+    }
+
+    async function autoFillPohSurveyFromDb() {
+        const quickInput = document.getElementById('pohQuickCoachInput');
+        const coachNumberInput = document.getElementById('pohCoachNumber');
+        const coachNo = (quickInput ? quickInput.value.trim() : '') || (coachNumberInput ? coachNumberInput.value.trim() : '');
+
         if (!coachNo || (coachNo.length !== 6 && coachNo !== '91223')) {
             showWarningAlert('Please enter a valid 6-digit coach number.');
             return;
         }
-        const container = document.getElementById('pohSurveyResultsContainer');
-        const submitBtn = document.getElementById('pohSurveySubmitBtn');
-        if (submitBtn) submitBtn.disabled = true;
+
+        const fetchBtn = document.getElementById('pohQuickFetchBtn');
+        const statusBox = document.getElementById('pohAutoFillStatus');
+        const statusText = document.getElementById('pohAutoFillStatusText');
+
+        if (fetchBtn) fetchBtn.disabled = true;
+        if (statusBox) statusBox.classList.add('hidden');
 
         try {
             const data = await fetchFromDatabase('coach', coachNo);
             if (data && data.status === 'success' && data.data && data.data.length > 0) {
                 const coach = data.data[0];
-                const rly = coach['RLY'] || coach['Rly'] || '-';
-                const type = coach['TYPE'] || coach['Coach Type'] || '-';
-                const train = coach['TRAIN NO'] || coach['Train No'] || '-';
-                const dom = coach['POH/DOM'] || coach['DOM'] || '-';
-                const doc = coach['SHOP/DOC'] || coach['DOC'] || '-';
-                const rDate = coach['R/DATE'] || '-';
-                const ss1 = coach['SS1'] || coach['SS1 DONE DATE'] || '-';
-                const ss2 = coach['SS2'] || coach['Next SS2 Due'] || '-';
 
-                container.classList.remove('hidden');
-                container.innerHTML = `
-                    <div class="glass-card slide-up" style="margin-bottom: 1rem; border-left: 4px solid #ec4899;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-                            <span class="badge" style="background: rgba(236, 72, 153, 0.15); color: #ec4899; font-weight: 700; font-size: 0.9rem;">
-                                <i class="fa-solid fa-train"></i> ${escapeHtml(rly)} ${escapeHtml(coachNo)} (${escapeHtml(type)})
-                            </span>
-                            <span style="font-size: 0.82rem; color: var(--text-muted);"><i class="fa-solid fa-train-subway"></i> Train: <strong>${escapeHtml(train)}</strong></span>
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem; margin-bottom: 1rem;">
-                            <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
-                                <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">POH / DOM</span>
-                                <strong>${escapeHtml(dom)}</strong>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
-                                <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">SHOP / DOC</span>
-                                <strong>${escapeHtml(doc)}</strong>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
-                                <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">Return Date</span>
-                                <strong>${escapeHtml(rDate)}</strong>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.03); padding: 8px 10px; border-radius: 6px;">
-                                <span style="color: var(--text-muted); display: block; font-size: 0.75rem;">Next SS2 Due</span>
-                                <strong style="color: #ec4899;">${escapeHtml(ss2)}</strong>
-                            </div>
-                        </div>
-                        <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.75rem;">
-                            <h4 style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #f8fafc;"><i class="fa-solid fa-clipboard-list" style="color: #ec4899;"></i> Survey Condition Notes</h4>
-                            <textarea class="app-textarea" placeholder="Enter SS2/POH pre-shop survey observations, deficiencies, or required repairs..." style="width: 100%; min-height: 80px;"></textarea>
-                            <button type="button" class="btn primary-btn btn-block" style="margin-top: 0.5rem; background: linear-gradient(135deg, #ec4899, #be185d);" onclick="showInfoAlert('Survey record saved locally for Coach ' + '${escapeHtml(coachNo)}')">
-                                <i class="fa-solid fa-floppy-disk"></i> Save Survey Record
-                            </button>
-                        </div>
-                    </div>
-                `;
+                // Auto-fill fields in form
+                if (coachNumberInput) coachNumberInput.value = coachNo;
+                if (quickInput) quickInput.value = coachNo;
+
+                const setField = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el && val && val !== '-') el.value = val;
+                };
+
+                setField('pohRailway', coach['RLY'] || coach['Rly'] || '');
+                setField('pohCoachType', coach['TYPE'] || coach['Coach Type'] || '');
+                setField('pohDomDoc', coach['POH/DOM'] || coach['DOM'] || '');
+                setField('pohShop', coach['SHOP/DOC'] || coach['DOC'] || '');
+                setField('pohRD', coach['R/DATE'] || coach['RD'] || '');
+
+                const rawSs2 = coach['Next SS2 Due'] || coach['SS2'] || coach['SS2 Date'] || '';
+                if (rawSs2) {
+                    const isoDate = parseToIsoDate(rawSs2);
+                    if (isoDate) setField('pohSs2Ss3Date', isoDate);
+                }
+
+                setField('pohTare', coach['TARE'] || coach['Tare'] || '');
+                setField('pohKmph', coach['KMPH'] || coach['Speed'] || '');
+
+                if (statusBox && statusText) {
+                    statusText.innerText = `Loaded Coach #${coachNo} (${coach['RLY'] || ''} ${coach['TYPE'] || ''})`;
+                    statusBox.classList.remove('hidden');
+                }
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: `Coach ${coachNo} details auto-filled!`,
+                    showConfirmButton: false,
+                    timer: 2500,
+                    background: 'rgba(30, 41, 59, 0.95)',
+                    color: 'var(--text)'
+                });
             } else {
-                container.classList.remove('hidden');
-                container.innerHTML = `
-                    <div class="glass-card slide-up" style="text-align: center; padding: 1.5rem;">
-                        <i class="fa-solid fa-circle-question" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
-                        <h4 style="margin: 0; color: #fff;">Coach Not Found</h4>
-                        <p style="margin: 4px 0 0; color: var(--text-muted); font-size: 0.85rem;">No database record found for Coach #${escapeHtml(coachNo)}</p>
-                    </div>
-                `;
+                showWarningAlert(`No database entry found for Coach #${coachNo}. Please fill survey manually.`);
             }
-        } catch (e) {
-            showErrorAlert('Could not fetch coach details. Please check your connection.');
+        } catch (err) {
+            console.error('Error auto-filling coach details:', err);
+            showErrorAlert('Could not auto-fill coach details. Please check connection.');
         } finally {
-            if (submitBtn) submitBtn.disabled = false;
+            if (fetchBtn) fetchBtn.disabled = false;
         }
     }
-    window.handlePohSurveySearch = handlePohSurveySearch;
+    window.autoFillPohSurveyFromDb = autoFillPohSurveyFromDb;
+
+    function collectPohSurveyFormData() {
+        const form = document.getElementById('pohSurveyForm');
+        const data = {};
+
+        // Timestamp
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        data['Timestamp'] = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+        // Map inputs by exact header name
+        DEFAULT_POH_SURVEY_HEADERS.forEach((header) => {
+            if (header === 'Timestamp') return;
+            const el = form ? form.querySelector(`[name="${header}"]`) : null;
+            data[header] = el ? el.value.trim() : '';
+        });
+
+        // Ensure coach number
+        if (!data['COACH NUMBER']) {
+            data['COACH NUMBER'] = document.getElementById('pohQuickCoachInput')?.value.trim() || '';
+        }
+
+        return data;
+    }
+    window.collectPohSurveyFormData = collectPohSurveyFormData;
+
+    async function submitPohSurveyForm() {
+        const data = collectPohSurveyFormData();
+        const coachNo = data['COACH NUMBER'];
+
+        if (!coachNo || (coachNo.length !== 6 && coachNo !== '91223')) {
+            showWarningAlert('Please enter a valid 6-digit coach number.');
+            document.getElementById('pohCoachNumber')?.focus();
+            return;
+        }
+
+        // Cache survey locally
+        localStorage.setItem('poh_survey_last_entry', JSON.stringify(data));
+
+        // Action Modal: Save to Google Sheet / Generate PDF / Both
+        Swal.fire({
+            title: 'SS2 / POH Survey Actions',
+            html: `
+                <div style="text-align: left; font-size: 0.9rem; line-height: 1.6;">
+                    <p style="margin-bottom: 0.5rem;">Survey for Coach <strong>${escapeHtml(coachNo)}</strong> (${escapeHtml(data['COACH TYPE'] || 'Coach')}) is ready!</p>
+                    <p style="color: var(--text-muted); font-size: 0.82rem; margin-bottom: 0;">Choose how you want to process this survey:</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: '<i class="fa-solid fa-cloud-arrow-up"></i> Save to Google Sheet',
+            denyButtonText: '<i class="fa-solid fa-file-pdf"></i> Generate PDF',
+            cancelButtonText: '<i class="fa-solid fa-check-double"></i> Save & Generate PDF',
+            confirmButtonColor: '#be185d',
+            denyButtonColor: '#2563eb',
+            cancelButtonColor: '#059669',
+            background: 'rgba(30, 41, 59, 0.98)',
+            color: 'var(--text)',
+            customClass: { popup: 'glass-card' }
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                // Save to Google Sheet
+                await savePohSurveyToGoogleSheet(data);
+            } else if (result.isDenied) {
+                // Generate PDF
+                openPohPdfPreviewModal(data);
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                // Save to Sheet AND Generate PDF
+                await savePohSurveyToGoogleSheet(data, false);
+                openPohPdfPreviewModal(data);
+            }
+        });
+    }
+    window.submitPohSurveyForm = submitPohSurveyForm;
+
+    async function savePohSurveyToGoogleSheet(surveyData, showDialogOnDone = true) {
+        let appScriptUrl = getPohAppsScriptUrl();
+
+        if (!appScriptUrl) {
+            const promptResult = await Swal.fire({
+                title: 'Connect Google Sheet Web App',
+                html: `
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; text-align: left;">
+                        Please enter the <strong>Web App URL</strong> deployed from <code>appscript_POH survey.js</code>:
+                    </p>
+                    <input type="url" id="swalPohUrl" class="swal2-input" placeholder="https://script.google.com/macros/s/.../exec" style="margin: 0 0 0.5rem 0; width: 100%;">
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Save & Continue',
+                confirmButtonColor: '#be185d',
+                background: 'rgba(30, 41, 59, 0.98)',
+                color: 'var(--text)',
+                preConfirm: () => {
+                    const url = document.getElementById('swalPohUrl')?.value?.trim();
+                    if (!url || !url.startsWith('http')) {
+                        Swal.showValidationMessage('Please enter a valid Google Apps Script Web App URL.');
+                        return false;
+                    }
+                    return url;
+                }
+            });
+
+            if (promptResult.isConfirmed && promptResult.value) {
+                appScriptUrl = promptResult.value;
+                localStorage.setItem('poh_survey_app_script_url', appScriptUrl);
+            } else {
+                return;
+            }
+        }
+
+        const payload = Object.assign({}, surveyData);
+        const customSheetId = getPohSpreadsheetId();
+        if (customSheetId) payload.spreadsheetId = customSheetId;
+
+        // Show loading
+        Swal.fire({
+            title: 'Saving to Google Sheet...',
+            text: 'Submitting SS2/POH Survey data...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); },
+            background: 'rgba(30, 41, 59, 0.98)',
+            color: 'var(--text)'
+        });
+
+        try {
+            const resp = await fetch(appScriptUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            const res = await resp.json();
+
+            if (res.status === 'success') {
+                if (showDialogOnDone) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved to Google Sheet!',
+                        text: `Survey recorded successfully (Row #${res.rowIndex || 'New'}) for Coach ${payload['COACH NUMBER']}.`,
+                        confirmButtonColor: '#be185d',
+                        background: 'rgba(30, 41, 59, 0.98)',
+                        color: 'var(--text)'
+                    });
+                }
+                return true;
+            } else {
+                throw new Error(res.message || 'Error reported by Apps Script');
+            }
+        } catch (e) {
+            console.error('Error saving survey to Google Sheet:', e);
+            Swal.fire({
+                icon: 'warning',
+                title: 'Network / Script Notice',
+                text: 'Survey is safely preserved in local offline memory. If using a newly deployed script, ensure "Who has access: Anyone" is selected.',
+                confirmButtonColor: '#be185d',
+                background: 'rgba(30, 41, 59, 0.98)',
+                color: 'var(--text)'
+            });
+            return false;
+        }
+    }
+    window.savePohSurveyToGoogleSheet = savePohSurveyToGoogleSheet;
+
+    function openPohPdfPreviewModal(surveyData) {
+        const data = surveyData || collectPohSurveyFormData();
+        const coachNo = data['COACH NUMBER'] || 'UNKNOWN';
+
+        const modal = document.getElementById('pohPdfPreviewModal');
+        const contentContainer = document.getElementById('pohPdfReportContent');
+        const titleEl = document.getElementById('pohPdfPreviewTitle');
+
+        if (titleEl) {
+            titleEl.innerText = `SS2 / POH Survey - Coach ${coachNo}`;
+        }
+
+        if (contentContainer) {
+            contentContainer.innerHTML = buildPohSurveyPdfHtml(data);
+        }
+
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+        document.body.style.overflow = 'hidden';
+
+        window.currentPohSurveyData = data;
+    }
+    window.openPohPdfPreviewModal = openPohPdfPreviewModal;
+
+    function closePohPdfPreviewModal() {
+        const modal = document.getElementById('pohPdfPreviewModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+        document.body.style.overflow = '';
+    }
+    window.closePohPdfPreviewModal = closePohPdfPreviewModal;
+
+    function previewPohSurveyPdf() {
+        const data = collectPohSurveyFormData();
+        openPohPdfPreviewModal(data);
+    }
+    window.previewPohSurveyPdf = previewPohSurveyPdf;
+
+    function buildPohSurveyPdfHtml(data) {
+        const esc = (v) => escapeHtml(v || '-');
+
+        const rowsHtml = DEFAULT_POH_SURVEY_HEADERS.map((key, idx) => {
+            const val = data[key] || '-';
+            const isHighlight = ['COACH NUMBER', 'RAILWAY', 'COACH TYPE', 'DEFICIENCY IF ANY', 'REMARKS'].includes(key);
+            const valStyle = isHighlight ? 'font-weight: 700; color: #831843;' : 'font-weight: 500;';
+            return `
+                <tr>
+                    <td style="width: 6%; text-align: center; color: #64748b; font-weight: 700;">${idx + 1}</td>
+                    <td class="poh-pdf-td-label">${esc(key)}</td>
+                    <td class="poh-pdf-td-val" style="${valStyle}">${esc(val)}</td>
+                </tr>
+            `;
+        }).join('');
+
+        return `
+            <div class="poh-pdf-page" id="pohPdfPrintablePage">
+                <!-- Document Header -->
+                <div class="poh-pdf-header">
+                    <h2>SOUTH WESTERN RAILWAY &bull; BENGALURU DIVISION</h2>
+                    <h3>SBC COACHING DEPOT &bull; SS2 / POH CONDITION SURVEY REPORT</h3>
+                    <p>Pre-Maintenance Technical Condition, Modification Compliance &amp; Inspection Record</p>
+                </div>
+
+                <!-- Meta Summary Ribbon -->
+                <div class="poh-pdf-meta-box">
+                    <span>COACH: <strong>${esc(data['COACH NUMBER'])} (${esc(data['RAILWAY'])} ${esc(data['COACH TYPE'])})</strong></span>
+                    <span>SHOP: <strong>${esc(data['SS2/SS3 SHOP'])}</strong></span>
+                    <span>DOM/DOC: <strong>${esc(data['DOM/DOC'])}</strong></span>
+                    <span>SURVEY DATE: <strong>${esc(data['Timestamp'])}</strong></span>
+                </div>
+
+                <!-- Survey Checklist Table -->
+                <table class="poh-pdf-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 6%; text-align: center;">S.N.</th>
+                            <th style="width: 44%;">Survey Parameter / Modification Item</th>
+                            <th style="width: 50%;">Recorded Observation / Status / Make</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+
+                <!-- Supervisory Signatures -->
+                <div class="poh-pdf-signatures">
+                    <div>
+                        <p style="margin: 0; text-decoration: underline;">INSPECTED BY</p>
+                        <p style="margin: 4px 0 0; color: #64748b; font-size: 8pt;">JE / SE (C&amp;W) SBC</p>
+                    </div>
+                    <div style="text-align: center;">
+                        <p style="margin: 0; text-decoration: underline;">SURVEY INCHARGE</p>
+                        <p style="margin: 4px 0 0; color: #64748b; font-size: 8pt;">SSE / C&amp;W Coaching Depot</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="margin: 0; text-decoration: underline;">FORWARDED TO SHOP</p>
+                        <p style="margin: 4px 0 0; color: #64748b; font-size: 8pt;">CDO / SBC &bull; South Western Railway</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function downloadPohSurveyPdf() {
+        const data = window.currentPohSurveyData || collectPohSurveyFormData();
+        const coachNo = data['COACH NUMBER'] || 'Coach';
+        const dateStr = (data['Timestamp'] || '').split(' ')[0] || new Date().toISOString().slice(0, 10);
+        const filename = `SS2_POH_Survey_${coachNo}_${dateStr}.pdf`;
+
+        const targetEl = document.getElementById('pohPdfReportContent');
+        if (!targetEl) return;
+
+        const downloadBtn = document.getElementById('pohPdfDownloadBtn');
+        const origHtml = downloadBtn ? downloadBtn.innerHTML : '';
+        if (downloadBtn) {
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+        }
+
+        try {
+            if (typeof html2pdf !== 'function') {
+                throw new Error('html2pdf library not loaded');
+            }
+
+            const opt = {
+                margin: [6, 6, 6, 6],
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            await html2pdf().set(opt).from(targetEl).save();
+
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'PDF Downloaded successfully!',
+                showConfirmButton: false,
+                timer: 2500,
+                background: 'rgba(30, 41, 59, 0.95)',
+                color: 'var(--text)'
+            });
+        } catch (err) {
+            console.error('Error generating PDF:', err);
+            window.print();
+        } finally {
+            if (downloadBtn) {
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = origHtml;
+            }
+        }
+    }
+    window.downloadPohSurveyPdf = downloadPohSurveyPdf;
+
+    function printPohSurveyPdf() {
+        window.print();
+    }
+    window.printPohSurveyPdf = printPohSurveyPdf;
+
+    async function sharePohSurveyPdf() {
+        const data = window.currentPohSurveyData || collectPohSurveyFormData();
+        const coachNo = data['COACH NUMBER'] || 'Coach';
+        const filename = `SS2_POH_Survey_${coachNo}.pdf`;
+
+        const targetEl = document.getElementById('pohPdfReportContent');
+        if (!targetEl) return;
+
+        if (!navigator.canShare) {
+            downloadPohSurveyPdf();
+            return;
+        }
+
+        try {
+            const opt = {
+                margin: [6, 6, 6, 6],
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const pdfBlob = await html2pdf().set(opt).from(targetEl).output('blob');
+            const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+            if (navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    title: `SS2 / POH Survey - Coach ${coachNo}`,
+                    text: `Official SS2 / POH Pre-Maintenance Condition Survey Report for Coach ${coachNo}`,
+                    files: [file]
+                });
+            } else {
+                downloadPohSurveyPdf();
+            }
+        } catch (e) {
+            if (e.name !== 'AbortError') {
+                downloadPohSurveyPdf();
+            }
+        }
+    }
+    window.sharePohSurveyPdf = sharePohSurveyPdf;
+
+    function resetPohSurveyForm() {
+        const form = document.getElementById('pohSurveyForm');
+        if (form) form.reset();
+        const quickInput = document.getElementById('pohQuickCoachInput');
+        if (quickInput) quickInput.value = '';
+        const statusBox = document.getElementById('pohAutoFillStatus');
+        if (statusBox) statusBox.classList.add('hidden');
+    }
+    window.resetPohSurveyForm = resetPohSurveyForm;
+
+    function openPohSettingsModal() {
+        const modal = document.getElementById('pohSettingsModal');
+        const urlInput = document.getElementById('pohAppsScriptUrlInput');
+        const sheetIdInput = document.getElementById('pohSpreadsheetIdInput');
+
+        if (urlInput) urlInput.value = getPohAppsScriptUrl();
+        if (sheetIdInput) sheetIdInput.value = getPohSpreadsheetId();
+
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+    }
+    window.openPohSettingsModal = openPohSettingsModal;
+
+    function closePohSettingsModal() {
+        const modal = document.getElementById('pohSettingsModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
+        }
+    }
+    window.closePohSettingsModal = closePohSettingsModal;
+
+    function savePohSettings() {
+        const urlInput = document.getElementById('pohAppsScriptUrlInput');
+        const sheetIdInput = document.getElementById('pohSpreadsheetIdInput');
+
+        if (urlInput) {
+            localStorage.setItem('poh_survey_app_script_url', urlInput.value.trim());
+        }
+        if (sheetIdInput) {
+            localStorage.setItem('poh_survey_spreadsheet_id', sheetIdInput.value.trim());
+        }
+
+        closePohSettingsModal();
+        Swal.fire({
+            icon: 'success',
+            title: 'Settings Saved',
+            text: 'Google Sheet and Web App connection details have been saved locally.',
+            timer: 2000,
+            showConfirmButton: false,
+            background: 'rgba(30, 41, 59, 0.98)',
+            color: 'var(--text)'
+        });
+    }
+    window.savePohSettings = savePohSettings;
 

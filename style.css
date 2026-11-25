@@ -3504,3 +3504,160 @@ select option {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   SS2 / POH SURVEY FORM & PDF STYLES
+   ========================================================================== */
+.survey-section-card {
+    background: rgba(30, 41, 59, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1.25rem 1.4rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.survey-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.1rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.survey-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin: 0;
+}
+
+.survey-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+}
+
+.survey-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .survey-grid-2,
+    .survey-grid-3 {
+        grid-template-columns: 1fr;
+    }
+    .survey-section-card {
+        padding: 1rem;
+    }
+}
+
+/* POH Survey PDF Printable Report Document Layout */
+.poh-pdf-page {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 24px 28px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.poh-pdf-header {
+    text-align: center;
+    border-bottom: 2.5px solid #be185d;
+    padding-bottom: 12px;
+    margin-bottom: 14px;
+}
+
+.poh-pdf-header h2 {
+    margin: 0;
+    font-size: 15pt;
+    font-weight: 800;
+    color: #831843;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.poh-pdf-header h3 {
+    margin: 4px 0 0;
+    font-size: 12pt;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.poh-pdf-header p {
+    margin: 3px 0 0;
+    font-size: 9pt;
+    color: #475569;
+    font-weight: 600;
+}
+
+.poh-pdf-meta-box {
+    display: flex;
+    justify-content: space-between;
+    background: #fdf2f8;
+    border: 1px solid #fbcfe8;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 9pt;
+    margin-bottom: 14px;
+    font-weight: 700;
+    color: #9d174d;
+}
+
+.poh-pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 8.5pt;
+}
+
+.poh-pdf-table th {
+    background: #be185d;
+    color: #ffffff;
+    font-weight: 700;
+    text-align: left;
+    padding: 6px 10px;
+    border: 1px solid #9d174d;
+    font-size: 9pt;
+}
+
+.poh-pdf-table td {
+    padding: 5px 8px;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    vertical-align: top;
+}
+
+.poh-pdf-table tr:nth-child(even) td {
+    background: #f8fafc;
+}
+
+.poh-pdf-td-label {
+    width: 38%;
+    font-weight: 700;
+    color: #0f172a;
+    background: #f1f5f9;
+}
+
+.poh-pdf-td-val {
+    width: 62%;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.poh-pdf-signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px dashed #94a3b8;
+    font-size: 9pt;
+    font-weight: 700;
+    color: #334155;
+}

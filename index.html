@@ -566,44 +566,644 @@
             <button class="icon-btn back-btn" onclick="navigateTo('dashboardScreen')"><i
                     class="fa-solid fa-arrow-left"></i></button>
             <div>
-                <h1>SS2/ POH survey</h1>
+                <h1>SS2 / POH Survey</h1>
                 <p class="subtitle">Pre-maintenance inspection &amp; condition survey</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" class="btn-clear-cache" onclick="resetPohSurveyForm()" title="Clear / Reset Form"
+                    style="padding: 6px 12px; font-size: 0.78rem; border-radius: 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #fca5a5; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-rotate-left"></i> <span>Reset</span>
+                </button>
+                <button type="button" class="icon-btn" onclick="openPohSettingsModal()" title="Sheet &amp; Script Settings"
+                    style="color: #ec4899; background: rgba(236, 72, 153, 0.15); border: 1px solid rgba(236, 72, 153, 0.3);">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
             </div>
         </header>
 
-        <main class="slide-up">
-            <div class="glass-card form-card" style="margin-bottom: 1.25rem;">
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 1rem;">
-                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(236, 72, 153, 0.15); color: #ec4899; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
-                        <i class="fa-solid fa-clipboard-check"></i>
+        <main class="slide-up" style="max-width: 980px; margin: 0 auto; padding-bottom: 3rem;">
+            <!-- Quick Coach Auto-fill Card -->
+            <div class="glass-card form-card" style="margin-bottom: 1.25rem; border-left: 4px solid #ec4899;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(236, 72, 153, 0.18); color: #ec4899; display: flex; align-items: center; justify-content: center; font-size: 1.05rem;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1rem; font-weight: 700; color: #fff;">Auto-fill from Database</h3>
+                            <p style="margin: 2px 0 0; font-size: 0.78rem; color: var(--text-muted);">Enter coach number to fetch existing schedule and history data</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: #fff;">SS2 / POH Coach Survey</h3>
-                        <p style="margin: 2px 0 0; font-size: 0.8rem; color: var(--text-muted);">Inspect &amp; record pre-shop maintenance condition</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div class="input-group" style="flex: 1;">
+                        <i class="fa-solid fa-train input-icon"></i>
+                        <input type="number" id="pohQuickCoachInput" class="app-input" placeholder="Enter 6-digit coach number (e.g. 195193)">
+                    </div>
+                    <button type="button" class="btn primary-btn" id="pohQuickFetchBtn" onclick="autoFillPohSurveyFromDb()" style="background: linear-gradient(135deg, #ec4899, #be185d); white-space: nowrap;">
+                        <i class="fa-solid fa-bolt"></i> <span>Auto-fill</span>
+                    </button>
+                </div>
+                <div id="pohAutoFillStatus" class="hidden" style="margin-top: 0.65rem; font-size: 0.8rem; color: #34d399; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-circle-check"></i> <span id="pohAutoFillStatusText">Coach data loaded</span>
+                </div>
+            </div>
+
+            <!-- Full 63-Field Survey Form -->
+            <form id="pohSurveyForm" onsubmit="event.preventDefault(); submitPohSurveyForm();">
+
+                <!-- SECTION 1: General Coach Identification -->
+                <div class="survey-section-card">
+                    <div class="survey-section-header">
+                        <i class="fa-solid fa-id-card" style="color: #ec4899; font-size: 1.1rem;"></i>
+                        <h3 class="survey-section-title">Section 1: General Coach Identification</h3>
+                    </div>
+                    <div class="survey-grid-3">
+                        <div class="form-group">
+                            <label for="pohCoachNumber">COACH NUMBER *</label>
+                            <input type="number" id="pohCoachNumber" name="COACH NUMBER" class="app-input" placeholder="e.g. 195193" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohRailway">RAILWAY *</label>
+                            <input type="text" id="pohRailway" name="RAILWAY" class="app-input" placeholder="e.g. SWR, CR, NR" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohCoachType">COACH TYPE *</label>
+                            <input type="text" id="pohCoachType" name="COACH TYPE" class="app-input" placeholder="e.g. LWSCN, LWACCN" required>
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohPU">PU (Production Unit)</label>
+                            <select id="pohPU" name="PU" class="app-input">
+                                <option value="">Select PU</option>
+                                <option value="RCF">RCF</option>
+                                <option value="ICF">ICF</option>
+                                <option value="MCF">MCF</option>
+                                <option value="BEML">BEML</option>
+                                <option value="OTHER">OTHER</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohDomDoc">DOM/DOC</label>
+                            <input type="text" id="pohDomDoc" name="DOM/DOC" class="app-input" placeholder="e.g. 15-08-2019">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohShop">SS2/SS3 SHOP</label>
+                            <input type="text" id="pohShop" name="SS2/SS3 SHOP" class="app-input" placeholder="e.g. MYSS, KGP, JUDW">
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohSs2Ss3Date">SS2/SS3 Date</label>
+                            <input type="date" id="pohSs2Ss3Date" name="SS2/SS3 Date" class="app-input" onclick="this.showPicker()">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohRD">RD (Return Date)</label>
+                            <input type="text" id="pohRD" name="RD" class="app-input" placeholder="e.g. 15-08-2025">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohTare">TARE (Tonnes)</label>
+                            <input type="text" id="pohTare" name="TARE" class="app-input" placeholder="e.g. 40.5">
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohKmph">KMPH</label>
+                            <input type="text" id="pohKmph" name="KMPH" class="app-input" placeholder="e.g. 130 / 160">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohRfid">RFID</label>
+                            <select id="pohRfid" name="RFID" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Fitted">Fitted</option>
+                                <option value="Not Fitted">Not Fitted</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohEmail">Email address</label>
+                            <input type="email" id="pohEmail" name="Email address" class="app-input" placeholder="inspector@railnet.gov.in">
+                        </div>
                     </div>
                 </div>
 
-                <form id="pohSurveyCoachForm" onsubmit="event.preventDefault(); handlePohSurveySearch();">
-                    <div class="form-group" style="margin-bottom: 0.75rem;">
-                        <label for="pohSurveyCoachInput">Coach Number</label>
-                        <div class="input-group">
-                            <i class="fa-solid fa-train input-icon"></i>
-                            <input type="number" id="pohSurveyCoachInput" class="app-input"
-                                placeholder="Enter 6-digit coach number" required>
+                <!-- SECTION 2: Water, Toilet & Passenger Amenities -->
+                <div class="survey-section-card">
+                    <div class="survey-section-header">
+                        <i class="fa-solid fa-faucet-drip" style="color: #38bdf8; font-size: 1.1rem;"></i>
+                        <h3 class="survey-section-title">Section 2: Water, Toilet &amp; Passenger Amenities</h3>
+                    </div>
+                    <div class="survey-grid-3">
+                        <div class="form-group">
+                            <label for="pohDualWater">DUAL WATER FILLING</label>
+                            <select id="pohDualWater" name="DUAL WATER FILLING" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Available">Available</option>
+                                <option value="Not Available">Not Available</option>
+                                <option value="Modified">Modified</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohToiletType">TYPE OF TOILET</label>
+                            <select id="pohToiletType" name="TYPE OF TOILET" class="app-input">
+                                <option value="">Select Type</option>
+                                <option value="Bio-Toilet">Bio-Toilet</option>
+                                <option value="Vacuum Bio-Toilet">Vacuum Bio-Toilet</option>
+                                <option value="Controlled Discharge (CDTS)">Controlled Discharge (CDTS)</option>
+                                <option value="Conventional">Conventional</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohPfsMake">PFS MAKE</label>
+                            <input type="text" id="pohPfsMake" name="PFS MAKE" class="app-input" placeholder="e.g. AMIT, KALYANI, NA">
                         </div>
                     </div>
-                    <button type="submit" class="btn primary-btn btn-block" id="pohSurveySubmitBtn"
-                        style="background: linear-gradient(135deg, #ec4899, #be185d);">
-                        <i class="fa-solid fa-magnifying-glass"></i> <span>Search Coach</span>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohBypassFlush">BYPASS FLUSHING ARRANGEMENT</label>
+                            <select id="pohBypassFlush" name="PROVISION OF BYPASS ARRANGEMENT IN FLUSHING" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohPressurizerLoc">EPPFS/PPFS PRESSURIZER LOCATION</label>
+                            <input type="text" id="pohPressurizerLoc" name="EPPFS/PPFS WATER PRESSURIZER LOCATION" class="app-input" placeholder="Underframe / In Lavatory / NA">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohNrvFo">NRV IN FO LINE</label>
+                            <select id="pohNrvFo" name="NRV IN FO LINE" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohWashbasinMod">WASHBASIN DRAIN OUT PIPE MOD.</label>
+                            <select id="pohWashbasinMod" name="WASHBASIN DRAIN OUT PIPE MOD." class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohWaterRefill">TYPE OF WATER REFILLING</label>
+                            <select id="pohWaterRefill" name="TYPE OF WATER REFILLING" class="app-input">
+                                <option value="">Select Type</option>
+                                <option value="Quick Watering System (QWS)">Quick Watering System (QWS)</option>
+                                <option value="Conventional">Conventional</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohRubberWasher">RUBBER WASHER S-TRAP/CHUTE</label>
+                            <select id="pohRubberWasher" name="RUBBER WASHER BETWEEN S TRAP AND COMMODE CHUTE" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohOdourControl">ODOUR CONTROL SYSTEM</label>
+                            <select id="pohOdourControl" name="PROVISION OF ODOUR CONTROL SYSTEM" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohSmartMirror">SMART MIRROR PROVISION</label>
+                            <select id="pohSmartMirror" name="PROVISION OF ANY SMART MIRROR" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohMiniPantry">MINI PANTRY</label>
+                            <input type="text" id="pohMiniPantry" name="MINI PANTRY" class="app-input" placeholder="Available / Not Available / NA">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: Electrical, Safety & Fire Detection -->
+                <div class="survey-section-card">
+                    <div class="survey-section-header">
+                        <i class="fa-solid fa-fire-extinguisher" style="color: #f59e0b; font-size: 1.1rem;"></i>
+                        <h3 class="survey-section-title">Section 3: Electrical, Safety &amp; Fire Systems</h3>
+                    </div>
+                    <div class="survey-grid-3">
+                        <div class="form-group">
+                            <label for="pohCctv">CCTV MAKE / NUMBER OF CCTV</label>
+                            <input type="text" id="pohCctv" name="CCTV MAKE / number of CCTV" class="app-input" placeholder="e.g. D-LINK / 4, NA">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohPapis">PROVISION OF PAPIS &amp; STATUS</label>
+                            <input type="text" id="pohPapis" name="PROVISION OF PAPIS & STATUS" class="app-input" placeholder="e.g. Provided & Working, NA">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohSmokeSampling">HASP/SMOKE SAMPLING POINTS LAV</label>
+                            <select id="pohSmokeSampling" name="HASP/SMOKE SAMPLING POINTS  LAVOTORY" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Available & Intact">Available &amp; Intact</option>
+                                <option value="Not Provided">Not Provided</option>
+                                <option value="Deficient">Deficient</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohVenturi">VENTURI ARRANGEMENT</label>
+                            <select id="pohVenturi" name="PROVISION OF VENTURI ARRAGEMENT" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohFdssMake">FIRE DETECTION SYSTEM / FDSS MAKE</label>
+                            <input type="text" id="pohFdssMake" name="FIRE DETECTION SYSTEM/FDSS MAKE" class="app-input" placeholder="e.g. FAIVELEY, AGNI, NOT PROVIDED">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohFireSuppression">FIRE SUPPRESSION SYSTEM TYPE</label>
+                            <select id="pohFireSuppression" name="FIRE SUPPSSION SYSTEM TYPE" class="app-input">
+                                <option value="">Select Type</option>
+                                <option value="Aerosol">Aerosol</option>
+                                <option value="High Pressure Water Mist">High Pressure Water Mist</option>
+                                <option value="Gas Based">Gas Based</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohN2Cylinder">N2 CYLINDER OPERATION PROTECTION</label>
+                            <select id="pohN2Cylinder" name="N2 CYLINDER OPERATION PROTECTION" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Available">Available</option>
+                                <option value="Not Available">Not Available</option>
+                                <option value="NA">NA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohEmergencyHandle">EMERGENCY WINDOW HANDLE</label>
+                            <select id="pohEmergencyHandle" name="EMERGENCY WINDOW HANDLE" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Available & Intact">Available &amp; Intact</option>
+                                <option value="Deficient">Deficient</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohAcpCover">ACP COVER</label>
+                            <select id="pohAcpCover" name="ACP COVER" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Available & Intact">Available &amp; Intact</option>
+                                <option value="Damaged">Damaged</option>
+                                <option value="Missing">Missing</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohBraille">PROVISION OF BRAILLE SIGNAGE</label>
+                            <select id="pohBraille" name="PROVISION OF BRAILLE SIGNAGE" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohWindowType">TYPE OF WINDOW</label>
+                            <select id="pohWindowType" name="TYPE OF WINDOW" class="app-input">
+                                <option value="">Select Type</option>
+                                <option value="Sealed Window Glass">Sealed Window Glass</option>
+                                <option value="Openable Hopper Type">Openable Hopper Type</option>
+                                <option value="Conventional">Conventional</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohDogBox">DOG BOX IN POWER CAR &amp; SLRD</label>
+                            <input type="text" id="pohDogBox" name="DOG BOX IN POWER CAR & SLRD" class="app-input" placeholder="Intact / Deficient / NA">
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-2" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohVesdaMod">FDS VESDA BEDROLL COMPARTMENT MOD.</label>
+                            <select id="pohVesdaMod" name="FDS VESDA BEDROLL COMPARTMENT MOD." class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                                <option value="NA">NA</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: Air Brake, Suspension & Bogie Checks -->
+                <div class="survey-section-card">
+                    <div class="survey-section-header">
+                        <i class="fa-solid fa-gauge-high" style="color: #10b981; font-size: 1.1rem;"></i>
+                        <h3 class="survey-section-title">Section 4: Air Brake, Suspension &amp; Bogie Checks</h3>
+                    </div>
+                    <div class="survey-grid-3">
+                        <div class="form-group">
+                            <label for="pohDvNo">BRAKE SYSTEM MAKE &amp; DV NO</label>
+                            <input type="text" id="pohDvNo" name="BRAKE SYSTEM MAKE & DV N0" class="app-input" placeholder="e.g. KNORR / 2341">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohBrakeValve">BRAKE VALVE</label>
+                            <input type="text" id="pohBrakeValve" name="BRAKE VALVE" class="app-input" placeholder="e.g. FT, KNORR, ESCORTS">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohSpringType">TYPE OF SPRING SECONDARY SUSPENSION</label>
+                            <select id="pohSpringType" name="TYPE OF SPRING SECONDARY SUSPENSION" class="app-input">
+                                <option value="">Select Type</option>
+                                <option value="Air Spring">Air Spring</option>
+                                <option value="Coil Spring">Coil Spring</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohAirSpring">AIR SPRING MAKE &amp; CAPACITY</label>
+                            <input type="text" id="pohAirSpring" name="AIR SPRING MAKE & CAPACITY" class="app-input" placeholder="e.g. CONTITECH / 140KN">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohLevelingValve">LEVELING VALVE MAKE</label>
+                            <input type="text" id="pohLevelingValve" name="LEVELING VALVE MAKE" class="app-input" placeholder="e.g. KNORR, ESCORTS, FT">
+                        </div>
+                        <div class="form-group">
+                            <label for="pohFibaMake">FIBA MAKE</label>
+                            <input type="text" id="pohFibaMake" name="FIBA MAKE" class="app-input" placeholder="e.g. KNORR, ESCORTS, FT">
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohFibaPipeMod">FIBA PIPE LINE MODIFICATION IN UF</label>
+                            <select id="pohFibaPipeMod" name="FIBA PIPE LINE MODIFICATION IN UF" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohFibaR1R3">FIBA PIPE LINE R1 TO R3</label>
+                            <select id="pohFibaR1R3" name="PROVISION OF FIBA PIPE LINE R1 TO R3" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohFibaDcMod">FIBA DC MODIFICATION</label>
+                            <select id="pohFibaDcMod" name="FIBA DC MODIFICATION" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohTpuPs">TPU IN PS</label>
+                            <select id="pohTpuPs" name="TPU IN PS" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohTpuSs">TPU IN SS</label>
+                            <select id="pohTpuSs" name="TPU IN SS" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohBogieBumpStop">BOGIE BUMP STOP HEIGHT IDENTIFICATION</label>
+                            <input type="text" id="pohBogieBumpStop" name="BOGIE FRAME IDENTIFICATION BASED ON PRIMARY VERTICAL BUMP STOP HEIGHT" class="app-input" placeholder="e.g. Standard, Modified">
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohWireRopeQrv">WIRE ROPE MOD. FOR QRV</label>
+                            <select id="pohWireRopeQrv" name="WIRE ROPE MOD. FOR QRV" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohAirbrakeHoseMod">AIRBRAKE HOSE MOD.</label>
+                            <select id="pohAirbrakeHoseMod" name="AIRBRAKE HOSE MOD." class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohCbcMake">CBC MAKE</label>
+                            <input type="text" id="pohCbcMake" name="CBC MAKE" class="app-input" placeholder="e.g. ESCORTS, DELLNER, FAIVELEY">
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-3" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohTransitionCoupling">TRANSITION COUPLING FOR LWLRRM</label>
+                            <select id="pohTransitionCoupling" name="PROVISION OF TRANSITION COUPLING FOR LWLRRM" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                                <option value="NA">NA</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohTertiaryPin">TERTIARY LOCKING PIN FOR CBC</label>
+                            <select id="pohTertiaryPin" name="PROVISION OF TERTIARY LOCKING PIN FOR CBC" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Provided">Provided</option>
+                                <option value="Not Provided">Not Provided</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohProjectionBp">PROJECTION OF BP(140MM), FP(200MM) METAL PIPES</label>
+                            <select id="pohProjectionBp" name="PROJECTION OF BP(140MM),FP(200MM)METAL PIPES FROM HEADSTOCK" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Correct (BP 140mm, FP 200mm)">Correct (BP 140mm, FP 200mm)</option>
+                                <option value="Not Correct">Not Correct</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: WSP & Speed Sensor Wiring Modifications -->
+                <div class="survey-section-card">
+                    <div class="survey-section-header">
+                        <i class="fa-solid fa-microchip" style="color: #a855f7; font-size: 1.1rem;"></i>
+                        <h3 class="survey-section-title">Section 5: WSP &amp; Speed Sensor Wiring Modifications</h3>
+                    </div>
+                    <div class="survey-grid-2">
+                        <div class="form-group">
+                            <label for="pohSpeedSensorJbOrient">SPEED SENSOR J.B. ORIENTATION</label>
+                            <select id="pohSpeedSensorJbOrient" name="SPEED SENSOR J.B. ORIENTATION" class="app-input">
+                                <option value="">Select Orientation</option>
+                                <option value="Modified (Vertical)">Modified (Vertical)</option>
+                                <option value="Horizontal">Horizontal</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohSpeedSensorRouting">SPEED SENSOR J.B. ROUTING</label>
+                            <select id="pohSpeedSensorRouting" name="SPEED SENSOR J.B. ROUTING" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Modified">Modified</option>
+                                <option value="Not Modified">Not Modified</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="survey-grid-2" style="margin-top: 0.75rem;">
+                        <div class="form-group">
+                            <label for="pohSsJbCoverMod">SS JB PROTECTION COVER MODIFICATION</label>
+                            <select id="pohSsJbCoverMod" name="SS JB PROTECTION COVER MODIFICATION" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Available & Intact">Available &amp; Intact</option>
+                                <option value="Deficient">Deficient</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pohMilConnector">PROVISION OF MIL GRADE CONNECTOR</label>
+                            <select id="pohMilConnector" name="PROVISION OF MIL GRADE CONNECTOR" class="app-input">
+                                <option value="">Select Status</option>
+                                <option value="Modified (MIL Grade)">Modified (MIL Grade)</option>
+                                <option value="Conventional">Conventional</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 6: Deficiencies, Innovations & Remarks -->
+                <div class="survey-section-card">
+                    <div class="survey-section-header">
+                        <i class="fa-solid fa-comment-dots" style="color: #f43f5e; font-size: 1.1rem;"></i>
+                        <h3 class="survey-section-title">Section 6: Deficiencies, Innovations &amp; Remarks</h3>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0.85rem;">
+                        <label for="pohDeficiency">DEFICIENCY IF ANY</label>
+                        <textarea id="pohDeficiency" name="DEFICIENCY IF ANY" class="app-textarea" placeholder="Detail any missing items, mechanical/electrical deficiencies, or parts required..." rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0.85rem;">
+                        <label for="pohNewFeature">ANY NEW FEATURE</label>
+                        <textarea id="pohNewFeature" name="ANY NEW FEATURE" class="app-textarea" placeholder="Detail any new trial fittings, experimental features, or shop modifications..." rows="2"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pohRemarks">REMARKS</label>
+                        <textarea id="pohRemarks" name="REMARKS" class="app-textarea" placeholder="General condition assessment, supervisory remarks, or depot attention instructions..." rows="2"></textarea>
+                    </div>
+                </div>
+
+                <!-- Action Button Toolbar -->
+                <div class="poh-actions-sticky-bar" style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.5rem;">
+                    <button type="submit" class="btn primary-btn btn-lg" id="pohSubmitBtn" style="background: linear-gradient(135deg, #ec4899, #be185d); flex: 1.5; font-size: 1rem; padding: 0.85rem 1.25rem;">
+                        <i class="fa-solid fa-check-double"></i> <span>Submit Survey</span>
                     </button>
-                </form>
+                    <button type="button" class="btn secondary-btn btn-lg" onclick="previewPohSurveyPdf()" style="border-color: #ec4899; color: #f472b6; flex: 1; font-size: 1rem; padding: 0.85rem 1.25rem;">
+                        <i class="fa-solid fa-file-pdf"></i> <span>Generate PDF</span>
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <!-- POH Settings Modal (Configure Google Sheet Web App URL / Sheet ID) -->
+    <div id="pohSettingsModal" class="modal-overlay hidden">
+        <div class="glass-card modal-card slide-up" style="max-width: 500px; width: 92%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-gear" style="color: #ec4899; font-size: 1.2rem;"></i>
+                    <h3 style="margin: 0; font-size: 1.1rem; color: #fff;">SS2 / POH Survey Cloud Settings</h3>
+                </div>
+                <button type="button" class="icon-btn" onclick="closePohSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+                Connect this form to your Google Sheet by entering the Web App URL generated from <code>appscript_POH survey.js</code>, or set your Google Sheet ID.
+            </p>
+            <div class="form-group" style="margin-bottom: 0.85rem;">
+                <label for="pohAppsScriptUrlInput">Apps Script Web App URL</label>
+                <input type="url" id="pohAppsScriptUrlInput" class="app-input" placeholder="https://script.google.com/macros/s/.../exec">
+                <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">From Deploy &gt; New deployment &gt; Web app</small>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label for="pohSpreadsheetIdInput">Google Sheet ID (Optional)</label>
+                <input type="text" id="pohSpreadsheetIdInput" class="app-input" placeholder="e.g. 1a2b3c4d5e6f7g8h9i0j...">
+                <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 4px;">Paste the ID from your Google Sheet URL if not bound</small>
+            </div>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button type="button" class="btn secondary-btn" onclick="closePohSettingsModal()">Cancel</button>
+                <button type="button" class="btn primary-btn" onclick="savePohSettings()" style="background: linear-gradient(135deg, #ec4899, #be185d);">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POH Survey PDF Preview Modal -->
+    <div id="pohPdfPreviewModal" class="modal-overlay hidden" style="display: none;">
+        <div class="wsp-pdf-modal-container slide-up" style="max-width: 1080px;">
+            <!-- Modal Header -->
+            <div class="wsp-pdf-modal-header" style="background: linear-gradient(135deg, #831843, #9d174d);">
+                <div class="wsp-pdf-header-left">
+                    <div class="wsp-pdf-icon-badge" style="background: rgba(255,255,255,0.2);">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <div>
+                        <h3 class="wsp-pdf-title" id="pohPdfPreviewTitle">SS2 / POH Condition Survey Report</h3>
+                        <p class="wsp-pdf-subtitle">South Western Railway • SBC Coaching Depot</p>
+                    </div>
+                </div>
+                <button type="button" class="wsp-pdf-close" onclick="closePohPdfPreviewModal()" title="Close Preview">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
 
-            <!-- Survey Results Container -->
-            <div id="pohSurveyResultsContainer" class="hidden">
-                <!-- Dynamically loaded coach survey details -->
+            <!-- Toolbar: Download PDF, Share, Print -->
+            <div class="wsp-pdf-actions-bar">
+                <button type="button" class="pdf-btn pdf-btn-download" id="pohPdfDownloadBtn" onclick="downloadPohSurveyPdf()" style="background: #be185d;">
+                    <i class="fa-solid fa-download"></i> <span>Download PDF</span>
+                </button>
+                <button type="button" class="pdf-btn pdf-btn-share" onclick="sharePohSurveyPdf()">
+                    <i class="fa-solid fa-share-nodes"></i> <span>Share</span>
+                </button>
+                <button type="button" class="pdf-btn pdf-btn-print" onclick="printPohSurveyPdf()">
+                    <i class="fa-solid fa-print"></i> <span>Print</span>
+                </button>
             </div>
-        </main>
+
+            <!-- Scrollable Report Preview Body -->
+            <div class="wsp-pdf-scroll-body" id="pohPdfPreviewScroll">
+                <div id="pohPdfReportContent" class="wsp-pdf-content-wrapper">
+                    <!-- Injected Survey Report HTML -->
+                </div>
+            </div>
+        </div>
     </div>
     <div id="searchScreen" class="screen hidden">
         <header class="app-header fade-in">
